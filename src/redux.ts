@@ -20,10 +20,12 @@ export interface UndoableMeta {
 }
 
 export interface ReduxHistoryAdapter<Data> extends HistoryAdapter<Data> {
+  /** An action creator prepare callback which doesn't take a payload */
   withoutPayload(): (undoable?: boolean) => {
     payload: undefined;
     meta: UndoableMeta;
   };
+  /** An action creator prepare call back which takes a single payload */
   withPayload<P>(): (
     ...args: IfMaybeUndefined<
       P,
@@ -31,6 +33,7 @@ export interface ReduxHistoryAdapter<Data> extends HistoryAdapter<Data> {
       [payload: P, undoable?: boolean]
     >
   ) => { payload: P; meta: UndoableMeta };
+  /** Wraps a reducer in logic which automatically updates the state history, and extracts whether an action is undoable from its meta (`action.meta.undoable`) */
   undoableReducer<A extends Action & { meta?: UndoableMeta }>(
     reducer: CaseReducer<Data, A>,
   ): <State extends HistoryState<Data>>(state: State, action: A) => State;
@@ -40,6 +43,7 @@ function getUndoableMeta(action: { meta?: UndoableMeta }) {
   return action.meta?.undoable;
 }
 
+// eslint-disable-next-line import/export
 export function createHistoryAdapter<Data>(): ReduxHistoryAdapter<Data> {
   const adapter = createOriginalAdapter<Data>();
   return {
