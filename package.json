@@ -10,6 +10,10 @@
     ".": {
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./creator": {
+      "import": "./dist/creator.js",
+      "require": "./dist/creator.cjs"
     }
   },
   "files": [
