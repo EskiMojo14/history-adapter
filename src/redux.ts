@@ -1,4 +1,8 @@
+import { createAction } from "@reduxjs/toolkit";
 import type {
+  ReducerNamesOfType,
+  PayloadActionCreator,
+  SliceActionType,
   Action,
   CaseReducer,
   CaseReducerDefinition,
@@ -6,6 +10,7 @@ import type {
   ReducerCreator,
   ReducerCreatorEntry,
   ReducerCreators,
+  ReducerDefinition,
   SliceCaseReducers,
 } from "@reduxjs/toolkit";
 import type { HistoryAdapter, HistoryState } from ".";
@@ -83,8 +88,29 @@ declare module "@reduxjs/toolkit" {
         ? (this: ReducerCreators<State>) => {
             undo: CaseReducerDefinition<State, PayloadAction>;
             redo: CaseReducerDefinition<State, PayloadAction>;
+            reset: ReducerDefinition<typeof historyMethodsCreatorType> & {
+              type: "reset";
+            };
           }
-        : never
+        : never,
+      {
+        actions: {
+          [ReducerName in ReducerNamesOfType<
+            CaseReducers,
+            typeof historyMethodsCreatorType
+          >]: CaseReducers[ReducerName] extends { type: "reset" }
+            ? PayloadActionCreator<void, SliceActionType<Name, ReducerName>>
+            : never;
+        };
+        caseReducers: {
+          [ReducerName in ReducerNamesOfType<
+            CaseReducers,
+            typeof historyMethodsCreatorType
+          >]: CaseReducers[ReducerName] extends { type: "reset" }
+            ? CaseReducer<State, PayloadAction>
+            : never;
+        };
+      }
     >;
     [undoableCreatorType]: ReducerCreatorEntry<
       State extends HistoryState<infer Data>
@@ -109,7 +135,22 @@ export const historyMethodsCreator: ReducerCreator<
     return {
       undo: this.reducer(anyHistoryCreator.undo),
       redo: this.reducer(anyHistoryCreator.redo),
+      reset: {
+        _reducerDefinitionType: historyMethodsCreatorType,
+        type: "reset",
+      },
     };
+  },
+  handle({ reducerName, type }, def, context) {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (def.type !== "reset")
+      throw new Error(`Unrecognised reducer type ${String(def.type)}`);
+    const resetAction = createAction(type);
+    const resetReducer = () => context.getInitialState();
+    context
+      .addCase(resetAction, resetReducer)
+      .exposeAction(reducerName, resetAction)
+      .exposeCaseReducer(reducerName, resetReducer);
   },
 };
 

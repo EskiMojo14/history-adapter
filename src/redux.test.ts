@@ -117,7 +117,7 @@ describe("Slice creators", () => {
       },
     });
     const {
-      actions: { undo, redo, changeTitle, exclaimTitle },
+      actions: { undo, redo, reset, changeTitle, exclaimTitle },
       selectors: { selectTitle },
     } = bookSlice;
 
@@ -148,5 +148,9 @@ describe("Slice creators", () => {
     store.dispatch(undo());
 
     expect(selectTitle(store.getState())).toBe(newTitle);
+
+    store.dispatch(reset());
+
+    expect(selectTitle(store.getState())).toBe(book.title);
   });
 });
