@@ -88,13 +88,12 @@ declare module "@reduxjs/toolkit" {
     >;
     [undoableCreatorType]: ReducerCreatorEntry<
       State extends HistoryState<infer Data>
-        ? {
-            <A extends Action & { meta?: UndoableMeta }>(
-              reducer: CaseReducer<Data, A>,
-            ): CaseReducer<State, A>;
-          } & Compute<
-            Pick<ReduxHistoryAdapter<Data>, "withPayload" | "withoutPayload">
-          >
+        ? (<A extends Action & { meta?: UndoableMeta }>(
+            reducer: CaseReducer<Data, A>,
+          ) => CaseReducer<State, A>) &
+            Compute<
+              Pick<ReduxHistoryAdapter<Data>, "withPayload" | "withoutPayload">
+            >
         : never
     >;
   }
