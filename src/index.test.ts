@@ -134,20 +134,6 @@ describe("createHistoryAdapter", () => {
   });
 
   describe("in combination with RTK", () => {
-    interface UndoableMeta {
-      undoable?: boolean;
-    }
-    const reduxUtils = {
-      prepareWithPayload:
-        <P>() =>
-        (payload: P, undoable?: boolean) => ({ payload, meta: { undoable } }),
-      prepareWithoutPayload: () => (undoable?: boolean) => ({
-        payload: undefined,
-        meta: { undoable },
-      }),
-      getUndoableMeta: (action: { meta?: UndoableMeta }) =>
-        action.meta?.undoable,
-    };
     const bookHistorySlice = createSlice({
       name: "book",
       initialState: bookHistoryAdapter.getInitialState(book),
@@ -155,10 +141,16 @@ describe("createHistoryAdapter", () => {
         undo: create.reducer(bookHistoryAdapter.undo),
         redo: create.reducer(bookHistoryAdapter.redo),
         updateTitle: create.preparedReducer(
-          reduxUtils.prepareWithPayload<string>(),
-          bookHistoryAdapter.undoable((state, action) => {
-            state.title = action.payload;
-          }, reduxUtils.getUndoableMeta),
+          (newTitle: string, undoable?: boolean) => ({
+            payload: newTitle,
+            meta: { undoable },
+          }),
+          bookHistoryAdapter.undoable(
+            (state, action) => {
+              state.title = action.payload;
+            },
+            (action) => action.meta.undoable,
+          ),
         ),
       }),
       selectors: {
