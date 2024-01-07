@@ -32,8 +32,10 @@ export interface HistoryState<Data> {
 
 enablePatches();
 
-function makeStateOperator<Data>(mutator: (state: HistoryState<Data>) => void) {
-  return function operator(state: HistoryState<Data>) {
+function makeStateOperator<Data, State extends HistoryState<Data>>(
+  mutator: (state: State) => void,
+) {
+  return function operator(state: State) {
     if (isDraft(state)) {
       mutator(state);
       return state;
@@ -43,16 +45,26 @@ function makeStateOperator<Data>(mutator: (state: HistoryState<Data>) => void) {
   };
 }
 
-export function createHistoryAdapter<Data>() {
+export interface HistoryAdapter<Data> {
+  getInitialState(initialData: Data): HistoryState<Data>;
+  undo<State extends HistoryState<Data>>(state: State): State;
+  redo<State extends HistoryState<Data>>(state: State): State;
+  undoable<Args extends Array<any>>(
+    recipe: (draft: Draft<Data>, ...args: Args) => ValidRecipeReturnType<Data>,
+    isUndoable?: (...args: NoInfer<Args>) => boolean | undefined,
+  ): <State extends HistoryState<Data>>(state: State, ...args: Args) => State;
+}
+
+export function createHistoryAdapter<Data>(): HistoryAdapter<Data> {
   return {
-    getInitialState(initialData: Data): HistoryState<Data> {
+    getInitialState(initialData) {
       return {
         past: [],
         present: initialData,
         future: [],
       };
     },
-    undo: makeStateOperator<Data>((state) => {
+    undo: makeStateOperator((state) => {
       const historyEntry = state.past.pop();
       if (historyEntry) {
         applyPatches(state, historyEntry.undo);
@@ -60,7 +72,7 @@ export function createHistoryAdapter<Data>() {
       }
       return state;
     }),
-    redo: makeStateOperator<Data>((state) => {
+    redo: makeStateOperator((state) => {
       const historyEntry = state.future.shift();
       if (historyEntry) {
         applyPatches(state, historyEntry.redo);
@@ -69,14 +81,8 @@ export function createHistoryAdapter<Data>() {
       return state;
     }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    undoable<Args extends Array<any>>(
-      recipe: (
-        draft: Draft<Data>,
-        ...args: Args
-      ) => ValidRecipeReturnType<Data>,
-      isUndoable?: (...args: NoInfer<Args>) => boolean | undefined,
-    ) {
-      return function wrapper(state: HistoryState<Data>, ...args: Args) {
+    undoable(recipe, isUndoable) {
+      return function wrapper(state, ...args) {
         const [nextState, redoPatch, undoPatch] = produceWithPatches(
           state,
           (draft) => {

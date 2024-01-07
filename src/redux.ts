@@ -8,7 +8,7 @@ import {
   ReducerCreators,
   SliceCaseReducers,
 } from "@reduxjs/toolkit";
-import { HistoryState, createHistoryAdapter } from ".";
+import { HistoryAdapter, HistoryState, createHistoryAdapter } from ".";
 
 type IfMaybeUndefined<T, True, False> = [undefined] extends [T] ? True : False;
 
@@ -16,16 +16,33 @@ export interface UndoableMeta {
   undoable?: boolean;
 }
 
+export interface ReduxHistoryAdapter<Data> extends HistoryAdapter<Data> {
+  withoutPayload(): (undoable?: boolean) => {
+    payload: undefined;
+    meta: UndoableMeta;
+  };
+  withPayload<P>(): (
+    ...args: IfMaybeUndefined<
+      P,
+      [payload?: P, undoable?: boolean],
+      [payload: P, undoable?: boolean]
+    >
+  ) => { payload: P; meta: UndoableMeta };
+  undoableReducer<A extends Action & { meta?: UndoableMeta }>(
+    reducer: CaseReducer<Data, A>,
+  ): <State extends HistoryState<Data>>(state: State, action: A) => State;
+}
+
 function getUndoableMeta(action: { meta?: UndoableMeta }) {
   return action.meta?.undoable;
 }
 
-export function createReduxHistoryAdapter<Data>() {
+export function createReduxHistoryAdapter<Data>(): ReduxHistoryAdapter<Data> {
   const adapter = createHistoryAdapter<Data>();
   return {
     ...adapter,
     withoutPayload() {
-      return (undoable?: boolean) => ({
+      return (undoable) => ({
         payload: undefined,
         meta: { undoable },
       });
@@ -39,9 +56,7 @@ export function createReduxHistoryAdapter<Data>() {
         >
       ) => ({ payload: payload as P, meta: { undoable } });
     },
-    undoableReducer<A extends Action & { meta?: UndoableMeta }>(
-      reducer: CaseReducer<Data, A>,
-    ) {
+    undoableReducer(reducer) {
       return adapter.undoable(reducer, getUndoableMeta);
     },
   };
