@@ -54,15 +54,17 @@ export interface HistoryAdapter<Data> {
   ): <State extends HistoryState<Data>>(state: State, ...args: Args) => State;
 }
 
+export function getInitialState<Data>(initialData: Data): HistoryState<Data> {
+  return {
+    past: [],
+    present: initialData,
+    future: [],
+  };
+}
+
 export function createHistoryAdapter<Data>(): HistoryAdapter<Data> {
   return {
-    getInitialState(initialData) {
-      return {
-        past: [],
-        present: initialData,
-        future: [],
-      };
-    },
+    getInitialState,
     undo: makeStateOperator((state) => {
       const historyEntry = state.past.pop();
       if (historyEntry) {

@@ -10,12 +10,12 @@ import {
   undoableCreator,
 } from "./redux";
 import { describe, expect, it, beforeEach } from "vitest";
+import { getInitialState } from ".";
 
 interface Book {
   title: string;
   author: string;
 }
-const bookHistoryAdapter = createReduxHistoryAdapter<Book>();
 const book: Book = {
   title: "Hitchhiker's Guide to the Galaxy",
   author: "Douglas Adams",
@@ -23,6 +23,7 @@ const book: Book = {
 const newTitle = "The Restaurant at the End of the Universe";
 
 describe("createReduxHistoryAdapter", () => {
+  const bookHistoryAdapter = createReduxHistoryAdapter<Book>();
   const bookHistorySlice = createSlice({
     name: "book",
     initialState: bookHistoryAdapter.getInitialState(book),
@@ -95,7 +96,7 @@ describe("Slice creators", () => {
   it("adds creators for reuse with slices", () => {
     const bookSlice = createAppSlice({
       name: "book",
-      initialState: bookHistoryAdapter.getInitialState(book),
+      initialState: getInitialState(book),
       reducers: (create) => ({
         ...create.historyMethods(),
         changeTitle: create.preparedReducer(
