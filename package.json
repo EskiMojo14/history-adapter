@@ -61,7 +61,7 @@
   "tsup": {
     "entry": [
       "src/index.ts",
-      "src/creator.ts"
+      "src/redux.ts"
     ],
     "sourcemap": true,
     "format": [
