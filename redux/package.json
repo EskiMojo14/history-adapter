@@ -1,10 +1,10 @@
 {
-  "name": "history-adapter-creator",
+  "name": "redux-history-adapter",
   "version": "1.0.0",
   "type": "module",
-  "main": "../dist/creator.cjs",
-  "module": "../dist/creator.js",
-  "types": "../dist/creator.d.ts",
+  "main": "../dist/redux.cjs",
+  "module": "../dist/redux.js",
+  "types": "../dist/redux.d.ts",
   "files": [
     "../dist"
   ]
