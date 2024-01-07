@@ -72,6 +72,7 @@
     "minify": true
   },
   "dependencies": {
+    "eslint-plugin-vitest": "^0.3.20",
     "immer": "^10.0.3"
   }
 }

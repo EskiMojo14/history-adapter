@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { HistoryState, createHistoryAdapter } from ".";
+import type { HistoryState } from ".";
+import { createHistoryAdapter } from ".";
 import { nothing } from "immer";
 
 describe("createHistoryAdapter", () => {

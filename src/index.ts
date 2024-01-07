@@ -1,6 +1,5 @@
+import type { Patch, Draft } from "immer";
 import {
-  type Patch,
-  type Draft,
   nothing,
   enablePatches,
   applyPatches,
@@ -8,7 +7,7 @@ import {
   produce,
   isDraft,
 } from "immer";
-import { NoInfer } from "./utils";
+import type { NoInfer } from "./utils";
 
 type ValidRecipeReturnType<State> =
   | State

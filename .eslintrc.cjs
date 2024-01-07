@@ -21,7 +21,10 @@ module.exports = {
     },
   },
   rules: {
-    "@typescript-eslint/consistent-type-imports": "error",
+    "@typescript-eslint/consistent-type-imports": [
+      "error",
+      { fixStyle: "separate-type-imports" },
+    ],
     "@typescript-eslint/array-type": ["error", { default: "generic" }],
   },
   overrides: [

@@ -1,4 +1,4 @@
-import {
+import type {
   Action,
   CaseReducer,
   CaseReducerDefinition,
@@ -8,13 +8,11 @@ import {
   ReducerCreators,
   SliceCaseReducers,
 } from "@reduxjs/toolkit";
-import {
-  HistoryAdapter,
-  HistoryState,
-  createHistoryAdapter as createOriginalAdapter,
-} from ".";
-import { Compute, IfMaybeUndefined } from "./utils";
+import type { HistoryAdapter, HistoryState } from ".";
+import { createHistoryAdapter as createOriginalAdapter } from ".";
+import type { Compute, IfMaybeUndefined } from "./utils";
 
+// eslint-disable-next-line import/export
 export * from ".";
 
 export interface UndoableMeta {
