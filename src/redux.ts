@@ -69,8 +69,6 @@ export function createHistoryAdapter<Data>(): ReduxHistoryAdapter<Data> {
   };
 }
 
-const anyHistoryCreator = createHistoryAdapter<any>();
-
 const historyMethodsCreatorType = Symbol();
 const undoableCreatorType = Symbol();
 
@@ -100,6 +98,8 @@ declare module "@reduxjs/toolkit" {
     >;
   }
 }
+
+const anyHistoryCreator = createHistoryAdapter<any>();
 
 export const historyMethodsCreator: ReducerCreator<
   typeof historyMethodsCreatorType
