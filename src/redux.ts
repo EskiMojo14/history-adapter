@@ -16,7 +16,38 @@ export interface UndoableMeta {
   undoable?: boolean;
 }
 
-const anyHistoryCreator = createHistoryAdapter<any>();
+function getUndoableMeta(action: { meta?: UndoableMeta }) {
+  return action.meta?.undoable;
+}
+
+export function createReduxHistoryAdapter<Data>() {
+  const adapter = createHistoryAdapter<Data>();
+  return {
+    ...adapter,
+    withoutPayload() {
+      return (undoable?: boolean) => ({
+        payload: undefined,
+        meta: { undoable },
+      });
+    },
+    withPayload<P>() {
+      return (
+        ...[payload, undoable]: IfMaybeUndefined<
+          P,
+          [payload?: P, undoable?: boolean],
+          [payload: P, undoable?: boolean]
+        >
+      ) => ({ payload: payload as P, meta: { undoable } });
+    },
+    undoableReducer<A extends Action & { meta?: UndoableMeta }>(
+      reducer: CaseReducer<Data, A>,
+    ) {
+      return adapter.undoable(reducer, getUndoableMeta);
+    },
+  };
+}
+
+const anyHistoryCreator = createReduxHistoryAdapter<any>();
 
 const historyMethodsCreatorType = Symbol();
 const undoableCreatorType = Symbol();
@@ -69,17 +100,7 @@ export const historyMethodsCreator: ReducerCreator<
   },
 };
 
-function getUndoableMeta(action: { meta?: UndoableMeta }) {
-  return action.meta?.undoable;
-}
-
-function makeUndoableReducer<A extends Action & { meta?: UndoableMeta }>(
-  reducer: CaseReducer<any, A>,
-): CaseReducer<HistoryState<any>, A> {
-  return anyHistoryCreator.undoable(reducer, getUndoableMeta);
-}
-
-Object.assign(makeUndoableReducer, {
+Object.assign(anyHistoryCreator.undoableReducer, {
   withoutPayload() {
     return (undoable?: boolean) => ({ payload: undefined, meta: { undoable } });
   },
@@ -93,7 +114,7 @@ Object.assign(makeUndoableReducer, {
 
 export const undoableCreator: ReducerCreator<typeof undoableCreatorType> = {
   type: undoableCreatorType,
-  create: makeUndoableReducer as ReducerCreator<
+  create: anyHistoryCreator.undoableReducer as ReducerCreator<
     typeof undoableCreatorType
   >["create"],
 };

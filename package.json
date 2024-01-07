@@ -11,14 +11,14 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
-    "./creator": {
-      "import": "./dist/creator.js",
-      "require": "./dist/creator.cjs"
+    "./redux": {
+      "import": "./dist/redux.js",
+      "require": "./dist/redux.cjs"
     }
   },
   "files": [
     "dist",
-    "creator"
+    "redux"
   ],
   "scripts": {
     "prepare": "husky install",

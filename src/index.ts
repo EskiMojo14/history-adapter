@@ -13,6 +13,7 @@ type NoInfer<T> = [T][T extends any ? 0 : never];
 
 type ValidRecipeReturnType<State> =
   | State
+  | Draft<State>
   // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
   | void
   | undefined
