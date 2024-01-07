@@ -69,10 +69,14 @@ export const historyMethodsCreator: ReducerCreator<
   },
 };
 
+function getUndoableMeta(action: { meta?: UndoableMeta }) {
+  return action.meta?.undoable;
+}
+
 function makeUndoableReducer<A extends Action & { meta?: UndoableMeta }>(
   reducer: CaseReducer<any, A>,
 ): CaseReducer<HistoryState<any>, A> {
-  return anyHistoryCreator.undoable(reducer, (a) => a.meta?.undoable);
+  return anyHistoryCreator.undoable(reducer, getUndoableMeta);
 }
 
 Object.assign(makeUndoableReducer, {
