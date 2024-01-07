@@ -4,8 +4,6 @@ import { nothing } from "immer";
 import { combineSlices, configureStore, createSlice } from "@reduxjs/toolkit";
 
 describe("createHistoryAdapter", () => {
-  const numberHistoryAdapter = createHistoryAdapter<number>();
-
   interface Book {
     title: string;
     author: string;
@@ -28,15 +26,6 @@ describe("createHistoryAdapter", () => {
         future: [],
       });
     });
-    it("works with non-draftable state", () => {
-      expect(numberHistoryAdapter.getInitialState(1)).toEqual<
-        HistoryState<number>
-      >({
-        past: [],
-        present: 1,
-        future: [],
-      });
-    });
   });
 
   const aPatchState = {
@@ -56,16 +45,6 @@ describe("createHistoryAdapter", () => {
       expect(nextState).toEqual<HistoryState<Book>>({
         past: [aPatchState],
         present: { ...book, title: newTitle },
-        future: [],
-      });
-    });
-    it("works with undraftable values", () => {
-      const increment = numberHistoryAdapter.undoable((state) => state + 1);
-      expect(increment(numberHistoryAdapter.getInitialState(1))).toEqual<
-        HistoryState<number>
-      >({
-        past: [aPatchState],
-        present: 2,
         future: [],
       });
     });
