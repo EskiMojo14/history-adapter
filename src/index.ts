@@ -30,7 +30,7 @@ export interface HistoryState<Data> {
 
 enablePatches();
 
-function makeStateOperator<Data, State extends HistoryState<Data>>(
+function makeStateOperator<State extends HistoryState<unknown>>(
   mutator: (state: State) => void,
 ) {
   return function operator(state: State) {
