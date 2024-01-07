@@ -5,7 +5,7 @@ import {
   createSlice,
 } from "@reduxjs/toolkit";
 import {
-  createReduxHistoryAdapter,
+  createHistoryAdapter,
   historyMethodsCreator,
   undoableCreator,
 } from "./redux";
@@ -22,8 +22,8 @@ const book: Book = {
 };
 const newTitle = "The Restaurant at the End of the Universe";
 
-describe("createReduxHistoryAdapter", () => {
-  const bookHistoryAdapter = createReduxHistoryAdapter<Book>();
+describe("createHistoryAdapter (redux)", () => {
+  const bookHistoryAdapter = createHistoryAdapter<Book>();
   const bookHistorySlice = createSlice({
     name: "book",
     initialState: bookHistoryAdapter.getInitialState(book),

@@ -8,8 +8,14 @@ import {
   ReducerCreators,
   SliceCaseReducers,
 } from "@reduxjs/toolkit";
-import { HistoryAdapter, HistoryState, createHistoryAdapter } from ".";
+import {
+  HistoryAdapter,
+  HistoryState,
+  createHistoryAdapter as createOriginalAdapter,
+} from ".";
 import { Compute, IfMaybeUndefined } from "./utils";
+
+export * from ".";
 
 export interface UndoableMeta {
   undoable?: boolean;
@@ -36,8 +42,8 @@ function getUndoableMeta(action: { meta?: UndoableMeta }) {
   return action.meta?.undoable;
 }
 
-export function createReduxHistoryAdapter<Data>(): ReduxHistoryAdapter<Data> {
-  const adapter = createHistoryAdapter<Data>();
+export function createHistoryAdapter<Data>(): ReduxHistoryAdapter<Data> {
+  const adapter = createOriginalAdapter<Data>();
   return {
     ...adapter,
     withoutPayload() {
@@ -61,7 +67,7 @@ export function createReduxHistoryAdapter<Data>(): ReduxHistoryAdapter<Data> {
   };
 }
 
-const anyHistoryCreator = createReduxHistoryAdapter<any>();
+const anyHistoryCreator = createHistoryAdapter<any>();
 
 const historyMethodsCreatorType = Symbol();
 const undoableCreatorType = Symbol();
