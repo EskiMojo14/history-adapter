@@ -8,8 +8,7 @@ import {
   produce,
   isDraft,
 } from "immer";
-
-type NoInfer<T> = [T][T extends any ? 0 : never];
+import { NoInfer } from "./utils";
 
 type ValidRecipeReturnType<State> =
   | State

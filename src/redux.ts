@@ -9,8 +9,7 @@ import {
   SliceCaseReducers,
 } from "@reduxjs/toolkit";
 import { HistoryAdapter, HistoryState, createHistoryAdapter } from ".";
-
-type IfMaybeUndefined<T, True, False> = [undefined] extends [T] ? True : False;
+import { Compute, IfMaybeUndefined } from "./utils";
 
 export interface UndoableMeta {
   undoable?: boolean;
@@ -87,7 +86,9 @@ declare module "@reduxjs/toolkit" {
             <A extends Action & { meta?: UndoableMeta }>(
               reducer: CaseReducer<Data, A>,
             ): CaseReducer<State, A>;
-          } & Pick<ReduxHistoryAdapter<Data>, "withPayload" | "withoutPayload">
+          } & Compute<
+            Pick<ReduxHistoryAdapter<Data>, "withPayload" | "withoutPayload">
+          >
         : never
     >;
   }
