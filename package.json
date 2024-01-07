@@ -22,7 +22,7 @@
   ],
   "scripts": {
     "prepare": "husky install",
-    "prebuild": "npm run type",
+    "prebuild": "yarn type",
     "build": "tsup",
     "test": "vitest",
     "lint": "eslint",
@@ -30,7 +30,7 @@
     "attw": "attw",
     "publint": "publint",
     "type": "tsc",
-    "prepack": "npm run publint"
+    "prepack": "yarn publint"
   },
   "repository": "https://github.com/EskiMojo14/history-adapter.git",
   "author": "EskiMojo14 <ben.j.durrant@gmail.com>",
