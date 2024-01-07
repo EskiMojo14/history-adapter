@@ -1,6 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { HistoryState, createHistoryAdapter } from ".";
 import { nothing } from "immer";
+import { combineSlices, configureStore, createSlice } from "@reduxjs/toolkit";
 
 describe("createHistoryAdapter", () => {
   const numberHistoryAdapter = createHistoryAdapter<number>();
@@ -14,6 +15,7 @@ describe("createHistoryAdapter", () => {
     title: "Hitchhiker's Guide to the Galaxy",
     author: "Douglas Adams",
   };
+  const newTitle = "The Restaurant at the End of the Universe";
 
   const optionalHistoryAdapter = createHistoryAdapter<string | undefined>();
   describe("getInitialState", () => {
@@ -50,7 +52,6 @@ describe("createHistoryAdapter", () => {
         },
       );
       const initialState = bookHistoryAdapter.getInitialState(book);
-      const newTitle = "The Restaurant at the End of the Universe";
       const nextState = changeTitle(initialState, newTitle);
       expect(nextState).toEqual<HistoryState<Book>>({
         past: [aPatchState],
@@ -83,10 +84,9 @@ describe("createHistoryAdapter", () => {
         (book, newTitle: string, undoable?: boolean) => {
           book.title = newTitle;
         },
-        (newTitle, undoable = true) => undoable,
+        (newTitle, undoable) => undoable,
       );
       const initialState = bookHistoryAdapter.getInitialState(book);
-      const newTitle = "The Restaurant at the End of the Universe";
       const nextState = updateTitle(initialState, newTitle, false);
       expect(nextState).toEqual<HistoryState<Book>>({
         past: [],
@@ -103,10 +103,7 @@ describe("createHistoryAdapter", () => {
           book.title = newTitle;
         },
       );
-      const updatedState = updateTitle(
-        initialState,
-        "The Restaurant at the End of the Universe",
-      );
+      const updatedState = updateTitle(initialState, newTitle);
 
       expect(bookHistoryAdapter.undo(updatedState)).toEqual<HistoryState<Book>>(
         {
@@ -125,7 +122,6 @@ describe("createHistoryAdapter", () => {
           book.title = newTitle;
         },
       );
-      const newTitle = "The Restaurant at the End of the Universe";
       const updatedState = updateTitle(initialState, newTitle);
       const undoneState = bookHistoryAdapter.undo(updatedState);
 
@@ -134,6 +130,77 @@ describe("createHistoryAdapter", () => {
         present: { ...book, title: newTitle },
         future: [],
       });
+    });
+  });
+
+  describe("in combination with RTK", () => {
+    interface UndoableMeta {
+      undoable?: boolean;
+    }
+    const reduxUtils = {
+      prepareWithPayload:
+        <P>() =>
+        (payload: P, undoable?: boolean) => ({ payload, meta: { undoable } }),
+      prepareWithoutPayload: () => (undoable?: boolean) => ({
+        payload: undefined,
+        meta: { undoable },
+      }),
+      getUndoableMeta: (action: { meta?: UndoableMeta }) =>
+        action.meta?.undoable,
+    };
+    const bookHistorySlice = createSlice({
+      name: "book",
+      initialState: bookHistoryAdapter.getInitialState(book),
+      reducers: (create) => ({
+        undo: create.reducer(bookHistoryAdapter.undo),
+        redo: create.reducer(bookHistoryAdapter.redo),
+        updateTitle: create.preparedReducer(
+          reduxUtils.prepareWithPayload<string>(),
+          bookHistoryAdapter.undoable((state, action) => {
+            state.title = action.payload;
+          }, reduxUtils.getUndoableMeta),
+        ),
+      }),
+      selectors: {
+        selectTitle: (state) => state.present.title,
+      },
+    });
+
+    const { undo, redo, updateTitle } = bookHistorySlice.actions;
+    const { selectTitle } = bookHistorySlice.selectors;
+
+    const reducer = combineSlices(bookHistorySlice);
+    let store = configureStore({ reducer });
+    beforeEach(() => {
+      store = configureStore({ reducer });
+    });
+
+    it("can be used as valid case reducers", () => {
+      expect(selectTitle(store.getState())).toBe(book.title);
+
+      store.dispatch(updateTitle(newTitle));
+
+      expect(selectTitle(store.getState())).toBe(newTitle);
+
+      store.dispatch(undo());
+
+      expect(selectTitle(store.getState())).toBe(book.title);
+
+      store.dispatch(redo());
+
+      expect(selectTitle(store.getState())).toBe(newTitle);
+    });
+
+    it("can derive undoable from action", () => {
+      expect(selectTitle(store.getState())).toBe(book.title);
+
+      store.dispatch(updateTitle(newTitle, false));
+
+      expect(selectTitle(store.getState())).toBe(newTitle);
+
+      store.dispatch(undo());
+
+      expect(selectTitle(store.getState())).toBe(newTitle);
     });
   });
 });

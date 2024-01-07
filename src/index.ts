@@ -9,7 +9,7 @@ import {
   isDraft,
 } from "immer";
 
-type NoInfer<T> = { [K in keyof T]: T[K] } & unknown;
+type NoInfer<T> = [T][T extends any ? 0 : never];
 
 type ValidRecipeReturnType<State> =
   | State
@@ -73,7 +73,7 @@ export function createHistoryAdapter<Data>() {
         draft: Draft<Data>,
         ...args: Args
       ) => ValidRecipeReturnType<Data>,
-      isUndoable?: (...args: NoInfer<Args>) => boolean,
+      isUndoable?: (...args: NoInfer<Args>) => boolean | undefined,
     ) {
       return function wrapper(state: HistoryState<Data>, ...args: Args) {
         const [nextState, redoPatch, undoPatch] = produceWithPatches(
@@ -88,7 +88,7 @@ export function createHistoryAdapter<Data>() {
           },
         );
         let finalState = nextState;
-        const undoable = isUndoable ? isUndoable(...args) : true;
+        const undoable = isUndoable ? isUndoable(...args) ?? true : true;
         if (undoable) {
           finalState = produce(finalState, (draft) => {
             draft.past.push({
