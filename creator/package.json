@@ -1,0 +1,11 @@
+{
+  "name": "history-adapter-creator",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "../dist/creator.cjs",
+  "module": "../dist/creator.js",
+  "types": "../dist/creator.d.ts",
+  "files": [
+    "../dist"
+  ]
+}
