@@ -87,17 +87,7 @@ declare module "@reduxjs/toolkit" {
             <A extends Action & { meta?: UndoableMeta }>(
               reducer: CaseReducer<Data, A>,
             ): CaseReducer<State, A>;
-            withoutPayload(): (undoable?: boolean) => {
-              payload: undefined;
-              meta: UndoableMeta;
-            };
-            withPayload<P>(): (
-              ...args: [
-                ...IfMaybeUndefined<P, [payload?: P], [payload: P]>,
-                undoable?: boolean,
-              ]
-            ) => { payload: P; meta: UndoableMeta };
-          }
+          } & Pick<ReduxHistoryAdapter<Data>, "withPayload" | "withoutPayload">
         : never
     >;
   }
@@ -115,21 +105,10 @@ export const historyMethodsCreator: ReducerCreator<
   },
 };
 
-Object.assign(anyHistoryCreator.undoableReducer, {
-  withoutPayload() {
-    return (undoable?: boolean) => ({ payload: undefined, meta: { undoable } });
-  },
-  withPayload() {
-    return (payload?: any, undoable?: boolean) => ({
-      payload,
-      meta: { undoable },
-    });
-  },
-});
-
 export const undoableCreator: ReducerCreator<typeof undoableCreatorType> = {
   type: undoableCreatorType,
-  create: anyHistoryCreator.undoableReducer as ReducerCreator<
-    typeof undoableCreatorType
-  >["create"],
+  create: Object.assign(anyHistoryCreator.undoableReducer, {
+    withoutPayload: anyHistoryCreator.withoutPayload,
+    withPayload: anyHistoryCreator.withPayload,
+  }),
 };
