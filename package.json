@@ -43,6 +43,7 @@
     "eslint": "^8.56.0",
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-vitest": "^0.3.20",
     "husky": "^8.0.3",
     "lint-staged": "^15.2.0",
     "prettier": "^3.1.1",
@@ -72,7 +73,6 @@
     "minify": true
   },
   "dependencies": {
-    "eslint-plugin-vitest": "^0.3.20",
     "immer": "^10.0.3"
   }
 }
