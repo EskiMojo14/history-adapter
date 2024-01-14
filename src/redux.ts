@@ -1,4 +1,4 @@
-import { createAction } from "@reduxjs/toolkit";
+import { reducerCreator } from "@reduxjs/toolkit";
 import type {
   ReducerNamesOfType,
   PayloadActionCreator,
@@ -141,16 +141,15 @@ export const historyMethodsCreator: ReducerCreator<
       },
     };
   },
-  handle({ reducerName, type }, def, context) {
+  handle(details, def, context) {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (def.type !== "reset")
       throw new Error(`Unrecognised reducer type ${String(def.type)}`);
-    const resetAction = createAction(type);
-    const resetReducer = () => context.getInitialState();
-    context
-      .addCase(resetAction, resetReducer)
-      .exposeAction(reducerName, resetAction)
-      .exposeCaseReducer(reducerName, resetReducer);
+    reducerCreator.handle(
+      details,
+      reducerCreator.create(() => context.getInitialState()),
+      context,
+    );
   },
 };
 
