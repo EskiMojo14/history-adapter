@@ -25,6 +25,10 @@ module.exports = {
       "error",
       { fixStyle: "separate-type-imports" },
     ],
+    "@typescript-eslint/consistent-type-exports": [
+      "error",
+      { fixMixedExportsWithInlineTypeSpecifier: false },
+    ],
     "@typescript-eslint/array-type": ["error", { default: "generic" }],
   },
   overrides: [
