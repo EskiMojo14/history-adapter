@@ -1,5 +1,5 @@
 import { combineSlices, configureStore, createSlice } from "@reduxjs/toolkit";
-import { createReduxHistoryAdapter } from ".";
+import { createHistoryAdapter } from "./redux";
 import { describe, expect, it, beforeEach } from "vitest";
 
 interface Book {
@@ -13,7 +13,7 @@ const book: Book = {
 const newTitle = "The Restaurant at the End of the Universe";
 
 describe("createReduxHistoryAdapter", () => {
-  const bookHistoryAdapter = createReduxHistoryAdapter<Book>();
+  const bookHistoryAdapter = createHistoryAdapter<Book>();
   const bookHistorySlice = createSlice({
     name: "book",
     initialState: bookHistoryAdapter.getInitialState(book),

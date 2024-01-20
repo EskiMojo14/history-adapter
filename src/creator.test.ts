@@ -4,7 +4,7 @@ import {
   configureStore,
 } from "@reduxjs/toolkit";
 import { describe, expect, it } from "vitest";
-import { getInitialState } from "..";
+import { getInitialState } from ".";
 import { historyMethodsCreator, undoableCreator } from "./creator";
 
 interface Book {

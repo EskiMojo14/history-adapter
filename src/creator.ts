@@ -13,10 +13,9 @@ import type {
   ReducerDefinition,
   SliceCaseReducers,
 } from "@reduxjs/toolkit";
-import type { HistoryState } from "..";
-import type { ReduxHistoryAdapter, UndoableMeta } from ".";
-import { createReduxHistoryAdapter } from ".";
-import type { Compute } from "../utils";
+import type { HistoryAdapter, HistoryState, UndoableMeta } from "./redux";
+import { createHistoryAdapter } from "./redux";
+import type { Compute } from "./utils";
 
 const historyMethodsCreatorType = Symbol();
 const undoableCreatorType = Symbol();
@@ -62,14 +61,14 @@ declare module "@reduxjs/toolkit" {
             reducer: CaseReducer<Data, A>,
           ) => CaseReducer<State, A>) &
             Compute<
-              Pick<ReduxHistoryAdapter<Data>, "withPayload" | "withoutPayload">
+              Pick<HistoryAdapter<Data>, "withPayload" | "withoutPayload">
             >
         : never
     >;
   }
 }
 
-const anyHistoryCreator = createReduxHistoryAdapter<any>();
+const anyHistoryCreator = createHistoryAdapter<any>();
 
 export const historyMethodsCreator: ReducerCreator<
   typeof historyMethodsCreatorType
