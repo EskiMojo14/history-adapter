@@ -120,10 +120,9 @@ const isPayloadAction = isFluxStandardAction as <P>(
 ) => action is PayloadAction<P>;
 
 function getPayload<P>(payloadOrAction: PayloadAction<P> | P): P {
-  if (isPayloadAction(payloadOrAction)) {
-    return payloadOrAction.payload;
-  }
-  return payloadOrAction;
+  return isPayloadAction(payloadOrAction)
+    ? payloadOrAction.payload
+    : payloadOrAction;
 }
 
 export function createHistoryAdapter<Data>(
