@@ -1,5 +1,5 @@
 import type { Action, CaseReducer, PayloadAction } from "@reduxjs/toolkit";
-import { isAction } from "@reduxjs/toolkit";
+import { isFluxStandardAction } from "@reduxjs/toolkit";
 import type {
   HistoryAdapter as Adapter,
   HistoryAdapterConfig,
@@ -48,8 +48,12 @@ export function getUndoableMeta(action: { meta?: UndoableMeta }) {
   return action.meta?.undoable;
 }
 
+const isPayloadAction = isFluxStandardAction as <P>(
+  action: P | PayloadAction<P>,
+) => action is PayloadAction<P>;
+
 function getPayload<P>(payloadOrAction: PayloadAction<P> | P): P {
-  if (isAction(payloadOrAction) && "payload" in payloadOrAction) {
+  if (isPayloadAction(payloadOrAction)) {
     return payloadOrAction.payload;
   }
   return payloadOrAction;
