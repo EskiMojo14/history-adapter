@@ -1,5 +1,6 @@
 {
   "name": "history-adapter",
+  "description": "A \"history adapter\" for managing undoable (and redoable) state changes.",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.cjs",
