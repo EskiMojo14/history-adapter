@@ -74,6 +74,8 @@ console.log(initialState.present, nextState.present); // [] [{ id: 1, title: "Du
 
 Because immer wraps the values, you can use mutating methods without the original data being affected.
 
+If passed an immer draft, the returned function will act mutably, otherwise it'll act immutably and return a new state.
+
 #### Extracting whether an action is undoable
 
 If wrapped in `undoable`, an action is assumed to be undoable, and its changes will be included in the history.
@@ -103,7 +105,7 @@ const redoneState = booksHistoryAdapter.redo(undoneState);
 console.log(undoneState.present); // [{ id: 1, title: "Dune" }]
 ```
 
-If passed an immer draft, they'll act mutably, otherwise they'll act immutably and return a new state.
+Just like undoable functions, `undo` and `redo` will act mutably when passed an immer draft and immutably otherwise.
 
 ## Redux helper methods
 

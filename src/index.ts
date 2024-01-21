@@ -30,15 +30,20 @@ export interface HistoryState<Data> {
 
 enablePatches();
 
-function makeStateOperator<State extends HistoryState<unknown>>(
-  mutator: (state: State) => void,
-) {
-  return function operator(state: State) {
-    if (isDraft(state)) {
-      mutator(state);
+const isDraftTyped = isDraft as <T>(value: T | Draft<T>) => value is Draft<T>;
+
+function makeStateOperator<
+  State extends HistoryState<unknown>,
+  Args extends Array<any>,
+>(mutator: (state: Draft<State>, ...args: Args) => void) {
+  return function operator(state: State, ...args: Args) {
+    if (isDraftTyped(state)) {
+      mutator(state, ...args);
       return state;
     } else {
-      return produce(state, mutator);
+      return produce(state, (draft) => {
+        mutator(draft, ...args);
+      });
     }
   };
 }
@@ -106,33 +111,30 @@ export function createHistoryAdapter<Data>(): HistoryAdapter<Data> {
       }
       return state;
     }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     undoable(recipe, isUndoable) {
-      return function wrapper(state, ...args) {
-        const [nextState, redoPatch, undoPatch] = produceWithPatches(
+      return makeStateOperator((state, ...args) => {
+        const [{ present }, redoPatch, undoPatch] = produceWithPatches(
           state,
           (draft) => {
-            const result = recipe(draft.present, ...args);
+            const result = recipe(draft.present as Draft<Data>, ...args);
             if (result === nothing) {
-              draft.present = undefined as Draft<Data>;
+              draft.present = undefined as Draft<Draft<Data>>;
             } else if (typeof result !== "undefined") {
-              draft.present = result as Draft<Data>;
+              draft.present = result as Draft<Draft<Data>>;
             }
           },
         );
-        let finalState = nextState;
+        state.present = present;
+
         const undoable = isUndoable?.(...args) ?? true;
         if (undoable) {
-          finalState = produce(finalState, (draft) => {
-            draft.past.push({
-              undo: undoPatch,
-              redo: redoPatch,
-            });
-            draft.future = [];
+          state.past.push({
+            undo: undoPatch,
+            redo: redoPatch,
           });
+          state.future = [];
         }
-        return finalState;
-      };
+      });
     },
   };
 }

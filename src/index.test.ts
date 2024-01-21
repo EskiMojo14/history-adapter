@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type { HistoryState } from ".";
 import { createHistoryAdapter } from ".";
-import { nothing } from "immer";
+import { nothing, produce } from "immer";
 
 describe("createHistoryAdapter", () => {
   interface Book {
@@ -73,17 +73,32 @@ describe("createHistoryAdapter", () => {
         future: [],
       });
     });
-  });
-  describe("undo", () => {
-    it("applies previous patch if available", () => {
-      const initialState = bookHistoryAdapter.getInitialState(book);
-      const updateTitle = bookHistoryAdapter.undoable(
+    it("can be used as a mutator if already working with drafts", () => {
+      const changeTitle = bookHistoryAdapter.undoable(
         (book, newTitle: string) => {
           book.title = newTitle;
         },
       );
-      const updatedState = updateTitle(initialState, newTitle);
-
+      const initialState = bookHistoryAdapter.getInitialState(book);
+      const nextState = produce(initialState, (draft) => {
+        changeTitle(draft, newTitle);
+      });
+      expect(nextState).toEqual<HistoryState<Book>>({
+        past: [aPatchState],
+        present: { ...book, title: newTitle },
+        future: [],
+      });
+    });
+  });
+  describe("undo", () => {
+    const initialState = bookHistoryAdapter.getInitialState(book);
+    const updateTitle = bookHistoryAdapter.undoable(
+      (book, newTitle: string) => {
+        book.title = newTitle;
+      },
+    );
+    const updatedState = updateTitle(initialState, newTitle);
+    it("applies previous patch if available", () => {
       expect(bookHistoryAdapter.undo(updatedState)).toEqual<HistoryState<Book>>(
         {
           past: [],
@@ -92,19 +107,41 @@ describe("createHistoryAdapter", () => {
         },
       );
     });
+    it("can be used as a mutator if already working with drafts", () => {
+      expect(
+        produce(updatedState, (draft) => {
+          bookHistoryAdapter.undo(draft);
+        }),
+      ).toEqual<HistoryState<Book>>({
+        past: [],
+        present: book,
+        future: [aPatchState],
+      });
+    });
   });
   describe("redo", () => {
-    it("applies next patch if available", () => {
-      const initialState = bookHistoryAdapter.getInitialState(book);
-      const updateTitle = bookHistoryAdapter.undoable(
-        (book, newTitle: string) => {
-          book.title = newTitle;
-        },
-      );
-      const updatedState = updateTitle(initialState, newTitle);
-      const undoneState = bookHistoryAdapter.undo(updatedState);
+    const initialState = bookHistoryAdapter.getInitialState(book);
+    const updateTitle = bookHistoryAdapter.undoable(
+      (book, newTitle: string) => {
+        book.title = newTitle;
+      },
+    );
+    const updatedState = updateTitle(initialState, newTitle);
+    const undoneState = bookHistoryAdapter.undo(updatedState);
 
+    it("applies next patch if available", () => {
       expect(bookHistoryAdapter.redo(undoneState)).toEqual<HistoryState<Book>>({
+        past: [aPatchState],
+        present: { ...book, title: newTitle },
+        future: [],
+      });
+    });
+    it("can be used as a mutator if already working with drafts", () => {
+      expect(
+        produce(undoneState, (draft) => {
+          bookHistoryAdapter.redo(draft);
+        }),
+      ).toEqual<HistoryState<Book>>({
         past: [aPatchState],
         present: { ...book, title: newTitle },
         future: [],
