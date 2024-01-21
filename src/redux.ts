@@ -1,9 +1,5 @@
-import {
-  type Action,
-  type CaseReducer,
-  type PayloadAction,
-  isAction,
-} from "@reduxjs/toolkit";
+import type { Action, CaseReducer, PayloadAction } from "@reduxjs/toolkit";
+import { isAction } from "@reduxjs/toolkit";
 import type {
   HistoryAdapter as Adapter,
   HistoryAdapterConfig,
