@@ -150,7 +150,7 @@ const booksSlice = createSlice({
       }),
       reducer: booksHistoryAdapter.undoableReducer(
         (state, action: PayloadAction<Book>) => {
-          state.puah(action.payload);
+          state.push(action.payload);
         },
       ),
     },
@@ -190,7 +190,7 @@ const booksSlice = createSlice({
       prepare: booksHistoryAdapter.withPayload<Book>(),
       reducer: booksHistoryAdapter.undoableReducer(
         (state, action: PayloadAction<Book>) => {
-          state.puah(action.payload);
+          state.push(action.payload);
         },
       ),
     },
@@ -213,7 +213,7 @@ const booksSlice = createSlice({
       prepare: booksHistoryAdapter.withPayload<Book>(),
       reducer: booksHistoryAdapter.undoableReducer(
         (state, action: PayloadAction<Book>) => {
-          state.puah(action.payload);
+          state.push(action.payload);
         },
       ),
     },
