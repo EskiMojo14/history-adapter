@@ -113,25 +113,19 @@ export function createHistoryAdapter<Data>(): HistoryAdapter<Data> {
     }),
     undoable(recipe, isUndoable) {
       return makeStateOperator((state, ...args) => {
-        const [{ present }, redoPatch, undoPatch] = produceWithPatches(
-          state,
-          (draft) => {
-            const result = recipe(draft.present as Draft<Data>, ...args);
-            if (result === nothing) {
-              draft.present = undefined as Draft<Draft<Data>>;
-            } else if (typeof result !== "undefined") {
-              draft.present = result as Draft<Draft<Data>>;
-            }
-          },
-        );
+        const [{ present }, redo, undo] = produceWithPatches(state, (draft) => {
+          const result = recipe(draft.present as Draft<Data>, ...args);
+          if (result === nothing) {
+            draft.present = undefined as Draft<Draft<Data>>;
+          } else if (typeof result !== "undefined") {
+            draft.present = result as Draft<Draft<Data>>;
+          }
+        });
         state.present = present;
 
         const undoable = isUndoable?.(...args) ?? true;
         if (undoable) {
-          state.past.push({
-            undo: undoPatch,
-            redo: redoPatch,
-          });
+          state.past.push({ undo, redo });
           state.future = [];
         }
       });
