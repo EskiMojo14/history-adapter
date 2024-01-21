@@ -48,7 +48,15 @@ describe("Slice creators", () => {
       },
     });
     const {
-      actions: { undo, redo, jump, reset, changeTitle, exclaimTitle },
+      actions: {
+        undo,
+        redo,
+        jump,
+        clearHistory,
+        reset,
+        changeTitle,
+        exclaimTitle,
+      },
       selectors: { selectTitle },
     } = bookSlice;
 
@@ -83,6 +91,14 @@ describe("Slice creators", () => {
     store.dispatch(jump(-1));
 
     expect(selectTitle(store.getState())).toBe(book.title);
+
+    store.dispatch(clearHistory());
+
+    store.dispatch(undo());
+
+    expect(selectTitle(store.getState())).toBe(book.title);
+
+    store.dispatch(changeTitle(newTitle));
 
     store.dispatch(reset());
 

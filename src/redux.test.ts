@@ -22,6 +22,7 @@ describe("createReduxHistoryAdapter", () => {
       undo: create.reducer(bookHistoryAdapter.undo),
       redo: create.reducer(bookHistoryAdapter.redo),
       jump: create.reducer(bookHistoryAdapter.jump),
+      clearHistory: create.reducer(bookHistoryAdapter.clearHistory),
       updateTitle: create.preparedReducer(
         bookHistoryAdapter.withPayload<string>(),
         bookHistoryAdapter.undoableReducer((state, action) => {
@@ -40,7 +41,8 @@ describe("createReduxHistoryAdapter", () => {
     },
   });
 
-  const { undo, redo, jump, updateTitle } = bookHistorySlice.actions;
+  const { undo, redo, jump, clearHistory, updateTitle } =
+    bookHistorySlice.actions;
   const { selectTitle } = bookHistorySlice.selectors;
 
   const reducer = combineSlices(bookHistorySlice);
@@ -73,6 +75,12 @@ describe("createReduxHistoryAdapter", () => {
     expect(selectTitle(store.getState())).toBe(book.title);
 
     store.dispatch(jump(1));
+
+    expect(selectTitle(store.getState())).toBe(newTitle);
+
+    store.dispatch(clearHistory());
+
+    store.dispatch(undo());
 
     expect(selectTitle(store.getState())).toBe(newTitle);
   });
