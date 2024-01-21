@@ -1,5 +1,8 @@
 import type { Action, CaseReducer, PayloadAction } from "@reduxjs/toolkit";
-import { isFluxStandardAction } from "@reduxjs/toolkit";
+import {
+  isFluxStandardAction,
+  createSelector as _createSelector,
+} from "@reduxjs/toolkit";
 import type {
   HistoryAdapter as Adapter,
   HistoryAdapterConfig,
@@ -7,9 +10,67 @@ import type {
 } from ".";
 import { createHistoryAdapter as createAdapter } from ".";
 import type { IfMaybeUndefined } from "./utils";
+import type { CreateSelectorFunction } from "reselect";
 
 export type { HistoryState, HistoryAdapterConfig } from ".";
 export { getInitialState } from ".";
+
+type AnyFunction = (...args: any) => any;
+type AnyCreateSelectorFunction = CreateSelectorFunction<
+  <F extends AnyFunction>(f: F) => F,
+  <F extends AnyFunction>(f: F) => F
+>;
+
+export interface GetSelectorsOptions {
+  createSelector?: AnyCreateSelectorFunction;
+}
+
+export interface HistorySelectors<Data, State = HistoryState<Data>> {
+  /**
+   * Returns true if there are any patches in the past
+   * @param state History state shape, with patches
+   */
+  selectCanUndo: (state: State) => boolean;
+  /**
+   * Returns true if there are any patches in the future
+   * @param state History state shape, with patches
+   */
+  selectCanRedo: (state: State) => boolean;
+  /**
+   * A selector which automatically extracts the present state
+   */
+  selectPresent: (state: State) => Data;
+}
+
+function makeSelectorFactory<Data>() {
+  function getSelectors(): HistorySelectors<Data>;
+  function getSelectors<RootState>(
+    selectState: (rootState: RootState) => HistoryState<Data>,
+    options?: GetSelectorsOptions,
+  ): HistorySelectors<Data, RootState>;
+  function getSelectors<RootState>(
+    selectState?: (rootState: RootState) => HistoryState<Data>,
+    { createSelector = _createSelector }: GetSelectorsOptions = {},
+  ): HistorySelectors<Data, any> {
+    const selectCanUndo = (state: HistoryState<Data>) => state.past.length > 0;
+    const selectCanRedo = (state: HistoryState<Data>) =>
+      state.future.length > 0;
+    const selectPresent = (state: HistoryState<Data>) => state.present;
+    if (!selectState) {
+      return {
+        selectCanUndo,
+        selectCanRedo,
+        selectPresent,
+      };
+    }
+    return {
+      selectCanUndo: createSelector(selectState, selectCanUndo),
+      selectCanRedo: createSelector(selectState, selectCanRedo),
+      selectPresent: createSelector(selectState, selectPresent),
+    };
+  }
+  return getSelectors;
+}
 
 export interface UndoableMeta {
   undoable?: boolean;
@@ -42,6 +103,12 @@ export interface HistoryAdapter<Data> extends Adapter<Data> {
   undoableReducer<A extends Action & { meta?: UndoableMeta }>(
     reducer: CaseReducer<Data, A>,
   ): <State extends HistoryState<Data>>(state: State, action: A) => State;
+
+  getSelectors(): HistorySelectors<Data>;
+  getSelectors<RootState>(
+    selectState: (rootState: RootState) => HistoryState<Data>,
+    options?: GetSelectorsOptions,
+  ): HistorySelectors<Data, RootState>;
 }
 
 export function getUndoableMeta(action: { meta?: UndoableMeta }) {
@@ -86,5 +153,6 @@ export function createHistoryAdapter<Data>(
     undoableReducer(reducer) {
       return adapter.undoable(reducer, getUndoableMeta);
     },
+    getSelectors: makeSelectorFactory<Data>(),
   };
 }

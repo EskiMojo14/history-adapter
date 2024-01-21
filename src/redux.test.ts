@@ -1,6 +1,13 @@
-import { combineSlices, configureStore, createSlice } from "@reduxjs/toolkit";
+import {
+  combineSlices,
+  configureStore,
+  createSelector,
+  createSelectorCreator,
+  createSlice,
+  lruMemoize,
+} from "@reduxjs/toolkit";
 import { createHistoryAdapter } from "./redux";
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach, vi } from "vitest";
 
 interface Book {
   title: string;
@@ -15,6 +22,7 @@ const secondTitle = "Life, the Universe and Everything";
 
 describe("createReduxHistoryAdapter", () => {
   const bookHistoryAdapter = createHistoryAdapter<Book>();
+  const localisedSelectors = bookHistoryAdapter.getSelectors();
   const bookHistorySlice = createSlice({
     name: "book",
     initialState: bookHistoryAdapter.getInitialState(book),
@@ -37,19 +45,27 @@ describe("createReduxHistoryAdapter", () => {
       ),
     }),
     selectors: {
-      selectTitle: (state) => state.present.title,
+      selectCanUndo: localisedSelectors.selectCanUndo,
+      selectCanRedo: localisedSelectors.selectCanRedo,
+      selectTitle: createSelector(
+        localisedSelectors.selectPresent,
+        (book) => book.title,
+      ),
     },
   });
 
   const { undo, redo, jump, clearHistory, updateTitle } =
     bookHistorySlice.actions;
-  const { selectTitle } = bookHistorySlice.selectors;
+  const { selectCanRedo, selectCanUndo, selectTitle } =
+    bookHistorySlice.selectors;
 
   const reducer = combineSlices(bookHistorySlice);
   let store = configureStore({ reducer });
   beforeEach(() => {
     store = configureStore({ reducer });
   });
+
+  type RootState = ReturnType<typeof reducer>;
 
   it("can be used as valid case reducers", () => {
     expect(selectTitle(store.getState())).toBe(book.title);
@@ -58,9 +74,17 @@ describe("createReduxHistoryAdapter", () => {
 
     expect(selectTitle(store.getState())).toBe(newTitle);
 
+    expect(selectCanUndo(store.getState())).toBe(true);
+
+    expect(selectCanRedo(store.getState())).toBe(false);
+
     store.dispatch(undo());
 
     expect(selectTitle(store.getState())).toBe(book.title);
+
+    expect(selectCanUndo(store.getState())).toBe(false);
+
+    expect(selectCanRedo(store.getState())).toBe(true);
 
     store.dispatch(redo());
 
@@ -95,5 +119,26 @@ describe("createReduxHistoryAdapter", () => {
     store.dispatch(undo());
 
     expect(selectTitle(store.getState())).toBe(newTitle);
+  });
+
+  describe("getSelectors", () => {
+    it("can be used with an input selector", () => {
+      const { selectPresent } = bookHistoryAdapter.getSelectors(
+        (state: RootState) => bookHistorySlice.selectSlice(state),
+      );
+      expect(selectPresent(store.getState())).toBe(book);
+    });
+    it("can be used with an input selector and a custom createSelector", () => {
+      const createSelector = createSelectorCreator(lruMemoize);
+      const spied = vi.fn(createSelector);
+      const { selectPresent } = bookHistoryAdapter.getSelectors(
+        (state: RootState) => bookHistorySlice.selectSlice(state),
+        {
+          createSelector: spied as unknown as typeof createSelector,
+        },
+      );
+      expect(selectPresent(store.getState())).toBe(book);
+      expect(spied).toHaveBeenCalled();
+    });
   });
 });

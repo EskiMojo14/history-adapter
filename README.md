@@ -221,6 +221,52 @@ const booksSlice = createSlice({
 });
 ```
 
+### `getSelectors`
+
+A method which returns some useful selectors.
+
+```ts
+const { selectCanUndo, selectCanRedo, selectPresent } =
+  booksHistoryAdapter.getSelectors();
+
+console.log(
+  selectPresent(initialState), // []
+  selectCanUndo(initialState), // false
+  selectCanRedo(initialState), // false
+);
+
+console.log(
+  selectPresent(nextState), // [{ id: 1, title: "Dune" }]
+  selectCanUndo(nextState), // true
+  selectCanRedo(nextState), // false
+);
+```
+
+If an input selector is provided, the selectors will be combined using [reselect](https://github.com/reduxjs/reselect).
+
+```ts
+const { selectPresent } = booksHistoryAdapter.getSelectors(
+  (state: RootState) => state.books,
+);
+
+console.log(selectPresent({ books: initialState })); // []
+```
+
+The instance of `createSelector` used can be customised:
+
+```ts
+import { createSelectorCreator, lruMemoize } from "reselect";
+
+const createLruSelector = createSelectorCreator(lruMemoize);
+
+const { selectPresent } = booksHistoryAdapter.getSelectors(
+  (state: RootState) => state.books,
+  { createSelector: createLruSelector },
+);
+
+console.log(selectPresent({ books: initialState })); // []
+```
+
 ## Configuration
 
 Optionally, `createHistoryAdapter` accepts a configuration object with some of the following options:
