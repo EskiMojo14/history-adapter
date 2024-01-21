@@ -91,7 +91,7 @@ const addBook = booksHistoryAdapter.undoable(
 );
 ```
 
-### `undo`, `redo`, `jump`
+### `undo`, `redo`, `jump`, `clearHistory`
 
 The `undo`, `redo` and `jump` methods use the stored patches to move back/forward in the change history.
 
@@ -106,6 +106,21 @@ console.log(undoneState.present); // [{ id: 1, title: "Dune" }]
 
 // jump(-2) is like calling undo() twice and jump(2) is like calling redo() twice
 const jumpedState = booksHistoryAdapter.jump(redoneState, -1);
+
+console.log(jumpedState.present); // []
+```
+
+`clearHistory` resets the history of the state while leaving the current value.
+
+```ts
+const resetState = booksHistoryAdapter.clearHistory(redoneState);
+
+console.log(resetState.present); // [{ id: 1, title: "Dune" }]
+
+// history has been cleared, so cannot be undone
+const tryUndoState = booksHistoryAdapter.undo(resetState);
+
+console.log(tryUndoState.present); // [{ id: 1, title: "Dune" }]
 ```
 
 Just like undoable functions, these methods will act mutably when passed an immer draft and immutably otherwise.
@@ -183,7 +198,7 @@ const booksSlice = createSlice({
 });
 ```
 
-As a tip, `undo`, `redo` and `jump` are valid reducers when using a Redux history adapter:
+As a tip, `undo`, `redo` and `clearHistory` are all valid reducers due to not needing an argument. The version of `jump` on a Redux history adapter allows for either a number or payload action, making it also valid.
 
 ```ts
 const booksSlice = createSlice({
@@ -192,8 +207,8 @@ const booksSlice = createSlice({
   reducers: {
     undo: booksHistoryAdapter.undo,
     redo: booksHistoryAdapter.redo,
-    // the redux specific version of `jump` accepts either a number or an action with a number payload
     jump: booksHistoryAdapter.jump,
+    clearHistory: booksHistoryAdapter.clearHistory,
     addBook: {
       prepare: booksHistoryAdapter.withPayload<Book>(),
       reducer: booksHistoryAdapter.undoableReducer(

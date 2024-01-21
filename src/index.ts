@@ -78,6 +78,11 @@ export interface HistoryAdapter<Data> {
    */
   jump<State extends HistoryState<Data>>(state: State, n: number): State;
   /**
+   * Clears past and present history.
+   * @param state History state shape, with patches
+   */
+  clearHistory<State extends HistoryState<Data>>(state: State): State;
+  /**
    * Wraps a function to automatically update patch history according to changes
    * @param recipe An immer-style recipe, which can mutate the draft or return new state
    * @param isUndoable A function to extract from the arguments whether the action was undoable or not. If not provided (or if function returns undefined), defaults to true.
@@ -134,6 +139,10 @@ export function createHistoryAdapter<Data>({
           redoMutably(state);
         }
       }
+    }),
+    clearHistory: makeStateOperator((state) => {
+      state.past = [];
+      state.future = [];
     }),
     undoable(recipe, isUndoable) {
       return makeStateOperator((state, ...args) => {
