@@ -130,11 +130,13 @@ describe("createReduxHistoryAdapter", () => {
     });
     it("can be used with an input selector and a custom createSelector", () => {
       const createSelector = createSelectorCreator(lruMemoize);
-      const spied = vi.fn(createSelector);
+      const spied = vi.fn(
+        createSelector as any,
+      ) as unknown as typeof createSelector;
       const { selectPresent } = bookHistoryAdapter.getSelectors(
         (state: RootState) => bookHistorySlice.selectSlice(state),
         {
-          createSelector: spied as unknown as typeof createSelector,
+          createSelector: spied,
         },
       );
       expect(selectPresent(store.getState())).toBe(book);
