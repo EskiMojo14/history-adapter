@@ -31,6 +31,7 @@ declare module "@reduxjs/toolkit" {
         ? (this: ReducerCreators<State>) => {
             undo: CaseReducerDefinition<State, PayloadAction>;
             redo: CaseReducerDefinition<State, PayloadAction>;
+            jump: CaseReducerDefinition<State, PayloadAction<number>>;
             reset: ReducerDefinition<typeof historyMethodsCreatorType> & {
               type: "reset";
             };
@@ -78,6 +79,7 @@ export const historyMethodsCreator: ReducerCreator<
     return {
       undo: this.reducer(anyHistoryCreator.undo),
       redo: this.reducer(anyHistoryCreator.redo),
+      jump: this.reducer(anyHistoryCreator.jump),
       reset: {
         _reducerDefinitionType: historyMethodsCreatorType,
         type: "reset",

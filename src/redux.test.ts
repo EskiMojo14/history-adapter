@@ -11,6 +11,7 @@ const book: Book = {
   author: "Douglas Adams",
 };
 const newTitle = "The Restaurant at the End of the Universe";
+const secondTitle = "Life, the Universe and Everything";
 
 describe("createReduxHistoryAdapter", () => {
   const bookHistoryAdapter = createHistoryAdapter<Book>();
@@ -20,6 +21,7 @@ describe("createReduxHistoryAdapter", () => {
     reducers: (create) => ({
       undo: create.reducer(bookHistoryAdapter.undo),
       redo: create.reducer(bookHistoryAdapter.redo),
+      jump: create.reducer(bookHistoryAdapter.jump),
       updateTitle: create.preparedReducer(
         bookHistoryAdapter.withPayload<string>(),
         bookHistoryAdapter.undoableReducer((state, action) => {
@@ -38,7 +40,7 @@ describe("createReduxHistoryAdapter", () => {
     },
   });
 
-  const { undo, redo, updateTitle } = bookHistorySlice.actions;
+  const { undo, redo, jump, updateTitle } = bookHistorySlice.actions;
   const { selectTitle } = bookHistorySlice.selectors;
 
   const reducer = combineSlices(bookHistorySlice);
@@ -59,6 +61,18 @@ describe("createReduxHistoryAdapter", () => {
     expect(selectTitle(store.getState())).toBe(book.title);
 
     store.dispatch(redo());
+
+    expect(selectTitle(store.getState())).toBe(newTitle);
+
+    store.dispatch(updateTitle(secondTitle));
+
+    expect(selectTitle(store.getState())).toBe(secondTitle);
+
+    store.dispatch(jump(-2));
+
+    expect(selectTitle(store.getState())).toBe(book.title);
+
+    store.dispatch(jump(1));
 
     expect(selectTitle(store.getState())).toBe(newTitle);
   });

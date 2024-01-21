@@ -14,6 +14,7 @@ describe("createHistoryAdapter", () => {
     author: "Douglas Adams",
   };
   const newTitle = "The Restaurant at the End of the Universe";
+  const secondTitle = "Life, the Universe and Everything";
 
   const optionalHistoryAdapter = createHistoryAdapter<string | undefined>();
   describe("getInitialState", () => {
@@ -145,6 +146,38 @@ describe("createHistoryAdapter", () => {
         past: [aPatchState],
         present: { ...book, title: newTitle },
         future: [],
+      });
+    });
+  });
+  describe("jump", () => {
+    const initialState = bookHistoryAdapter.getInitialState(book);
+    const updateTitle = bookHistoryAdapter.undoable(
+      (book, newTitle: string) => {
+        book.title = newTitle;
+      },
+    );
+    const updatedState = updateTitle(initialState, newTitle);
+    const secondState = updateTitle(updatedState, secondTitle);
+
+    it("moves the state back or forward in history by n steps", () => {
+      const jumpedState = bookHistoryAdapter.jump(secondState, -2);
+      expect(jumpedState).toEqual<HistoryState<Book>>({
+        past: [],
+        present: book,
+        future: [aPatchState, aPatchState],
+      });
+      const jumpedForwardState = bookHistoryAdapter.jump(jumpedState, 2);
+      expect(jumpedForwardState).toEqual(secondState);
+    });
+    it("can be used as a mutator if already working with drafts", () => {
+      expect(
+        produce(secondState, (draft) => {
+          bookHistoryAdapter.jump(draft, -2);
+        }),
+      ).toEqual<HistoryState<Book>>({
+        past: [],
+        present: book,
+        future: [aPatchState, aPatchState],
       });
     });
   });

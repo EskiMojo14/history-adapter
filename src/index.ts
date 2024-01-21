@@ -34,9 +34,9 @@ const isDraftTyped = isDraft as <T>(value: T | Draft<T>) => value is Draft<T>;
 
 function makeStateOperator<
   State extends HistoryState<unknown>,
-  Args extends Array<any>,
+  Args extends Array<any> = [],
 >(mutator: (state: Draft<State>, ...args: Args) => void) {
-  return function operator(state: State, ...args: Args) {
+  return function operator<S extends State>(state: S, ...args: Args) {
     if (isDraftTyped(state)) {
       mutator(state, ...args);
       return state;
@@ -68,6 +68,12 @@ export interface HistoryAdapter<Data> {
    */
   redo<State extends HistoryState<Data>>(state: State): State;
   /**
+   * Moves the state back or forward in history by n steps.
+   * @param state History state shape, with patches
+   * @param n steps to move. Negative numbers move backwards.
+   */
+  jump<State extends HistoryState<Data>>(state: State, n: number): State;
+  /**
    * Wraps a function to automatically update patch history according to changes
    * @param recipe An immer-style recipe, which can mutate the draft or return new state
    * @param isUndoable A function to extract from the arguments whether the action was undoable or not. If not provided (or if function returns undefined), defaults to true.
@@ -93,23 +99,35 @@ export function getInitialState<Data>(initialData: Data): HistoryState<Data> {
 }
 
 export function createHistoryAdapter<Data>(): HistoryAdapter<Data> {
+  function undoMutably(state: Draft<HistoryState<unknown>>) {
+    const historyEntry = state.past.pop();
+    if (historyEntry) {
+      applyPatches(state, historyEntry.undo);
+      state.future.unshift(historyEntry);
+    }
+  }
+  function redoMutably(state: Draft<HistoryState<unknown>>) {
+    const historyEntry = state.future.shift();
+    if (historyEntry) {
+      applyPatches(state, historyEntry.redo);
+      state.past.push(historyEntry);
+    }
+  }
+
   return {
     getInitialState,
-    undo: makeStateOperator((state) => {
-      const historyEntry = state.past.pop();
-      if (historyEntry) {
-        applyPatches(state, historyEntry.undo);
-        state.future.unshift(historyEntry);
+    undo: makeStateOperator(undoMutably),
+    redo: makeStateOperator(redoMutably),
+    jump: makeStateOperator((state, n) => {
+      if (n < 0) {
+        for (let i = 0; i < -n; i++) {
+          undoMutably(state);
+        }
+      } else {
+        for (let i = 0; i < n; i++) {
+          redoMutably(state);
+        }
       }
-      return state;
-    }),
-    redo: makeStateOperator((state) => {
-      const historyEntry = state.future.shift();
-      if (historyEntry) {
-        applyPatches(state, historyEntry.redo);
-        state.past.push(historyEntry);
-      }
-      return state;
     }),
     undoable(recipe, isUndoable) {
       return makeStateOperator((state, ...args) => {

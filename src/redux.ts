@@ -1,4 +1,9 @@
-import type { Action, CaseReducer } from "@reduxjs/toolkit";
+import {
+  type Action,
+  type CaseReducer,
+  type PayloadAction,
+  isAction,
+} from "@reduxjs/toolkit";
 import type { HistoryAdapter as Adapter, HistoryState } from ".";
 import { createHistoryAdapter as createAdapter } from ".";
 import type { IfMaybeUndefined } from "./utils";
@@ -11,6 +16,15 @@ export interface UndoableMeta {
 }
 
 export interface HistoryAdapter<Data> extends Adapter<Data> {
+  /**
+   * Moves the state back or forward in history by n steps.
+   * @param state History state shape, with patches
+   * @param n Number of steps to move, or an action with a payload of the number of steps to move. Negative numbers move backwards.
+   */
+  jump<State extends HistoryState<Data>>(
+    state: State,
+    n: number | PayloadAction<number>,
+  ): State;
   /** An action creator prepare callback which doesn't take a payload */
   withoutPayload(): (undoable?: boolean) => {
     payload: undefined;
@@ -34,11 +48,20 @@ export function getUndoableMeta(action: { meta?: UndoableMeta }) {
   return action.meta?.undoable;
 }
 
-// eslint-disable-next-line import/export
+function getPayload<P>(payloadOrAction: PayloadAction<P> | P): P {
+  if (isAction(payloadOrAction) && "payload" in payloadOrAction) {
+    return payloadOrAction.payload;
+  }
+  return payloadOrAction;
+}
+
 export function createHistoryAdapter<Data>(): HistoryAdapter<Data> {
   const adapter = createAdapter<Data>();
   return {
     ...adapter,
+    jump(state, payloadOrAction) {
+      return adapter.jump(state, getPayload(payloadOrAction));
+    },
     withoutPayload() {
       return (undoable) => ({
         payload: undefined,
