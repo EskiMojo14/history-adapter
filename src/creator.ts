@@ -13,7 +13,12 @@ import type {
   ReducerDefinition,
   SliceCaseReducers,
 } from "@reduxjs/toolkit";
-import type { HistoryAdapter, HistoryState, UndoableMeta } from "./redux";
+import type {
+  HistoryAdapter,
+  HistoryAdapterConfig,
+  HistoryState,
+  UndoableMeta,
+} from "./redux";
 import { createHistoryAdapter } from "./redux";
 import type { Compute } from "./utils";
 
@@ -69,39 +74,44 @@ declare module "@reduxjs/toolkit" {
   }
 }
 
-const anyHistoryCreator = createHistoryAdapter<any>();
-
-export const historyMethodsCreator: ReducerCreator<
-  typeof historyMethodsCreatorType
-> = {
-  type: historyMethodsCreatorType,
-  create() {
-    return {
-      undo: this.reducer(anyHistoryCreator.undo),
-      redo: this.reducer(anyHistoryCreator.redo),
-      jump: this.reducer(anyHistoryCreator.jump),
-      reset: {
-        _reducerDefinitionType: historyMethodsCreatorType,
-        type: "reset",
+export function makeCreators(config?: HistoryAdapterConfig): {
+  historyMethodsCreator: ReducerCreator<typeof historyMethodsCreatorType>;
+  undoableCreator: ReducerCreator<typeof undoableCreatorType>;
+} {
+  const anyHistoryCreator = createHistoryAdapter<any>(config);
+  return {
+    historyMethodsCreator: {
+      type: historyMethodsCreatorType,
+      create() {
+        return {
+          undo: this.reducer(anyHistoryCreator.undo),
+          redo: this.reducer(anyHistoryCreator.redo),
+          jump: this.reducer(anyHistoryCreator.jump),
+          reset: {
+            _reducerDefinitionType: historyMethodsCreatorType,
+            type: "reset",
+          },
+        };
       },
-    };
-  },
-  handle(details, def, context) {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (def.type !== "reset")
-      throw new Error(`Unrecognised reducer type ${String(def.type)}`);
-    reducerCreator.handle(
-      details,
-      reducerCreator.create(() => context.getInitialState()),
-      context,
-    );
-  },
-};
+      handle(details, def, context) {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        if (def.type !== "reset")
+          throw new Error(`Unrecognised reducer type ${String(def.type)}`);
+        reducerCreator.handle(
+          details,
+          reducerCreator.create(() => context.getInitialState()),
+          context,
+        );
+      },
+    },
+    undoableCreator: {
+      type: undoableCreatorType,
+      create: Object.assign(anyHistoryCreator.undoableReducer, {
+        withoutPayload: anyHistoryCreator.withoutPayload,
+        withPayload: anyHistoryCreator.withPayload,
+      }),
+    },
+  };
+}
 
-export const undoableCreator: ReducerCreator<typeof undoableCreatorType> = {
-  type: undoableCreatorType,
-  create: Object.assign(anyHistoryCreator.undoableReducer, {
-    withoutPayload: anyHistoryCreator.withoutPayload,
-    withPayload: anyHistoryCreator.withPayload,
-  }),
-};
+export const { undoableCreator, historyMethodsCreator } = makeCreators();

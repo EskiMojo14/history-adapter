@@ -23,6 +23,20 @@ export interface HistoryState<Data> {
 
 The current data is stored under the `present` key, and changes are stored as collections of JSON Patches (created by immer).
 
+## Configuration
+
+Optionally, `createHistoryAdapter` accepts a configuration object with some of the following options:
+
+```ts
+const booksHistoryAdapter = createHistoryAdapter({
+  limit: 5,
+});
+```
+
+### `limit`
+
+Defines a maximum history size.
+
 ## Generic helper methods
 
 To access the helper methods, create an adapter instance with a specific data type:

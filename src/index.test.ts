@@ -181,4 +181,27 @@ describe("createHistoryAdapter", () => {
       });
     });
   });
+  describe("config", () => {
+    it("can limit history size", () => {
+      const historyAdapter = createHistoryAdapter<{ value: number }>({
+        limit: 2,
+      });
+      const initialState = historyAdapter.getInitialState({ value: 0 });
+      const increment = historyAdapter.undoable((state) => {
+        state.value++;
+      });
+
+      let currentState = initialState;
+      for (let i = 0; i < 5; i++) {
+        currentState = increment(currentState);
+      }
+
+      expect(currentState.present).toEqual({ value: 5 });
+      expect(currentState.past.length).toBe(2);
+
+      currentState = historyAdapter.jump(currentState, -5);
+
+      expect(currentState.present).toEqual({ value: 3 });
+    });
+  });
 });

@@ -4,11 +4,15 @@ import {
   type PayloadAction,
   isAction,
 } from "@reduxjs/toolkit";
-import type { HistoryAdapter as Adapter, HistoryState } from ".";
+import type {
+  HistoryAdapter as Adapter,
+  HistoryAdapterConfig,
+  HistoryState,
+} from ".";
 import { createHistoryAdapter as createAdapter } from ".";
 import type { IfMaybeUndefined } from "./utils";
 
-export type { HistoryState } from ".";
+export type { HistoryState, HistoryAdapterConfig } from ".";
 export { getInitialState } from ".";
 
 export interface UndoableMeta {
@@ -55,8 +59,10 @@ function getPayload<P>(payloadOrAction: PayloadAction<P> | P): P {
   return payloadOrAction;
 }
 
-export function createHistoryAdapter<Data>(): HistoryAdapter<Data> {
-  const adapter = createAdapter<Data>();
+export function createHistoryAdapter<Data>(
+  config?: HistoryAdapterConfig,
+): HistoryAdapter<Data> {
+  const adapter = createAdapter<Data>(config);
   return {
     ...adapter,
     jump(state, payloadOrAction) {

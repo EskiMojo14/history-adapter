@@ -48,6 +48,10 @@ function makeStateOperator<
   };
 }
 
+export interface HistoryAdapterConfig {
+  limit?: number;
+}
+
 export interface HistoryAdapter<Data> {
   /**
    * Construct an initial state with no history.
@@ -98,7 +102,9 @@ export function getInitialState<Data>(initialData: Data): HistoryState<Data> {
   };
 }
 
-export function createHistoryAdapter<Data>(): HistoryAdapter<Data> {
+export function createHistoryAdapter<Data>({
+  limit,
+}: HistoryAdapterConfig = {}): HistoryAdapter<Data> {
   function undoMutably(state: Draft<HistoryState<unknown>>) {
     const historyEntry = state.past.pop();
     if (historyEntry) {
@@ -143,6 +149,10 @@ export function createHistoryAdapter<Data>(): HistoryAdapter<Data> {
 
         const undoable = isUndoable?.(...args) ?? true;
         if (undoable) {
+          const lengthWithoutFuture = state.past.length + 1;
+          if (limit && lengthWithoutFuture > limit) {
+            state.past.shift();
+          }
           state.past.push({ undo, redo });
           state.future = [];
         }
