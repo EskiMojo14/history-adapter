@@ -45,7 +45,7 @@ You can then use the methods attached to manage state as required.
 This method takes the data as specified during creation, and wraps it in a clean history state shape.
 
 ```ts
-const initialState = booksHistoryAdapter.getInitialState();
+const initialState = booksHistoryAdapter.getInitialState([]);
 //    ^? HistoryState<Array<Book>>
 ```
 
