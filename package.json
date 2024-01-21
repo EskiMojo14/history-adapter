@@ -75,5 +75,13 @@
   },
   "dependencies": {
     "immer": "^10.0.3"
+  },
+  "peerDependencies": {
+    "@reduxjs/toolkit": "^2"
+  },
+  "peerDependenciesMeta": {
+    "@reduxjs/toolkit": {
+      "optional": true
+    }
   }
 }
