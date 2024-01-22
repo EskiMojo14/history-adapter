@@ -52,21 +52,27 @@ function makeSelectorFactory<Data>() {
     selectState?: (rootState: RootState) => HistoryState<Data>,
     { createSelector = _createSelector }: GetSelectorsOptions = {},
   ): HistorySelectors<Data, any> {
-    const selectCanUndo = (state: HistoryState<Data>) => state.past.length > 0;
-    const selectCanRedo = (state: HistoryState<Data>) =>
-      state.future.length > 0;
-    const selectPresent = (state: HistoryState<Data>) => state.present;
+    const localisedSelectors = {
+      selectCanUndo: (state) => state.past.length > 0,
+      selectCanRedo: (state) => state.future.length > 0,
+      selectPresent: (state) => state.present,
+    } satisfies Record<string, (state: HistoryState<Data>) => unknown>;
     if (!selectState) {
-      return {
-        selectCanUndo,
-        selectCanRedo,
-        selectPresent,
-      };
+      return localisedSelectors;
     }
     return {
-      selectCanUndo: createSelector(selectState, selectCanUndo),
-      selectCanRedo: createSelector(selectState, selectCanRedo),
-      selectPresent: createSelector(selectState, selectPresent),
+      selectCanUndo: createSelector(
+        selectState,
+        localisedSelectors.selectCanUndo,
+      ),
+      selectCanRedo: createSelector(
+        selectState,
+        localisedSelectors.selectCanRedo,
+      ),
+      selectPresent: createSelector(
+        selectState,
+        localisedSelectors.selectPresent,
+      ),
     };
   }
   return getSelectors;
