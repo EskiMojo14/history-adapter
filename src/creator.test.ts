@@ -11,11 +11,15 @@ interface Book {
   title: string;
   author: string;
 }
-const book: Book = {
+
+const book1: Book = {
   title: "Hitchhiker's Guide to the Galaxy",
   author: "Douglas Adams",
 };
-const newTitle = "The Restaurant at the End of the Universe";
+const book2: Book = {
+  title: "The Restaurant at the End of the Universe",
+  author: "Douglas Adams",
+};
 
 describe("Slice creators", () => {
   const createAppSlice = buildCreateSlice({
@@ -27,24 +31,24 @@ describe("Slice creators", () => {
   it("adds creators for reuse with slices", () => {
     const bookSlice = createAppSlice({
       name: "book",
-      initialState: getInitialState(book),
+      initialState: getInitialState([] as Array<Book>),
       reducers: (create) => ({
         ...create.historyMethods(),
-        changeTitle: create.preparedReducer(
-          create.undoable.withPayload<string>(),
+        addBook: create.preparedReducer(
+          create.undoable.withPayload<Book>(),
           create.undoable((state, action) => {
-            state.title = action.payload;
+            state.push(action.payload);
           }),
         ),
-        exclaimTitle: create.preparedReducer(
+        removeLastBook: create.preparedReducer(
           create.undoable.withoutPayload(),
           create.undoable((state) => {
-            state.title += "!";
+            state.pop();
           }),
         ),
       }),
       selectors: {
-        selectTitle: (state) => state.present.title,
+        selectLastBook: (state) => state.present.at(-1),
       },
     });
     const {
@@ -54,54 +58,54 @@ describe("Slice creators", () => {
         jump,
         clearHistory,
         reset,
-        changeTitle,
-        exclaimTitle,
+        addBook,
+        removeLastBook,
       },
-      selectors: { selectTitle },
+      selectors: { selectLastBook },
     } = bookSlice;
 
     const store = configureStore({ reducer: combineSlices(bookSlice) });
 
-    expect(selectTitle(store.getState())).toBe(book.title);
+    expect(selectLastBook(store.getState())).toBeUndefined();
 
-    store.dispatch(changeTitle(newTitle));
+    store.dispatch(addBook(book1));
 
-    expect(selectTitle(store.getState())).toBe(newTitle);
+    expect(selectLastBook(store.getState())).toStrictEqual(book1);
 
-    store.dispatch(exclaimTitle());
+    store.dispatch(removeLastBook());
 
-    expect(selectTitle(store.getState())).toBe(newTitle + "!");
+    expect(selectLastBook(store.getState())).toBeUndefined();
 
     store.dispatch(undo());
 
-    expect(selectTitle(store.getState())).toBe(newTitle);
+    expect(selectLastBook(store.getState())).toStrictEqual(book1);
 
     store.dispatch(redo());
 
-    expect(selectTitle(store.getState())).toBe(newTitle + "!");
+    expect(selectLastBook(store.getState())).toBeUndefined();
 
-    store.dispatch(changeTitle(book.title, false));
+    store.dispatch(addBook(book2, false));
 
-    expect(selectTitle(store.getState())).toBe(book.title);
+    expect(selectLastBook(store.getState())).toStrictEqual(book2);
 
     store.dispatch(undo());
 
-    expect(selectTitle(store.getState())).toBe(newTitle);
+    expect(selectLastBook(store.getState())).toBe(book2);
 
     store.dispatch(jump(-1));
 
-    expect(selectTitle(store.getState())).toBe(book.title);
+    expect(selectLastBook(store.getState())).toStrictEqual(book2);
 
     store.dispatch(clearHistory());
 
     store.dispatch(undo());
 
-    expect(selectTitle(store.getState())).toBe(book.title);
+    expect(selectLastBook(store.getState())).toStrictEqual(book2);
 
-    store.dispatch(changeTitle(newTitle));
+    store.dispatch(addBook(book1));
 
     store.dispatch(reset());
 
-    expect(selectTitle(store.getState())).toBe(book.title);
+    expect(selectLastBook(store.getState())).toBeUndefined();
   });
 });

@@ -13,53 +13,56 @@ interface Book {
   title: string;
   author: string;
 }
-const book: Book = {
+
+const book1: Book = {
   title: "Hitchhiker's Guide to the Galaxy",
   author: "Douglas Adams",
 };
-const newTitle = "The Restaurant at the End of the Universe";
-const secondTitle = "Life, the Universe and Everything";
+const book2: Book = {
+  title: "The Restaurant at the End of the Universe",
+  author: "Douglas Adams",
+};
 
 describe("createReduxHistoryAdapter", () => {
-  const bookHistoryAdapter = createHistoryAdapter<Book>();
-  const localisedSelectors = bookHistoryAdapter.getSelectors();
-  const bookHistorySlice = createSlice({
-    name: "book",
-    initialState: bookHistoryAdapter.getInitialState(book),
+  const booksHistoryAdapter = createHistoryAdapter<Array<Book>>();
+  const localisedSelectors = booksHistoryAdapter.getSelectors();
+  const booksHistorySlice = createSlice({
+    name: "books",
+    initialState: booksHistoryAdapter.getInitialState([]),
     reducers: (create) => ({
-      undo: create.reducer(bookHistoryAdapter.undo),
-      redo: create.reducer(bookHistoryAdapter.redo),
-      jump: create.reducer(bookHistoryAdapter.jump),
-      clearHistory: create.reducer(bookHistoryAdapter.clearHistory),
-      updateTitle: create.preparedReducer(
-        bookHistoryAdapter.withPayload<string>(),
-        bookHistoryAdapter.undoableReducer((state, action) => {
-          state.title = action.payload;
+      undo: create.reducer(booksHistoryAdapter.undo),
+      redo: create.reducer(booksHistoryAdapter.redo),
+      jump: create.reducer(booksHistoryAdapter.jump),
+      clearHistory: create.reducer(booksHistoryAdapter.clearHistory),
+      addBook: create.preparedReducer(
+        booksHistoryAdapter.withPayload<Book>(),
+        booksHistoryAdapter.undoableReducer((state, action) => {
+          state.push(action.payload);
         }),
       ),
-      exclaimTitle: create.preparedReducer(
-        bookHistoryAdapter.withoutPayload(),
-        bookHistoryAdapter.undoableReducer((state) => {
-          state.title += "!";
+      removeLastBook: create.preparedReducer(
+        booksHistoryAdapter.withoutPayload(),
+        booksHistoryAdapter.undoableReducer((state) => {
+          state.pop();
         }),
       ),
     }),
     selectors: {
       selectCanUndo: localisedSelectors.selectCanUndo,
       selectCanRedo: localisedSelectors.selectCanRedo,
-      selectTitle: createSelector(
+      selectLastBook: createSelector(
         localisedSelectors.selectPresent,
-        (book) => book.title,
+        (books) => books.at(-1),
       ),
     },
   });
 
-  const { undo, redo, jump, clearHistory, updateTitle } =
-    bookHistorySlice.actions;
-  const { selectCanRedo, selectCanUndo, selectTitle } =
-    bookHistorySlice.selectors;
+  const { undo, redo, jump, clearHistory, addBook, removeLastBook } =
+    booksHistorySlice.actions;
+  const { selectCanRedo, selectCanUndo, selectLastBook } =
+    booksHistorySlice.selectors;
 
-  const reducer = combineSlices(bookHistorySlice);
+  const reducer = combineSlices(booksHistorySlice);
   let store = configureStore({ reducer });
   beforeEach(() => {
     store = configureStore({ reducer });
@@ -68,11 +71,11 @@ describe("createReduxHistoryAdapter", () => {
   type RootState = ReturnType<typeof reducer>;
 
   it("can be used as valid case reducers", () => {
-    expect(selectTitle(store.getState())).toBe(book.title);
+    expect(selectLastBook(store.getState())).toBeUndefined();
 
-    store.dispatch(updateTitle(newTitle));
+    store.dispatch(addBook(book1));
 
-    expect(selectTitle(store.getState())).toBe(newTitle);
+    expect(selectLastBook(store.getState())).toStrictEqual(book1);
 
     expect(selectCanUndo(store.getState())).toBe(true);
 
@@ -80,7 +83,7 @@ describe("createReduxHistoryAdapter", () => {
 
     store.dispatch(undo());
 
-    expect(selectTitle(store.getState())).toBe(book.title);
+    expect(selectLastBook(store.getState())).toBeUndefined();
 
     expect(selectCanUndo(store.getState())).toBe(false);
 
@@ -88,58 +91,62 @@ describe("createReduxHistoryAdapter", () => {
 
     store.dispatch(redo());
 
-    expect(selectTitle(store.getState())).toBe(newTitle);
+    expect(selectLastBook(store.getState())).toStrictEqual(book1);
 
-    store.dispatch(updateTitle(secondTitle));
+    store.dispatch(addBook(book2));
 
-    expect(selectTitle(store.getState())).toBe(secondTitle);
+    expect(selectLastBook(store.getState())).toStrictEqual(book2);
 
     store.dispatch(jump(-2));
 
-    expect(selectTitle(store.getState())).toBe(book.title);
+    expect(selectLastBook(store.getState())).toBe(undefined);
 
     store.dispatch(jump(1));
 
-    expect(selectTitle(store.getState())).toBe(newTitle);
+    expect(selectLastBook(store.getState())).toStrictEqual(book1);
 
     store.dispatch(clearHistory());
 
     store.dispatch(undo());
 
-    expect(selectTitle(store.getState())).toBe(newTitle);
+    expect(selectLastBook(store.getState())).toStrictEqual(book1);
+
+    store.dispatch(removeLastBook());
+
+    expect(selectLastBook(store.getState())).toBeUndefined();
   });
 
   it("can derive undoable from action", () => {
-    expect(selectTitle(store.getState())).toBe(book.title);
+    expect(selectLastBook(store.getState())).toBeUndefined();
 
-    store.dispatch(updateTitle(newTitle, false));
+    store.dispatch(addBook(book1, false));
 
-    expect(selectTitle(store.getState())).toBe(newTitle);
+    expect(selectLastBook(store.getState())).toStrictEqual(book1);
 
     store.dispatch(undo());
 
-    expect(selectTitle(store.getState())).toBe(newTitle);
+    expect(selectLastBook(store.getState())).toStrictEqual(book1);
   });
 
   describe("getSelectors", () => {
     it("can be used with an input selector", () => {
-      const { selectPresent } = bookHistoryAdapter.getSelectors(
-        (state: RootState) => bookHistorySlice.selectSlice(state),
+      const { selectPresent } = booksHistoryAdapter.getSelectors(
+        (state: RootState) => booksHistorySlice.selectSlice(state),
       );
-      expect(selectPresent(store.getState())).toBe(book);
+      expect(selectPresent(store.getState())).toEqual([]);
     });
     it("can be used with an input selector and a custom createSelector", () => {
       const createSelector = createSelectorCreator(lruMemoize);
       const spied = vi.fn(
         createSelector as any,
       ) as unknown as typeof createSelector;
-      const { selectPresent } = bookHistoryAdapter.getSelectors(
-        (state: RootState) => bookHistorySlice.selectSlice(state),
+      const { selectPresent } = booksHistoryAdapter.getSelectors(
+        (state: RootState) => booksHistorySlice.selectSlice(state),
         {
           createSelector: spied,
         },
       );
-      expect(selectPresent(store.getState())).toBe(book);
+      expect(selectPresent(store.getState())).toStrictEqual([]);
       expect(spied).toHaveBeenCalled();
     });
   });
