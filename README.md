@@ -283,4 +283,4 @@ Defines a maximum history size.
 
 ## Credits
 
-Inspired by [createEntityAdapter](https://redux-toolkit.js.org/api/createEntityAdapter), and code posted in a [discussion](https://github.com/reduxjs/redux-toolkit/discussions/4020) with @medihack.
+Inspired by [createEntityAdapter](https://redux-toolkit.js.org/api/createEntityAdapter), and code posted in a [discussion](https://github.com/reduxjs/redux-toolkit/discussions/4020) with [@medihack](https://github.com/medihack).
