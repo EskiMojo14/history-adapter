@@ -5,3 +5,6 @@ export type IfMaybeUndefined<T, True, False> = [undefined] extends [T]
   : False;
 
 export type Compute<T> = { [K in keyof T]: T[K] } & unknown;
+
+export type WithRequiredProp<T, K extends keyof T> = Omit<T, K> &
+  Required<Pick<T, K>>;

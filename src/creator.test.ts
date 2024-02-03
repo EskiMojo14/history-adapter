@@ -4,8 +4,8 @@ import {
   configureStore,
 } from "@reduxjs/toolkit";
 import { describe, expect, it } from "vitest";
-import { getInitialState } from ".";
-import { historyMethodsCreator, undoableCreator } from "./creator";
+import { historyMethodsCreator } from "./creator";
+import { createHistoryAdapter } from "./redux";
 
 interface Book {
   title: string;
@@ -25,24 +25,24 @@ describe("Slice creators", () => {
   const createAppSlice = buildCreateSlice({
     creators: {
       historyMethods: historyMethodsCreator,
-      undoable: undoableCreator,
     },
   });
   it("adds creators for reuse with slices", () => {
+    const bookAdapter = createHistoryAdapter<Array<Book>>();
     const bookSlice = createAppSlice({
       name: "book",
-      initialState: getInitialState([] as Array<Book>),
+      initialState: bookAdapter.getInitialState([]),
       reducers: (create) => ({
-        ...create.historyMethods(),
+        ...create.historyMethods(bookAdapter),
         addBook: create.preparedReducer(
-          create.undoable.withPayload<Book>(),
-          create.undoable((state, action) => {
+          bookAdapter.withPayload<Book>(),
+          bookAdapter.undoableReducer((state, action) => {
             state.push(action.payload);
           }),
         ),
         removeLastBook: create.preparedReducer(
-          create.undoable.withoutPayload(),
-          create.undoable((state) => {
+          bookAdapter.withoutPayload(),
+          bookAdapter.undoableReducer((state) => {
             state.pop();
           }),
         ),
