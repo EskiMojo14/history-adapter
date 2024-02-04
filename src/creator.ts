@@ -115,7 +115,7 @@ export const historyMethodsCreator: ReducerCreator<
       throw new Error(`Unrecognised reducer type ${String(def.type)}`);
     reducerCreator.handle(
       details,
-      reducerCreator.create<any>(() => context.getInitialState()),
+      reducerCreator.create(() => context.getInitialState()),
       context,
     );
   },
