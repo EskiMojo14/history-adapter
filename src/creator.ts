@@ -10,7 +10,8 @@ import type {
   ReducerCreatorEntry,
   ReducerCreators,
   ReducerDefinition,
-  SliceCaseReducers,
+  CreatorCaseReducers,
+  Draft,
 } from "@reduxjs/toolkit";
 import type { HistoryAdapter, HistoryState } from "./redux";
 import type { WithRequiredProp } from "./utils";
@@ -28,13 +29,14 @@ interface HistoryReducers<State> {
 }
 
 interface HistoryMethodsCreatorConfig<State, Data> {
-  selectHistoryState?: (state: State) => HistoryState<Data>;
+  selectHistoryState?: (state: Draft<State>) => HistoryState<Data>;
 }
 
 declare module "@reduxjs/toolkit" {
   export interface SliceReducerCreators<
     State = any,
-    CaseReducers extends SliceCaseReducers<State> = SliceCaseReducers<State>,
+    CaseReducers extends
+      CreatorCaseReducers<State> = CreatorCaseReducers<State>,
     Name extends string = string,
   > {
     [historyMethodsCreatorType]: ReducerCreatorEntry<
@@ -88,21 +90,26 @@ export const historyMethodsCreator: ReducerCreator<
   typeof historyMethodsCreatorType
 > = {
   type: historyMethodsCreatorType,
-  create(
-    adapter,
+  create<Data, State = HistoryState<Data>>(
+    this: ReducerCreators<State>,
+    adapter: HistoryAdapter<Data>,
     {
-      selectHistoryState = (state) => state,
-    }: HistoryMethodsCreatorConfig<any, any> = {},
+      selectHistoryState = (state) => state as HistoryState<Data>,
+    }: HistoryMethodsCreatorConfig<State, Data> = {},
   ) {
     return {
-      undo: this.reducer((state) => adapter.undo(selectHistoryState(state))),
-      redo: this.reducer((state) => adapter.redo(selectHistoryState(state))),
-      jump: this.reducer<number>((state, action) =>
-        adapter.jump(selectHistoryState(state), action),
-      ),
-      clearHistory: this.reducer((state) =>
-        adapter.clearHistory(selectHistoryState(state)),
-      ),
+      undo: this.reducer((state) => {
+        adapter.undo(selectHistoryState(state));
+      }),
+      redo: this.reducer((state) => {
+        adapter.redo(selectHistoryState(state));
+      }),
+      jump: this.reducer<number>((state, action) => {
+        adapter.jump(selectHistoryState(state), action);
+      }),
+      clearHistory: this.reducer((state) => {
+        adapter.clearHistory(selectHistoryState(state));
+      }),
       reset: {
         _reducerDefinitionType: historyMethodsCreatorType,
         type: "reset",
