@@ -34,10 +34,9 @@ interface HistoryMethodsCreatorConfig<State, Data> {
 
 declare module "@reduxjs/toolkit" {
   export interface SliceReducerCreators<
-    State = any,
-    CaseReducers extends
-      CreatorCaseReducers<State> = CreatorCaseReducers<State>,
-    Name extends string = string,
+    State,
+    CaseReducers extends CreatorCaseReducers<State>,
+    Name extends string,
   > {
     [historyMethodsCreatorType]: ReducerCreatorEntry<
       State extends HistoryState<infer Data>
