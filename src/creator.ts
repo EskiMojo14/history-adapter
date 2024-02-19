@@ -1,6 +1,5 @@
 import { reducerCreator } from "@reduxjs/toolkit";
 import type {
-  ReducerNamesOfType,
   PayloadActionCreator,
   SliceActionType,
   CaseReducer,
@@ -65,19 +64,21 @@ declare module "@reduxjs/toolkit" {
           ) => HistoryReducers<State>,
       {
         actions: {
-          [ReducerName in ReducerNamesOfType<
-            CaseReducers,
+          [ReducerName in keyof CaseReducers]: CaseReducers[ReducerName] extends ReducerDefinition<
             typeof historyMethodsCreatorType
-          >]: CaseReducers[ReducerName] extends { type: "reset" }
-            ? PayloadActionCreator<void, SliceActionType<Name, ReducerName>>
+          >
+            ? CaseReducers[ReducerName] extends { type: "reset" }
+              ? PayloadActionCreator<void, SliceActionType<Name, ReducerName>>
+              : never
             : never;
         };
         caseReducers: {
-          [ReducerName in ReducerNamesOfType<
-            CaseReducers,
+          [ReducerName in keyof CaseReducers]: CaseReducers[ReducerName] extends ReducerDefinition<
             typeof historyMethodsCreatorType
-          >]: CaseReducers[ReducerName] extends { type: "reset" }
-            ? CaseReducer<State, PayloadAction>
+          >
+            ? CaseReducers[ReducerName] extends { type: "reset" }
+              ? CaseReducer<State, PayloadAction>
+              : never
             : never;
         };
       }
