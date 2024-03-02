@@ -1,0 +1,24 @@
+module.exports = [
+  {
+    path: "dist/index.js",
+    name: "history-adapter",
+  },
+  {
+    path: "dist/index.cjs",
+    name: "history-adapter (CJS)",
+  },
+  {
+    path: "dist/redux.js",
+    name: "history-adapter/redux",
+  },
+  {
+    path: "dist/index.js",
+    import: "{ createHistoryAdapter }",
+    name: "import { createHistoryAdapter } from 'history-adapter'",
+  },
+  {
+    path: "dist/redux.js",
+    import: "{ createHistoryAdapter }",
+    name: "import { createHistoryAdapter } from 'history-adapter/redux'",
+  },
+];
