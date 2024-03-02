@@ -40,7 +40,8 @@
     "attw": "attw",
     "publint": "publint",
     "type": "tsc",
-    "prepack": "yarn publint"
+    "prepack": "yarn publint",
+    "size": "size-limit"
   },
   "repository": "https://github.com/EskiMojo14/history-adapter.git",
   "author": "EskiMojo14 <ben.j.durrant@gmail.com>",
@@ -84,7 +85,9 @@
     "minify": true
   },
   "dependencies": {
-    "immer": "^10.0.3"
+    "@size-limit/preset-small-lib": "^11.0.2",
+    "immer": "^10.0.3",
+    "size-limit": "^11.0.2"
   },
   "peerDependencies": {
     "@reduxjs/toolkit": "^1.9.7 || ^2",
