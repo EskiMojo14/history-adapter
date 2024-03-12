@@ -4,7 +4,7 @@ import {
   configureStore,
 } from "@reduxjs/toolkit";
 import { describe, expect, it } from "vitest";
-import { historyMethodsCreator } from "./creator";
+import { historyMethodsCreator, undoableReducersCreator } from "./creator";
 import type { HistoryState } from "./redux";
 import { createHistoryAdapter } from "./redux";
 
@@ -26,6 +26,7 @@ describe("Slice creators", () => {
   const createAppSlice = buildCreateSlice({
     creators: {
       historyMethods: historyMethodsCreator,
+      undoableReducers: undoableReducersCreator,
     },
   });
   it("adds creators for reuse with slices", () => {
@@ -35,18 +36,17 @@ describe("Slice creators", () => {
       initialState: bookAdapter.getInitialState([]),
       reducers: (create) => ({
         ...create.historyMethods(bookAdapter),
-        addBook: create.preparedReducer(
-          bookAdapter.withPayload<Book>(),
-          bookAdapter.undoableReducer((state, action) => {
-            state.push(action.payload);
-          }),
-        ),
-        removeLastBook: create.preparedReducer(
-          bookAdapter.withoutPayload(),
-          bookAdapter.undoableReducer((state) => {
+        ...create.undoableReducers(bookAdapter, (createUndoable) => ({
+          addBook: createUndoable.preparedReducer(
+            bookAdapter.withPayload<Book>(),
+            (state, action) => {
+              state.push(action.payload);
+            },
+          ),
+          removeLastBook: createUndoable.reducer((state) => {
             state.pop();
           }),
-        ),
+        })),
       }),
       selectors: {
         selectLastBook: (state) => state.present.at(-1),
@@ -120,27 +120,22 @@ describe("Slice creators", () => {
         ...create.historyMethods(bookAdapter, {
           selectHistoryState,
         }),
-        addBook: create.preparedReducer(
-          bookAdapter.withPayload<Book>(),
-          bookAdapter.undoableReducer(
-            (state, action) => {
-              state.push(action.payload);
-            },
-            {
-              selectHistoryState,
-            },
-          ),
-        ),
-        removeLastBook: create.preparedReducer(
-          bookAdapter.withoutPayload(),
-          bookAdapter.undoableReducer(
-            (state) => {
+        ...create.undoableReducers(
+          bookAdapter,
+          (create) => ({
+            addBook: create.preparedReducer(
+              bookAdapter.withPayload<Book>(),
+              (state, action) => {
+                state.push(action.payload);
+              },
+            ),
+            removeLastBook: create.reducer((state) => {
               state.pop();
-            },
-            {
-              selectHistoryState,
-            },
-          ),
+            }),
+          }),
+          {
+            selectHistoryState,
+          },
         ),
       }),
       selectors: {

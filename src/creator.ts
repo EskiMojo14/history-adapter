@@ -11,11 +11,14 @@ import type {
   ReducerDefinition,
   CreatorCaseReducers,
   Draft,
+  PreparedCaseReducerDefinition,
+  PrepareAction,
 } from "@reduxjs/toolkit";
 import type { HistoryAdapter, HistoryState } from "./redux";
 import type { WithRequiredProp } from "./utils";
 
 const historyMethodsCreatorType = Symbol();
+const undoableReducersCreatorType = Symbol();
 
 interface HistoryReducers<State> {
   undo: CaseReducerDefinition<State, PayloadAction>;
@@ -31,6 +34,32 @@ interface HistoryMethodsCreatorConfig<State, Data> {
   selectHistoryState?: (state: Draft<State>) => HistoryState<Data>;
 }
 
+interface UndoableReducersCreatorConfig<State, Data> {
+  selectHistoryState?: (state: Draft<State>) => HistoryState<Data>;
+}
+
+interface WrappedCreators<Data, State> {
+  reducer(
+    reducer: CaseReducer<Data, PayloadAction>,
+  ): CaseReducerDefinition<State, PayloadAction>;
+  reducer<Payload>(
+    reducer: CaseReducer<Data, PayloadAction<Payload>>,
+  ): CaseReducerDefinition<State, PayloadAction<Payload>>;
+  preparedReducer<Prepare extends PrepareAction<any>>(
+    prepare: Prepare,
+    reducer: CaseReducer<
+      Data,
+      ReturnType<
+        PayloadActionCreator<ReturnType<Prepare>["payload"], string, Prepare>
+      >
+    >,
+  ): PreparedCaseReducerDefinition<State, Prepare>;
+}
+
+type WrappedDefinitions<State> = Record<
+  string,
+  CaseReducerDefinition<State, any> | PreparedCaseReducerDefinition<State, any>
+>;
 declare module "@reduxjs/toolkit" {
   export interface SliceReducerCreators<
     State,
@@ -83,6 +112,41 @@ declare module "@reduxjs/toolkit" {
         };
       }
     >;
+    [undoableReducersCreatorType]: ReducerCreatorEntry<
+      State extends HistoryState<infer Data>
+        ? {
+            <ReducerDefinitions extends WrappedDefinitions<State>>(
+              this: ReducerCreators<State>,
+              adapter: HistoryAdapter<Data>,
+              reducers: (
+                creators: WrappedCreators<Data, State>,
+              ) => ReducerDefinitions,
+              config?: UndoableReducersCreatorConfig<State, Data>,
+            ): ReducerDefinitions;
+            <Data, ReducerDefinitions extends WrappedDefinitions<State>>(
+              this: ReducerCreators<State>,
+              adapter: HistoryAdapter<Data>,
+              reducers: (
+                creators: WrappedCreators<Data, State>,
+              ) => ReducerDefinitions,
+              config: WithRequiredProp<
+                UndoableReducersCreatorConfig<State, Data>,
+                "selectHistoryState"
+              >,
+            ): ReducerDefinitions;
+          }
+        : <Data, ReducerDefinitions extends WrappedDefinitions<State>>(
+            this: ReducerCreators<State>,
+            adapter: HistoryAdapter<Data>,
+            reducers: (
+              creators: WrappedCreators<Data, State>,
+            ) => ReducerDefinitions,
+            config: WithRequiredProp<
+              UndoableReducersCreatorConfig<State, Data>,
+              "selectHistoryState"
+            >,
+          ) => ReducerDefinitions
+    >;
   }
 }
 
@@ -125,5 +189,32 @@ export const historyMethodsCreator: ReducerCreator<
       reducerCreator.create(() => context.getInitialState()),
       context,
     );
+  },
+};
+
+export const undoableReducersCreator: ReducerCreator<
+  typeof undoableReducersCreatorType
+> = {
+  type: undoableReducersCreatorType,
+  create<Data, State = HistoryState<Data>>(
+    this: ReducerCreators<any>,
+    adapter: HistoryAdapter<Data>,
+    reducers: (
+      creators: WrappedCreators<Data, State>,
+    ) => WrappedDefinitions<State>,
+    { selectHistoryState }: UndoableReducersCreatorConfig<State, Data> = {},
+  ) {
+    return reducers({
+      reducer: (reducer: CaseReducer<Data, any>) =>
+        this.reducer(adapter.undoableReducer(reducer, { selectHistoryState })),
+      preparedReducer: <P extends PrepareAction<any>>(
+        prepare: P,
+        reducer: CaseReducer<Data, any>,
+      ) =>
+        this.preparedReducer(
+          prepare,
+          adapter.undoableReducer(reducer, { selectHistoryState }),
+        ),
+    });
   },
 };
