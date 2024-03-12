@@ -80,16 +80,33 @@ If passed an immer draft, the returned function will act mutably, otherwise it'l
 
 If wrapped in `undoable`, an action is assumed to be undoable, and its changes will be included in the history.
 
-For finer control over this, an `isUndoable` predicate can be passed as the second argument to `undoable`. It receives the same arguments as the recipe (except the current state) and should return `false` if the action is not undoable. `true` or `undefined` will default to the action being undoable.
+For finer control over this, an `isUndoable` predicate can be passed as part of the second argument to `undoable`. It receives the same arguments as the recipe (except the current state) and should return `false` if the action is not undoable. `true` or `undefined` will default to the action being undoable.
 
 ```ts
 const addBook = booksHistoryAdapter.undoable(
   (books, book: Book, undoable?: boolean) => {
     books.push(book);
   },
-  (book, undoable) => undoable,
+  { isUndoable: (book, undoable) => undoable },
 );
 ```
+
+#### Selecting history state
+
+Sometimes the history state needs to be selected from a larger state object. In this case, the `selectHistoryState` config option can be used.
+
+```ts
+const addBook = booksHistoryAdapter.undoable(
+  (books, book: Book, undoable?: boolean) => {
+    books.push(book);
+  },
+  {
+    selectHistoryState: (state: RootState) => state.books,
+  },
+);
+```
+
+It should be a function which receives the wider state and returns the history state shape (`{ past, present, future }`).
 
 ### `undo`, `redo`, `jump`, `clearHistory`
 
@@ -158,6 +175,30 @@ const booksSlice = createSlice({
 });
 ```
 
+It can accept a configuration object as the second argument, with the same options as `undoable` (except `isUndoable`).
+
+```ts
+const initialState = { books: booksHistoryAdapter.getInitialState([]) };
+const booksSlice = createSlice({
+  name: "books",
+  initialState,
+  reducers: {
+    addBook: {
+      prepare: (book: Book, undoable?: boolean) => ({
+        payload: book,
+        meta: { undoable },
+      }),
+      reducer: booksHistoryAdapter.undoableReducer(
+        (state, action: PayloadAction<Book>) => {
+          state.push(action.payload);
+        },
+        { selectHistoryState: (state: typeof initialState) => state.books },
+      ),
+    },
+  },
+});
+```
+
 ### `withoutPayload`
 
 Creates a [prepare callback](https://redux-toolkit.js.org/api/createAction#using-prepare-callbacks-to-customize-action-contents) which has one optional argument, `undoable`. This ensures it results in `action.meta.undoable` being the correct value for `undoableReducer`.
@@ -175,6 +216,10 @@ const booksSlice = createSlice({
     },
   },
 });
+
+dispatch(removeLastBook()); // action.meta.undoable === undefined (same as true)
+dispatch(removeLastBook(true)); // action.meta.undoable === true
+dispatch(removeLastBook(false)); // action.meta.undoable === false
 ```
 
 ### `withPayload`
@@ -196,6 +241,10 @@ const booksSlice = createSlice({
     },
   },
 });
+
+dispatch(addBook(book)); // action.meta.undoable === undefined (same as true)
+dispatch(addBook(book, true)); // action.meta.undoable === true
+dispatch(addBook(book, false)); // action.meta.undoable === false
 ```
 
 As a tip, `undo`, `redo` and `clearHistory` are all valid reducers due to not needing an argument. The version of `jump` on a Redux history adapter allows for either a number or payload action, making it also valid.
