@@ -256,15 +256,14 @@ describe("Slice creators", () => {
       name: "book",
       initialState: { books: bookAdapter.getInitialState([]) },
       reducers: (create) => {
+        const selectHistoryState = (state: {
+          books: HistoryState<Array<Book>>;
+        }) => state.books;
         const createUndoable = create.undoableReducers(bookAdapter, {
-          selectHistoryState: (state: { books: HistoryState<Array<Book>> }) =>
-            state.books,
+          selectHistoryState,
         });
         return {
-          ...create.historyMethods(bookAdapter, {
-            selectHistoryState: (state: { books: HistoryState<Array<Book>> }) =>
-              state.books,
-          }),
+          ...create.historyMethods(bookAdapter, { selectHistoryState }),
           addBook: createUndoable.preparedReducer(
             bookAdapter.withPayload<Book>(),
             (state, action) => {
