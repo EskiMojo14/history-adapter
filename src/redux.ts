@@ -112,7 +112,7 @@ export interface HistoryAdapter<Data> extends Adapter<Data> {
     RootState = HistoryState<Data>,
   >(
     reducer: CaseReducer<Data, A>,
-    config?: Omit<UndoableConfig<Data, [A], RootState>, "isUndoable">,
+    config?: Omit<UndoableConfig<Data, [action: A], RootState>, "isUndoable">,
   ): <State extends RootState>(state: State, action: A) => State;
 
   getSelectors(): HistorySelectors<Data>;
