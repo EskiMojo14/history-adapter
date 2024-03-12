@@ -32,11 +32,10 @@ enablePatches();
 
 const isDraftTyped = isDraft as <T>(value: T | Draft<T>) => value is Draft<T>;
 
-function makeStateOperator<
-  State extends HistoryState<unknown>,
-  Args extends Array<any> = [],
->(mutator: (state: Draft<State>, ...args: Args) => void) {
-  return function operator<S extends State>(state: S, ...args: Args) {
+function makeStateOperator<State, Args extends Array<any> = []>(
+  mutator: (state: Draft<State>, ...args: Args) => void,
+) {
+  return function operator<S extends State>(state: S, ...args: Args): S {
     if (isDraftTyped(state)) {
       mutator(state, ...args);
       return state;
@@ -50,6 +49,19 @@ function makeStateOperator<
 
 export interface HistoryAdapterConfig {
   limit?: number;
+}
+
+export interface UndoableConfig<Data, Args extends Array<any>, RootState> {
+  /**
+   * A function to extract from the arguments whether the action was undoable or not.
+   * If not provided (or if function returns undefined), defaults to true.
+   * Non-undoable actions will not be included in state history.
+   */
+  isUndoable?: (...args: Args) => boolean | undefined;
+  /**
+   * A function to select the history state from the root state.
+   */
+  selectHistoryState?: (state: Draft<RootState>) => HistoryState<Data>;
 }
 
 export interface HistoryAdapter<Data> {
@@ -82,6 +94,16 @@ export interface HistoryAdapter<Data> {
    * @param state History state shape, with patches
    */
   clearHistory<State extends HistoryState<Data>>(state: State): State;
+
+  /**
+   * Wraps a function to automatically update patch history according to changes
+   * @param recipe An immer-style recipe, which can mutate the draft or return new state
+   * @param config Configuration for undoable action
+   */
+  undoable<Args extends Array<any>, RootState = HistoryState<Data>>(
+    recipe: (draft: Draft<Data>, ...args: Args) => ValidRecipeReturnType<Data>,
+    config?: UndoableConfig<Data, Args, RootState>,
+  ): <State extends RootState>(state: State, ...args: Args) => State;
   /**
    * Wraps a function to automatically update patch history according to changes
    * @param recipe An immer-style recipe, which can mutate the draft or return new state
@@ -129,7 +151,7 @@ export function createHistoryAdapter<Data>({
     getInitialState,
     undo: makeStateOperator(undoMutably),
     redo: makeStateOperator(redoMutably),
-    jump: makeStateOperator((state, n) => {
+    jump: makeStateOperator<HistoryState<Data>, [number]>((state, n) => {
       if (n < 0) {
         for (let i = 0; i < -n; i++) {
           undoMutably(state);
@@ -140,18 +162,34 @@ export function createHistoryAdapter<Data>({
         }
       }
     }),
-    clearHistory: makeStateOperator((state) => {
+    clearHistory: makeStateOperator<HistoryState<Data>>((state) => {
       state.past = [];
       state.future = [];
     }),
-    undoable(recipe, isUndoable) {
-      return makeStateOperator((state, ...args) => {
+    undoable<Args extends Array<any>, RootState>(
+      recipe: (
+        draft: Draft<Data>,
+        ...args: Args
+      ) => ValidRecipeReturnType<Data>,
+      configOrIsUndoable?:
+        | UndoableConfig<Data, Args, RootState>
+        | ((...args: Args) => boolean | undefined),
+    ) {
+      const {
+        isUndoable,
+        selectHistoryState = (s: Draft<RootState>) => s as HistoryState<Data>,
+      } =
+        typeof configOrIsUndoable === "function"
+          ? { isUndoable: configOrIsUndoable }
+          : configOrIsUndoable ?? {};
+      return makeStateOperator<RootState, Args>((rootState, ...args) => {
+        const state = selectHistoryState(rootState);
         const [{ present }, redo, undo] = produceWithPatches(state, (draft) => {
           const result = recipe(draft.present as Draft<Data>, ...args);
           if (result === nothing) {
-            draft.present = undefined as Draft<Draft<Data>>;
+            draft.present = undefined as Draft<Data>;
           } else if (typeof result !== "undefined") {
-            draft.present = result as Draft<Draft<Data>>;
+            draft.present = result as Draft<Data>;
           }
         });
         state.present = present;

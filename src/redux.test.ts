@@ -6,6 +6,7 @@ import {
   createSlice,
   lruMemoize,
 } from "@reduxjs/toolkit";
+import type { HistoryState } from "./redux";
 import { createHistoryAdapter } from "./redux";
 import { describe, expect, it, beforeEach, vi } from "vitest";
 
@@ -126,6 +127,50 @@ describe("createReduxHistoryAdapter", () => {
     store.dispatch(undo());
 
     expect(selectLastBook(store.getState())).toStrictEqual(book1);
+  });
+
+  it("can work with nested state", () => {
+    const nestedSlice = createSlice({
+      name: "nested",
+      initialState: {
+        books: booksHistoryAdapter.getInitialState([]),
+      },
+      reducers: (create) => ({
+        undo: create.reducer((state) => {
+          booksHistoryAdapter.undo(state.books);
+        }),
+        addBook: create.preparedReducer(
+          booksHistoryAdapter.withPayload<Book>(),
+          booksHistoryAdapter.undoableReducer(
+            (state, action) => {
+              state.push(action.payload);
+            },
+            {
+              selectHistoryState: (s: { books: HistoryState<Array<Book>> }) =>
+                s.books,
+            },
+          ),
+        ),
+      }),
+      selectors: {
+        selectLastBook: (state: RootState) => state.books.present.at(-1),
+      },
+    });
+
+    const { addBook, undo } = nestedSlice.actions;
+    const { selectLastBook } = nestedSlice.selectors;
+
+    const reducer = combineSlices(nestedSlice);
+
+    const store = configureStore({ reducer });
+
+    store.dispatch(addBook(book1));
+
+    expect(selectLastBook(store.getState())).toStrictEqual(book1);
+
+    store.dispatch(undo());
+
+    expect(selectLastBook(store.getState())).toBeUndefined();
   });
 
   describe("getSelectors", () => {
