@@ -32,9 +32,13 @@ describe("createHistoryAdapter", () => {
     });
   });
 
+  const aPatch = expect.objectContaining({
+    op: expect.oneOf(["add", "replace", "remove"]),
+  });
+
   const aPatchState = {
-    redo: expect.any(Array),
-    undo: expect.any(Array),
+    redo: expect.iterableOf(aPatch),
+    undo: expect.iterableOf(aPatch),
   };
 
   describe("undoable", () => {
@@ -88,6 +92,28 @@ describe("createHistoryAdapter", () => {
         past: [aPatchState],
         present: [book1],
         future: [],
+      });
+    });
+    it("can be provided with a selector if working with nested state", () => {
+      const addBook = booksHistoryAdapter.undoable(
+        (books, book: Book) => {
+          books.push(book);
+        },
+        {
+          selectHistoryState: (state: { books: HistoryState<Array<Book>> }) =>
+            state.books,
+        },
+      );
+      const initialState = { books: booksHistoryAdapter.getInitialState([]) };
+
+      const nextState = addBook(initialState, book1);
+
+      expect(nextState).toEqual({
+        books: {
+          past: [aPatchState],
+          present: [book1],
+          future: [],
+        },
       });
     });
   });

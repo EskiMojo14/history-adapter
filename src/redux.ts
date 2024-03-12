@@ -7,6 +7,7 @@ import type {
   HistoryAdapter as Adapter,
   HistoryAdapterConfig,
   HistoryState,
+  UndoableConfig,
 } from ".";
 import { createHistoryAdapter as createAdapter } from ".";
 import type { IfMaybeUndefined } from "./utils";
@@ -106,9 +107,13 @@ export interface HistoryAdapter<Data> extends Adapter<Data> {
     >
   ) => { payload: P; meta: UndoableMeta };
   /** Wraps a reducer in logic which automatically updates the state history, and extracts whether an action is undoable from its meta (`action.meta.undoable`) */
-  undoableReducer<A extends Action & { meta?: UndoableMeta }>(
+  undoableReducer<
+    A extends Action & { meta?: UndoableMeta },
+    RootState = HistoryState<Data>,
+  >(
     reducer: CaseReducer<Data, A>,
-  ): <State extends HistoryState<Data>>(state: State, action: A) => State;
+    config?: Omit<UndoableConfig<Data, [action: A], RootState>, "isUndoable">,
+  ): <State extends RootState>(state: State, action: A) => State;
 
   getSelectors(): HistorySelectors<Data>;
   getSelectors<RootState>(
@@ -155,8 +160,11 @@ export function createHistoryAdapter<Data>(
         >
       ) => ({ payload: payload as P, meta: { undoable } });
     },
-    undoableReducer(reducer) {
-      return adapter.undoable(reducer, getUndoableMeta);
+    undoableReducer(reducer, config) {
+      return adapter.undoable(reducer, {
+        ...config,
+        isUndoable: getUndoableMeta,
+      });
     },
     getSelectors: makeSelectorFactory<Data>(),
   };
