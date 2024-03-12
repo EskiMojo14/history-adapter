@@ -200,4 +200,110 @@ describe("Slice creators", () => {
 
     expect(selectLastBook(store.getState())).toBeUndefined();
   });
+  it("supports alternate syntax", () => {
+    const bookAdapter = createHistoryAdapter<Array<Book>>();
+    const bookSlice = createAppSlice({
+      name: "book",
+      initialState: bookAdapter.getInitialState([]),
+      reducers: (create) => {
+        const createUndoable = create.undoableReducers(bookAdapter);
+        return {
+          ...create.historyMethods(bookAdapter),
+          addBook: createUndoable.preparedReducer(
+            bookAdapter.withPayload<Book>(),
+            (state, action) => {
+              state.push(action.payload);
+            },
+          ),
+          removeLastBook: createUndoable.reducer((state) => {
+            state.pop();
+          }),
+        };
+      },
+      selectors: {
+        selectLastBook: (state) => state.present.at(-1),
+      },
+    });
+
+    const {
+      actions: { undo, addBook, removeLastBook },
+      selectors: { selectLastBook },
+    } = bookSlice;
+
+    const store = configureStore({ reducer: combineSlices(bookSlice) });
+
+    expect(selectLastBook(store.getState())).toBeUndefined();
+
+    store.dispatch(addBook(book1));
+
+    expect(selectLastBook(store.getState())).toStrictEqual(book1);
+
+    store.dispatch(removeLastBook());
+
+    expect(selectLastBook(store.getState())).toBeUndefined();
+
+    store.dispatch(undo());
+
+    expect(selectLastBook(store.getState())).toStrictEqual(book1);
+
+    store.dispatch(undo());
+
+    expect(selectLastBook(store.getState())).toBeUndefined();
+  });
+  it("supports alternate syntax with nested state", () => {
+    const bookAdapter = createHistoryAdapter<Array<Book>>();
+    const bookSlice = createAppSlice({
+      name: "book",
+      initialState: { books: bookAdapter.getInitialState([]) },
+      reducers: (create) => {
+        const createUndoable = create.undoableReducers(bookAdapter, {
+          selectHistoryState: (state: { books: HistoryState<Array<Book>> }) =>
+            state.books,
+        });
+        return {
+          ...create.historyMethods(bookAdapter, {
+            selectHistoryState: (state: { books: HistoryState<Array<Book>> }) =>
+              state.books,
+          }),
+          addBook: createUndoable.preparedReducer(
+            bookAdapter.withPayload<Book>(),
+            (state, action) => {
+              state.push(action.payload);
+            },
+          ),
+          removeLastBook: createUndoable.reducer((state) => {
+            state.pop();
+          }),
+        };
+      },
+      selectors: {
+        selectLastBook: (state) => state.books.present.at(-1),
+      },
+    });
+
+    const {
+      actions: { undo, addBook, removeLastBook },
+      selectors: { selectLastBook },
+    } = bookSlice;
+
+    const store = configureStore({ reducer: combineSlices(bookSlice) });
+
+    expect(selectLastBook(store.getState())).toBeUndefined();
+
+    store.dispatch(addBook(book1));
+
+    expect(selectLastBook(store.getState())).toStrictEqual(book1);
+
+    store.dispatch(removeLastBook());
+
+    expect(selectLastBook(store.getState())).toBeUndefined();
+
+    store.dispatch(undo());
+
+    expect(selectLastBook(store.getState())).toStrictEqual(book1);
+
+    store.dispatch(undo());
+
+    expect(selectLastBook(store.getState())).toBeUndefined();
+  });
 });

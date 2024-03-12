@@ -407,9 +407,9 @@
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
   integrity sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==
 
-"@reduxjs/toolkit@https://pkg.csb.dev/reduxjs/redux-toolkit/commit/bd737450/@reduxjs/toolkit/_pkg.tgz":
+"@reduxjs/toolkit@https://pkg.csb.dev/reduxjs/redux-toolkit/commit/b05b9a75/@reduxjs/toolkit/_pkg.tgz":
   version "2.2.1"
-  resolved "https://pkg.csb.dev/reduxjs/redux-toolkit/commit/bd737450/@reduxjs/toolkit/_pkg.tgz#9ebeb2cc4c2c22173c1fb852132c03dd4d3789c7"
+  resolved "https://pkg.csb.dev/reduxjs/redux-toolkit/commit/b05b9a75/@reduxjs/toolkit/_pkg.tgz#902208bb2cf648900cc2fac35800a0ecbb7bb827"
   dependencies:
     immer "^10.0.3"
     redux "^5.0.1"
