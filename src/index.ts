@@ -177,8 +177,8 @@ export function createHistoryAdapter<Data>({
     ) {
       const {
         isUndoable,
-        selectHistoryState = (s: Draft<RootState>) => s as HistoryState<Data>,
-      } =
+        selectHistoryState = (s) => s as HistoryState<Data>,
+      }: UndoableConfig<Data, Args, RootState> =
         typeof configOrIsUndoable === "function"
           ? { isUndoable: configOrIsUndoable }
           : configOrIsUndoable ?? {};
