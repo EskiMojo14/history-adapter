@@ -222,7 +222,7 @@ export const undoableReducersCreator: ReducerCreator<
     reducersOrConfig?:
       | ((creators: WrappedCreators<Data, State>) => WrappedDefinitions<State>)
       | UndoableReducersCreatorConfig<State, Data>,
-    config: UndoableReducersCreatorConfig<State, Data> = {},
+    config?: UndoableReducersCreatorConfig<State, Data>,
   ) {
     const finalConfig =
       typeof reducersOrConfig === "function" ? config : reducersOrConfig;
