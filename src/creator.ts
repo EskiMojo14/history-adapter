@@ -18,7 +18,7 @@ import type { HistoryAdapter, HistoryState } from "./redux";
 import type { WithRequiredProp } from "./utils";
 
 const historyMethodsCreatorType = Symbol();
-const undoableReducersCreatorType = Symbol();
+const undoableCreatorsCreatorType = Symbol();
 
 interface HistoryReducers<State> {
   undo: CaseReducerDefinition<State, PayloadAction>;
@@ -34,11 +34,11 @@ interface HistoryMethodsCreatorConfig<State, Data> {
   selectHistoryState?: (state: Draft<State>) => HistoryState<Data>;
 }
 
-interface UndoableReducersCreatorConfig<State, Data> {
+interface undoableCreatorsCreatorConfig<State, Data> {
   selectHistoryState?: (state: Draft<State>) => HistoryState<Data>;
 }
 
-interface WrappedCreators<Data, State> {
+interface UndoableCreators<Data, State> {
   reducer(
     reducer: CaseReducer<Data, PayloadAction>,
   ): CaseReducerDefinition<State, PayloadAction>;
@@ -56,10 +56,6 @@ interface WrappedCreators<Data, State> {
   ): PreparedCaseReducerDefinition<State, Prepare>;
 }
 
-type WrappedDefinitions<State> = Record<
-  string,
-  CaseReducerDefinition<State, any> | PreparedCaseReducerDefinition<State, any>
->;
 declare module "@reduxjs/toolkit" {
   export interface SliceReducerCreators<
     State,
@@ -112,60 +108,28 @@ declare module "@reduxjs/toolkit" {
         };
       }
     >;
-    [undoableReducersCreatorType]: ReducerCreatorEntry<
+    [undoableCreatorsCreatorType]: ReducerCreatorEntry<
       State extends HistoryState<infer Data>
         ? {
             (
               this: ReducerCreators<State>,
               adapter: HistoryAdapter<Data>,
-              config?: UndoableReducersCreatorConfig<State, Data>,
-            ): WrappedCreators<Data, State>;
+              config?: undoableCreatorsCreatorConfig<State, Data>,
+            ): UndoableCreators<Data, State>;
             <Data>(
               this: ReducerCreators<State>,
               adapter: HistoryAdapter<Data>,
-              config?: UndoableReducersCreatorConfig<State, Data>,
-            ): WrappedCreators<Data, State>;
-            <ReducerDefinitions extends WrappedDefinitions<State>>(
-              this: ReducerCreators<State>,
-              adapter: HistoryAdapter<Data>,
-              reducers: (
-                creators: WrappedCreators<Data, State>,
-              ) => ReducerDefinitions,
-              config?: UndoableReducersCreatorConfig<State, Data>,
-            ): ReducerDefinitions;
-            <Data, ReducerDefinitions extends WrappedDefinitions<State>>(
-              this: ReducerCreators<State>,
-              adapter: HistoryAdapter<Data>,
-              reducers: (
-                creators: WrappedCreators<Data, State>,
-              ) => ReducerDefinitions,
-              config: WithRequiredProp<
-                UndoableReducersCreatorConfig<State, Data>,
-                "selectHistoryState"
-              >,
-            ): ReducerDefinitions;
+              config?: undoableCreatorsCreatorConfig<State, Data>,
+            ): UndoableCreators<Data, State>;
           }
-        : {
-            <Data>(
-              this: ReducerCreators<State>,
-              adapter: HistoryAdapter<Data>,
-              config: WithRequiredProp<
-                UndoableReducersCreatorConfig<State, Data>,
-                "selectHistoryState"
-              >,
-            ): WrappedCreators<Data, State>;
-            <Data, ReducerDefinitions extends WrappedDefinitions<State>>(
-              this: ReducerCreators<State>,
-              adapter: HistoryAdapter<Data>,
-              reducers: (
-                creators: WrappedCreators<Data, State>,
-              ) => ReducerDefinitions,
-              config: WithRequiredProp<
-                UndoableReducersCreatorConfig<State, Data>,
-                "selectHistoryState"
-              >,
-            ): ReducerDefinitions;
-          }
+        : <Data>(
+            this: ReducerCreators<State>,
+            adapter: HistoryAdapter<Data>,
+            config: WithRequiredProp<
+              undoableCreatorsCreatorConfig<State, Data>,
+              "selectHistoryState"
+            >,
+          ) => UndoableCreators<Data, State>
     >;
   }
 }
@@ -212,35 +176,16 @@ export const historyMethodsCreator: ReducerCreator<
   },
 };
 
-export const undoableReducersCreator: ReducerCreator<
-  typeof undoableReducersCreatorType
+export const undoableCreatorsCreator: ReducerCreator<
+  typeof undoableCreatorsCreatorType
 > = {
-  type: undoableReducersCreatorType,
-  create<Data, State = HistoryState<Data>>(
-    this: ReducerCreators<any>,
-    adapter: HistoryAdapter<Data>,
-    reducersOrConfig?:
-      | ((creators: WrappedCreators<Data, State>) => WrappedDefinitions<State>)
-      | UndoableReducersCreatorConfig<State, Data>,
-    config?: UndoableReducersCreatorConfig<State, Data>,
-  ) {
-    const finalConfig =
-      typeof reducersOrConfig === "function" ? config : reducersOrConfig;
-    const creators: WrappedCreators<Data, State> = {
-      reducer: (reducer: CaseReducer<Data, any>) =>
-        this.reducer(adapter.undoableReducer(reducer, finalConfig)),
-      preparedReducer: <P extends PrepareAction<any>>(
-        prepare: P,
-        reducer: CaseReducer<Data, any>,
-      ) =>
-        this.preparedReducer(
-          prepare,
-          adapter.undoableReducer(reducer, finalConfig),
-        ),
+  type: undoableCreatorsCreatorType,
+  create(this, adapter, config) {
+    return {
+      reducer: (reducer: CaseReducer<any, any>) =>
+        this.reducer(adapter.undoableReducer(reducer, config)),
+      preparedReducer: (prepare, reducer) =>
+        this.preparedReducer(prepare, adapter.undoableReducer(reducer, config)),
     };
-
-    return typeof reducersOrConfig === "function"
-      ? reducersOrConfig(creators)
-      : (creators as any);
   },
 };
