@@ -1,4 +1,6 @@
-module.exports = [
+import { SizeLimitConfig } from "size-limit";
+
+export default [
   {
     path: "dist/index.js",
     name: "history-adapter",
@@ -21,4 +23,4 @@ module.exports = [
     import: "{ createHistoryAdapter }",
     name: "import { createHistoryAdapter } from 'history-adapter/redux'",
   },
-];
+] satisfies SizeLimitConfig;
