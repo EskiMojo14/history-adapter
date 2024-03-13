@@ -34,7 +34,7 @@ interface HistoryMethodsCreatorConfig<State, Data> {
   selectHistoryState?: (state: Draft<State>) => HistoryState<Data>;
 }
 
-interface undoableCreatorsCreatorConfig<State, Data> {
+interface UndoableCreatorsCreatorConfig<State, Data> {
   selectHistoryState?: (state: Draft<State>) => HistoryState<Data>;
 }
 
@@ -113,19 +113,22 @@ declare module "@reduxjs/toolkit" {
             (
               this: ReducerCreators<State>,
               adapter: HistoryAdapter<Data>,
-              config?: undoableCreatorsCreatorConfig<State, Data>,
+              config?: UndoableCreatorsCreatorConfig<State, Data>,
             ): UndoableCreators<Data, State>;
             <Data>(
               this: ReducerCreators<State>,
               adapter: HistoryAdapter<Data>,
-              config?: undoableCreatorsCreatorConfig<State, Data>,
+              config: WithRequiredProp<
+                UndoableCreatorsCreatorConfig<State, Data>,
+                "selectHistoryState"
+              >,
             ): UndoableCreators<Data, State>;
           }
         : <Data>(
             this: ReducerCreators<State>,
             adapter: HistoryAdapter<Data>,
             config: WithRequiredProp<
-              undoableCreatorsCreatorConfig<State, Data>,
+              UndoableCreatorsCreatorConfig<State, Data>,
               "selectHistoryState"
             >,
           ) => UndoableCreators<Data, State>
