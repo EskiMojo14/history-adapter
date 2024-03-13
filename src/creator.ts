@@ -180,7 +180,7 @@ export const undoableCreatorsCreator: ReducerCreator<
   typeof undoableCreatorsCreatorType
 > = {
   type: undoableCreatorsCreatorType,
-  create(this, adapter, config) {
+  create(adapter, config) {
     return {
       reducer: (reducer: CaseReducer<any, any>) =>
         this.reducer(adapter.undoableReducer(reducer, config)),
