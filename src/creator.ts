@@ -38,6 +38,10 @@ interface undoableCreatorsCreatorConfig<State, Data> {
   selectHistoryState?: (state: Draft<State>) => HistoryState<Data>;
 }
 
+type ActionForPrepare<Prepare extends PrepareAction<any>> = ReturnType<
+  PayloadActionCreator<0, string, Prepare>
+>;
+
 interface UndoableCreators<Data, State> {
   reducer(
     reducer: CaseReducer<Data, PayloadAction>,
@@ -47,12 +51,7 @@ interface UndoableCreators<Data, State> {
   ): CaseReducerDefinition<State, PayloadAction<Payload>>;
   preparedReducer<Prepare extends PrepareAction<any>>(
     prepare: Prepare,
-    reducer: CaseReducer<
-      Data,
-      ReturnType<
-        PayloadActionCreator<ReturnType<Prepare>["payload"], string, Prepare>
-      >
-    >,
+    reducer: CaseReducer<Data, ActionForPrepare<Prepare>>,
   ): PreparedCaseReducerDefinition<State, Prepare>;
 }
 
