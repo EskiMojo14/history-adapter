@@ -1,4 +1,4 @@
-import { reducerCreator } from "@reduxjs/toolkit";
+import { preparedReducerCreator, reducerCreator } from "@reduxjs/toolkit";
 import type {
   PayloadActionCreator,
   SliceActionType,
@@ -65,12 +65,10 @@ declare module "@reduxjs/toolkit" {
       State extends HistoryState<infer Data>
         ? {
             (
-              this: ReducerCreators<State>,
               adapter: HistoryAdapter<Data>,
               config?: HistoryMethodsCreatorConfig<State, Data>,
             ): HistoryReducers<State>;
             <Data>(
-              this: ReducerCreators<State>,
               adapter: HistoryAdapter<Data>,
               config: WithRequiredProp<
                 HistoryMethodsCreatorConfig<State, Data>,
@@ -79,7 +77,6 @@ declare module "@reduxjs/toolkit" {
             ): HistoryReducers<State>;
           }
         : <Data>(
-            this: ReducerCreators<State>,
             adapter: HistoryAdapter<Data>,
             config: WithRequiredProp<
               HistoryMethodsCreatorConfig<State, Data>,
@@ -111,12 +108,10 @@ declare module "@reduxjs/toolkit" {
       State extends HistoryState<infer Data>
         ? {
             (
-              this: ReducerCreators<State>,
               adapter: HistoryAdapter<Data>,
               config?: UndoableCreatorsCreatorConfig<State, Data>,
             ): UndoableCreators<Data, State>;
             <Data>(
-              this: ReducerCreators<State>,
               adapter: HistoryAdapter<Data>,
               config: WithRequiredProp<
                 UndoableCreatorsCreatorConfig<State, Data>,
@@ -125,7 +120,6 @@ declare module "@reduxjs/toolkit" {
             ): UndoableCreators<Data, State>;
           }
         : <Data>(
-            this: ReducerCreators<State>,
             adapter: HistoryAdapter<Data>,
             config: WithRequiredProp<
               UndoableCreatorsCreatorConfig<State, Data>,
@@ -141,23 +135,24 @@ export const historyMethodsCreator: ReducerCreator<
 > = {
   type: historyMethodsCreatorType,
   create<Data, State = HistoryState<Data>>(
-    this: ReducerCreators<State>,
     adapter: HistoryAdapter<Data>,
     {
       selectHistoryState = (state) => state as HistoryState<Data>,
     }: HistoryMethodsCreatorConfig<State, Data> = {},
   ) {
+    const createReducer: ReducerCreators<State>["reducer"] =
+      reducerCreator.create;
     return {
-      undo: this.reducer((state) => {
+      undo: createReducer((state) => {
         adapter.undo(selectHistoryState(state));
       }),
-      redo: this.reducer((state) => {
+      redo: createReducer((state) => {
         adapter.redo(selectHistoryState(state));
       }),
-      jump: this.reducer<number>((state, action) => {
+      jump: createReducer<number>((state, action) => {
         adapter.jump(selectHistoryState(state), action);
       }),
-      clearHistory: this.reducer((state) => {
+      clearHistory: createReducer((state) => {
         adapter.clearHistory(selectHistoryState(state));
       }),
       reset: {
@@ -184,10 +179,15 @@ export const undoableCreatorsCreator: ReducerCreator<
   type: undoableCreatorsCreatorType,
   create(adapter, config) {
     return {
-      reducer: (reducer: CaseReducer<any, any>) =>
-        this.reducer(adapter.undoableReducer(reducer, config)),
-      preparedReducer: (prepare, reducer) =>
-        this.preparedReducer(prepare, adapter.undoableReducer(reducer, config)),
+      reducer(reducer: CaseReducer<any, any>) {
+        return reducerCreator.create(adapter.undoableReducer(reducer, config));
+      },
+      preparedReducer(prepare, reducer) {
+        return preparedReducerCreator.create(
+          prepare,
+          adapter.undoableReducer(reducer, config),
+        );
+      },
     };
   },
 };

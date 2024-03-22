@@ -29,8 +29,8 @@ describe("Slice creators", () => {
       undoableCreators: undoableCreatorsCreator,
     },
   });
+  const bookAdapter = createHistoryAdapter<Array<Book>>();
   it("adds creators for reuse with slices", () => {
-    const bookAdapter = createHistoryAdapter<Array<Book>>();
     const bookSlice = createAppSlice({
       name: "book",
       initialState: bookAdapter.getInitialState([]),
@@ -111,7 +111,6 @@ describe("Slice creators", () => {
     expect(selectLastBook(store.getState())).toBeUndefined();
   });
   it("works with nested state", () => {
-    const bookAdapter = createHistoryAdapter<Array<Book>>();
     const bookSlice = createAppSlice({
       name: "book",
       initialState: { books: bookAdapter.getInitialState([]) },
@@ -194,6 +193,49 @@ describe("Slice creators", () => {
     store.dispatch(addBook(book1));
 
     store.dispatch(reset());
+
+    expect(selectLastBook(store.getState())).toBeUndefined();
+  });
+  it("can be destructured", () => {
+    const bookSlice = createAppSlice({
+      name: "book",
+      initialState: bookAdapter.getInitialState([]),
+      reducers: ({ historyMethods, undoableCreators }) => {
+        const createUndoable = undoableCreators(bookAdapter);
+        return {
+          ...historyMethods(bookAdapter),
+          addBook: createUndoable.preparedReducer(
+            bookAdapter.withPayload<Book>(),
+            (state, action) => {
+              state.push(action.payload);
+            },
+          ),
+          removeLastBook: createUndoable.reducer((state) => {
+            state.pop();
+          }),
+        };
+      },
+      selectors: {
+        selectLastBook: (state) => state.present.at(-1),
+      },
+    });
+
+    const {
+      actions: { undo, addBook },
+      selectors: { selectLastBook },
+    } = bookSlice;
+
+    expect(undo).toBeTypeOf("function");
+
+    const store = configureStore({ reducer: combineSlices(bookSlice) });
+
+    expect(selectLastBook(store.getState())).toBeUndefined();
+
+    store.dispatch(addBook(book1));
+
+    expect(selectLastBook(store.getState())).toStrictEqual(book1);
+
+    store.dispatch(undo());
 
     expect(selectLastBook(store.getState())).toBeUndefined();
   });
