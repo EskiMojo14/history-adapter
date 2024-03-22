@@ -201,16 +201,16 @@ describe("Slice creators", () => {
       name: "book",
       initialState: bookAdapter.getInitialState([]),
       reducers: ({ historyMethods, undoableCreators }) => {
-        const createUndoable = undoableCreators(bookAdapter);
+        const { reducer, preparedReducer } = undoableCreators(bookAdapter);
         return {
           ...historyMethods(bookAdapter),
-          addBook: createUndoable.preparedReducer(
+          addBook: preparedReducer(
             bookAdapter.withPayload<Book>(),
             (state, action) => {
               state.push(action.payload);
             },
           ),
-          removeLastBook: createUndoable.reducer((state) => {
+          removeLastBook: reducer((state) => {
             state.pop();
           }),
         };

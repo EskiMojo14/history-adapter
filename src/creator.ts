@@ -43,16 +43,18 @@ type ActionForPrepare<Prepare extends PrepareAction<any>> = ReturnType<
 >;
 
 interface UndoableCreators<Data, State> {
-  reducer(
-    reducer: CaseReducer<Data, PayloadAction>,
-  ): CaseReducerDefinition<State, PayloadAction>;
-  reducer<Payload>(
-    reducer: CaseReducer<Data, PayloadAction<Payload>>,
-  ): CaseReducerDefinition<State, PayloadAction<Payload>>;
-  preparedReducer<Prepare extends PrepareAction<any>>(
+  reducer: {
+    (
+      reducer: CaseReducer<Data, PayloadAction>,
+    ): CaseReducerDefinition<State, PayloadAction>;
+    <Payload>(
+      reducer: CaseReducer<Data, PayloadAction<Payload>>,
+    ): CaseReducerDefinition<State, PayloadAction<Payload>>;
+  };
+  preparedReducer: <Prepare extends PrepareAction<any>>(
     prepare: Prepare,
     reducer: CaseReducer<Data, ActionForPrepare<Prepare>>,
-  ): PreparedCaseReducerDefinition<State, Prepare>;
+  ) => PreparedCaseReducerDefinition<State, Prepare>;
 }
 
 declare module "@reduxjs/toolkit" {
