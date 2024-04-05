@@ -62,6 +62,7 @@ declare module "@reduxjs/toolkit" {
     State,
     CaseReducers extends CreatorCaseReducers<State>,
     Name extends string,
+    ReducerPath extends string,
   > {
     [historyMethodsCreatorType]: ReducerCreatorEntry<
       State extends HistoryState<infer Data>

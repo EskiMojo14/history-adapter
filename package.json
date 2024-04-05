@@ -50,7 +50,7 @@
   "license": "MIT",
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.13.5",
-    "@reduxjs/toolkit": "https://pkg.csb.dev/reduxjs/redux-toolkit/commit/b05b9a75/@reduxjs/toolkit/_pkg.tgz",
+    "@reduxjs/toolkit": "https://pkg.csb.dev/reduxjs/redux-toolkit/commit/1f1ac688/@reduxjs/toolkit/_pkg.tgz",
     "@size-limit/preset-small-lib": "^11.1.0",
     "@typescript-eslint/eslint-plugin": "^6.18.0",
     "@typescript-eslint/parser": "^6.18.0",
