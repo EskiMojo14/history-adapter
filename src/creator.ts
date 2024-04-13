@@ -133,6 +133,16 @@ declare module "@reduxjs/toolkit" {
   }
 }
 
+const makeScopedReducerCreator =
+  <State, Data>(
+    createReducer: ReducerCreators<State>["reducer"],
+    selectHistoryState: (state: Draft<State>) => HistoryState<Data>,
+  ) =>
+  <P>(mutator: (state: HistoryState<Data>, action: PayloadAction<P>) => void) =>
+    createReducer<P>((state, action) => {
+      mutator(selectHistoryState(state), action);
+    });
+
 export const historyMethodsCreator: ReducerCreator<
   typeof historyMethodsCreatorType
 > = {
@@ -143,21 +153,15 @@ export const historyMethodsCreator: ReducerCreator<
       selectHistoryState = (state) => state as HistoryState<Data>,
     }: HistoryMethodsCreatorConfig<State, Data> = {},
   ) {
-    const createReducer: ReducerCreators<State>["reducer"] =
-      reducerCreator.create;
+    const createReducer = makeScopedReducerCreator(
+      reducerCreator.create,
+      selectHistoryState,
+    );
     return {
-      undo: createReducer((state) => {
-        adapter.undo(selectHistoryState(state));
-      }),
-      redo: createReducer((state) => {
-        adapter.redo(selectHistoryState(state));
-      }),
-      jump: createReducer<number>((state, action) => {
-        adapter.jump(selectHistoryState(state), action);
-      }),
-      clearHistory: createReducer((state) => {
-        adapter.clearHistory(selectHistoryState(state));
-      }),
+      undo: createReducer(adapter.undo),
+      redo: createReducer(adapter.redo),
+      jump: createReducer(adapter.jump),
+      clearHistory: createReducer(adapter.clearHistory),
       reset: {
         _reducerDefinitionType: historyMethodsCreatorType,
         type: "reset",

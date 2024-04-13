@@ -1,4 +1,5 @@
 import type { Action, CaseReducer, PayloadAction } from "@reduxjs/toolkit";
+import type { Draft } from "immer";
 import {
   isFluxStandardAction,
   createSelector as _createSelector,
@@ -7,6 +8,7 @@ import type {
   HistoryAdapter as Adapter,
   HistoryAdapterConfig,
   HistoryState,
+  MaybeDraftHistoryState,
   UndoableConfig,
 } from ".";
 import { createHistoryAdapter as createAdapter } from ".";
@@ -89,7 +91,7 @@ export interface HistoryAdapter<Data> extends Adapter<Data> {
    * @param state History state shape, with patches
    * @param n Number of steps to move, or an action with a payload of the number of steps to move. Negative numbers move backwards.
    */
-  jump<State extends HistoryState<Data>>(
+  jump<State extends MaybeDraftHistoryState<Data>>(
     state: State,
     n: number | PayloadAction<number>,
   ): State;
@@ -113,7 +115,10 @@ export interface HistoryAdapter<Data> extends Adapter<Data> {
   >(
     reducer: CaseReducer<Data, A>,
     config?: Omit<UndoableConfig<Data, [action: A], RootState>, "isUndoable">,
-  ): <State extends RootState>(state: State, action: A) => State;
+  ): <State extends RootState | Draft<RootState>>(
+    state: State,
+    action: A,
+  ) => State;
 
   getSelectors(): HistorySelectors<Data>;
   getSelectors<RootState>(
