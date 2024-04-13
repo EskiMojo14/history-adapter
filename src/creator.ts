@@ -138,9 +138,9 @@ const makeScopedReducerCreator =
     createReducer: ReducerCreators<State>["reducer"],
     selectHistoryState: (state: Draft<State>) => HistoryState<Data>,
   ) =>
-  <P>(reducer: CaseReducer<HistoryState<Data>, PayloadAction<P>>) =>
+  <P>(mutator: (state: HistoryState<Data>, action: PayloadAction<P>) => void) =>
     createReducer<P>((state, action) => {
-      reducer(selectHistoryState(state) as never, action);
+      mutator(selectHistoryState(state), action);
     });
 
 export const historyMethodsCreator: ReducerCreator<
