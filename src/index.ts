@@ -28,6 +28,10 @@ export interface HistoryState<Data> {
   future: Array<PatchState>;
 }
 
+export type MaybeDraftHistoryState<Data> =
+  | HistoryState<Data>
+  | Draft<HistoryState<Data>>;
+
 enablePatches();
 
 const isDraftTyped = isDraft as <T>(value: T | Draft<T>) => value is Draft<T>;
@@ -35,13 +39,16 @@ const isDraftTyped = isDraft as <T>(value: T | Draft<T>) => value is Draft<T>;
 function makeStateOperator<State, Args extends Array<any> = []>(
   mutator: (state: Draft<State>, ...args: Args) => void,
 ) {
-  return function operator<S extends State>(state: S, ...args: Args): S {
+  return function operator<S extends State | Draft<State>>(
+    state: S,
+    ...args: Args
+  ): S {
     if (isDraftTyped(state)) {
-      mutator(state, ...args);
+      mutator(state as Draft<State>, ...args);
       return state;
     } else {
       return produce(state, (draft) => {
-        mutator(draft, ...args);
+        mutator(draft as Draft<State>, ...args);
       });
     }
   };
@@ -76,24 +83,27 @@ export interface HistoryAdapter<Data> {
    * Will mutate directly if passed a draft, otherwise will return a new state immutably.
    * @param state History state shape, with patches
    */
-  undo<State extends HistoryState<Data>>(state: State): State;
+  undo<State extends MaybeDraftHistoryState<Data>>(state: State): State;
   /**
    * Applies next patch if available, and returns state.
    * Will mutate directly if passed a draft, otherwise will return a new state immutably.
    * @param state History state shape, with patches
    */
-  redo<State extends HistoryState<Data>>(state: State): State;
+  redo<State extends MaybeDraftHistoryState<Data>>(state: State): State;
   /**
    * Moves the state back or forward in history by n steps.
    * @param state History state shape, with patches
    * @param n steps to move. Negative numbers move backwards.
    */
-  jump<State extends HistoryState<Data>>(state: State, n: number): State;
+  jump<State extends MaybeDraftHistoryState<Data>>(
+    state: State,
+    n: number,
+  ): State;
   /**
    * Clears past and present history.
    * @param state History state shape, with patches
    */
-  clearHistory<State extends HistoryState<Data>>(state: State): State;
+  clearHistory<State extends MaybeDraftHistoryState<Data>>(state: State): State;
 
   /**
    * Wraps a function to automatically update patch history according to changes
@@ -103,7 +113,10 @@ export interface HistoryAdapter<Data> {
   undoable<Args extends Array<any>, RootState = HistoryState<Data>>(
     recipe: (draft: Draft<Data>, ...args: Args) => ValidRecipeReturnType<Data>,
     config?: UndoableConfig<Data, Args, RootState>,
-  ): <State extends RootState>(state: State, ...args: Args) => State;
+  ): <State extends RootState | Draft<RootState>>(
+    state: State,
+    ...args: Args
+  ) => State;
   /**
    * Wraps a function to automatically update patch history according to changes
    * @param recipe An immer-style recipe, which can mutate the draft or return new state
@@ -113,7 +126,10 @@ export interface HistoryAdapter<Data> {
   undoable<Args extends Array<any>>(
     recipe: (draft: Draft<Data>, ...args: Args) => ValidRecipeReturnType<Data>,
     isUndoable?: (...args: NoInfer<Args>) => boolean | undefined,
-  ): <State extends HistoryState<Data>>(state: State, ...args: Args) => State;
+  ): <State extends MaybeDraftHistoryState<Data>>(
+    state: State,
+    ...args: Args
+  ) => State;
 }
 
 /**
