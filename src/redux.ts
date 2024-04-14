@@ -13,7 +13,7 @@ import type {
 } from ".";
 import { createHistoryAdapter as createAdapter } from ".";
 import type { IfMaybeUndefined } from "./utils";
-import type { CreateSelectorFunction } from "reselect";
+import type { CreateSelectorFunction, Selector } from "reselect";
 
 export type { HistoryState, HistoryAdapterConfig } from ".";
 export { getInitialState } from ".";
@@ -45,6 +45,26 @@ export interface HistorySelectors<Data, State = HistoryState<Data>> {
   selectPresent: (state: State) => Data;
 }
 
+function globaliseSelectors<
+  Data,
+  RootState,
+  Selected extends Record<string, unknown>,
+>(
+  createSelector: AnyCreateSelectorFunction,
+  selectState: (rootState: RootState) => HistoryState<Data>,
+  selectors: {
+    [K in keyof Selected]: (state: HistoryState<Data>) => Selected[K];
+  },
+): {
+  [K in keyof Selected]: (rootState: RootState) => Selected[K];
+} {
+  const result: Record<string, Selector<RootState>> = {};
+  for (const key of Object.keys(selectors)) {
+    result[key] = createSelector(selectState, selectors[key as keyof Selected]);
+  }
+  return result as never;
+}
+
 function makeSelectorFactory<Data>() {
   function getSelectors(): HistorySelectors<Data>;
   function getSelectors<RootState>(
@@ -63,20 +83,7 @@ function makeSelectorFactory<Data>() {
     if (!selectState) {
       return localisedSelectors;
     }
-    return {
-      selectCanUndo: createSelector(
-        selectState,
-        localisedSelectors.selectCanUndo,
-      ),
-      selectCanRedo: createSelector(
-        selectState,
-        localisedSelectors.selectCanRedo,
-      ),
-      selectPresent: createSelector(
-        selectState,
-        localisedSelectors.selectPresent,
-      ),
-    };
+    return globaliseSelectors(createSelector, selectState, localisedSelectors);
   }
   return getSelectors;
 }

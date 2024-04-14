@@ -15,7 +15,7 @@ import type {
   PrepareAction,
 } from "@reduxjs/toolkit";
 import type { HistoryAdapter, HistoryState } from "./redux";
-import type { NoInfer, WithRequiredProp } from "./utils";
+import type { WithRequiredProp } from "./utils";
 
 const historyMethodsCreatorType = Symbol();
 const undoableCreatorsCreatorType = Symbol();
