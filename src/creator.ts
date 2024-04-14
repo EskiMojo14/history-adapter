@@ -15,7 +15,7 @@ import type {
   PrepareAction,
 } from "@reduxjs/toolkit";
 import type { HistoryAdapter, HistoryState } from "./redux";
-import type { WithRequiredProp } from "./utils";
+import type { NoInfer, WithRequiredProp } from "./utils";
 
 const historyMethodsCreatorType = Symbol();
 const undoableCreatorsCreatorType = Symbol();
@@ -135,13 +135,14 @@ declare module "@reduxjs/toolkit" {
 
 const makeScopedReducerCreator =
   <State, Data>(
-    createReducer: ReducerCreators<State>["reducer"],
     selectHistoryState: (state: Draft<State>) => HistoryState<Data>,
   ) =>
   <P>(mutator: (state: HistoryState<Data>, action: PayloadAction<P>) => void) =>
-    createReducer<P>((state, action) => {
-      mutator(selectHistoryState(state), action);
-    });
+    (reducerCreator.create as ReducerCreators<State>["reducer"])<P>(
+      (state, action) => {
+        mutator(selectHistoryState(state), action);
+      },
+    );
 
 export const historyMethodsCreator: ReducerCreator<
   typeof historyMethodsCreatorType
@@ -153,10 +154,7 @@ export const historyMethodsCreator: ReducerCreator<
       selectHistoryState = (state) => state as HistoryState<Data>,
     }: HistoryMethodsCreatorConfig<State, Data> = {},
   ) {
-    const createReducer = makeScopedReducerCreator(
-      reducerCreator.create,
-      selectHistoryState,
-    );
+    const createReducer = makeScopedReducerCreator(selectHistoryState);
     return {
       undo: createReducer(adapter.undo),
       redo: createReducer(adapter.redo),
