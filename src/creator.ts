@@ -17,8 +17,8 @@ import type {
 import type { HistoryAdapter, HistoryState } from "./redux";
 import type { WithRequiredProp } from "./utils";
 
-const historyMethodsCreatorType = Symbol();
-const undoableCreatorsCreatorType = Symbol();
+const historyMethodsCreatorType = Symbol("historyMethodsCreator");
+const undoableCreatorsCreatorType = Symbol("undoableCreatorsCreator");
 
 interface HistoryReducers<State> {
   undo: CaseReducerDefinition<State, PayloadAction>;
