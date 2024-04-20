@@ -159,6 +159,8 @@ const undoneState = booksHistoryAdapter.undo(resumedState);
 console.log(undoneState.present); // [{ id: 1, title: "Dune" }, { id: 2, title: "Foundation" }]
 ```
 
+Changes will still be made to the data while paused (including `undo` and `redo`), but they won't be recorded in the history.
+
 ## Redux helper methods
 
 If imported from `"history-adapter/redux"`, the history adapter will have additional methods to assist use with Redux, specifically with Redux Toolkit.
