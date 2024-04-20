@@ -2,7 +2,7 @@ import type { Action, CaseReducer, PayloadAction } from "@reduxjs/toolkit";
 import type { Draft } from "immer";
 import {
   isFluxStandardAction,
-  createSelector as _createSelector,
+  createDraftSafeSelector as _createSelector,
 } from "@reduxjs/toolkit";
 import type {
   HistoryAdapter as Adapter,
