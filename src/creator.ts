@@ -23,6 +23,8 @@ const undoableCreatorsCreatorType = Symbol("undoableCreatorsCreator");
 interface HistoryReducers<State> {
   undo: CaseReducerDefinition<State, PayloadAction>;
   redo: CaseReducerDefinition<State, PayloadAction>;
+  pause: CaseReducerDefinition<State, PayloadAction>;
+  resume: CaseReducerDefinition<State, PayloadAction>;
   jump: CaseReducerDefinition<State, PayloadAction<number>>;
   clearHistory: CaseReducerDefinition<State, PayloadAction>;
   reset: ReducerDefinition<typeof historyMethodsCreatorType> & {
@@ -153,12 +155,14 @@ export const historyMethodsCreator: ReducerCreator<
     {
       selectHistoryState = (state) => state as HistoryState<Data>,
     }: HistoryMethodsCreatorConfig<State, Data> = {},
-  ) {
+  ): HistoryReducers<State> {
     const createReducer = makeScopedReducerCreator(selectHistoryState);
     return {
       undo: createReducer(adapter.undo),
       redo: createReducer(adapter.redo),
       jump: createReducer(adapter.jump),
+      pause: createReducer(adapter.pause),
+      resume: createReducer(adapter.resume),
       clearHistory: createReducer(adapter.clearHistory),
       reset: {
         _reducerDefinitionType: historyMethodsCreatorType,

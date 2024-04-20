@@ -26,6 +26,7 @@ export interface HistoryState<Data> {
   past: Array<PatchState>;
   present: Data;
   future: Array<PatchState>;
+  paused: boolean;
 }
 
 export type MaybeDraftHistoryState<Data> =
@@ -130,6 +131,17 @@ export interface HistoryAdapter<Data> {
     state: State,
     ...args: Args
   ) => State;
+
+  /**
+   * Pauses the history, preventing any new patches from being added.
+   * @param state History state shape, with patches
+   */
+  pause<State extends MaybeDraftHistoryState<Data>>(state: State): State;
+  /**
+   * Resumes the history, allowing new patches to be added.
+   * @param state History state shape, with patches
+   */
+  resume<State extends MaybeDraftHistoryState<Data>>(state: State): State;
 }
 
 /**
@@ -142,6 +154,7 @@ export function getInitialState<Data>(initialData: Data): HistoryState<Data> {
     past: [],
     present: initialData,
     future: [],
+    paused: false,
   };
 }
 
@@ -210,6 +223,9 @@ export function createHistoryAdapter<Data>({
         });
         state.present = present;
 
+        // if paused, don't add to history
+        if (state.paused) return;
+
         const undoable = isUndoable?.(...args) ?? true;
         if (undoable) {
           const lengthWithoutFuture = state.past.length + 1;
@@ -221,5 +237,11 @@ export function createHistoryAdapter<Data>({
         }
       });
     },
+    pause: makeStateOperator<HistoryState<Data>>((state) => {
+      state.paused = true;
+    }),
+    resume: makeStateOperator<HistoryState<Data>>((state) => {
+      state.paused = false;
+    }),
   };
 }

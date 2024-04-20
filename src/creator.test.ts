@@ -58,6 +58,8 @@ describe("Slice creators", () => {
         undo,
         redo,
         jump,
+        pause,
+        resume,
         clearHistory,
         reset,
         addBook,
@@ -109,6 +111,16 @@ describe("Slice creators", () => {
     store.dispatch(reset());
 
     expect(selectLastBook(store.getState())).toBeUndefined();
+
+    store.dispatch(pause());
+
+    store.dispatch(addBook(book1));
+
+    store.dispatch(resume());
+
+    store.dispatch(undo());
+
+    expect(selectLastBook(store.getState())).toEqual(book1);
   });
   it("works with nested state", () => {
     const bookSlice = createAppSlice({
@@ -144,6 +156,8 @@ describe("Slice creators", () => {
         undo,
         redo,
         jump,
+        pause,
+        resume,
         clearHistory,
         reset,
         addBook,
@@ -195,6 +209,14 @@ describe("Slice creators", () => {
     store.dispatch(reset());
 
     expect(selectLastBook(store.getState())).toBeUndefined();
+
+    store.dispatch(pause());
+
+    store.dispatch(addBook(book1));
+
+    store.dispatch(resume());
+
+    expect(selectLastBook(store.getState())).toEqual(book1);
   });
   it("can be destructured", () => {
     const bookSlice = createAppSlice({

@@ -2,7 +2,7 @@ import type { Action, CaseReducer, PayloadAction } from "@reduxjs/toolkit";
 import type { Draft } from "immer";
 import {
   isFluxStandardAction,
-  createSelector as _createSelector,
+  createDraftSafeSelector,
 } from "@reduxjs/toolkit";
 import type {
   HistoryAdapter as Adapter,
@@ -43,6 +43,11 @@ export interface HistorySelectors<Data, State = HistoryState<Data>> {
    * A selector which automatically extracts the present state
    */
   selectPresent: (state: State) => Data;
+
+  /**
+   * Returns true if the history is paused
+   */
+  selectPaused: (state: State) => boolean;
 }
 
 function globaliseSelectors<
@@ -73,13 +78,14 @@ function makeSelectorFactory<Data>() {
   ): HistorySelectors<Data, RootState>;
   function getSelectors<RootState>(
     selectState?: (rootState: RootState) => HistoryState<Data>,
-    { createSelector = _createSelector }: GetSelectorsOptions = {},
+    { createSelector = createDraftSafeSelector }: GetSelectorsOptions = {},
   ): HistorySelectors<Data, any> {
     const localisedSelectors = {
       selectCanUndo: (state) => state.past.length > 0,
       selectCanRedo: (state) => state.future.length > 0,
       selectPresent: (state) => state.present,
-    } satisfies Record<string, (state: HistoryState<Data>) => unknown>;
+      selectPaused: (state) => state.paused,
+    } satisfies HistorySelectors<any>;
     if (!selectState) {
       return localisedSelectors;
     }

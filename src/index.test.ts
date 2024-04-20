@@ -28,6 +28,7 @@ describe("createHistoryAdapter", () => {
         past: [],
         present: [],
         future: [],
+        paused: false,
       });
     });
   });
@@ -52,6 +53,7 @@ describe("createHistoryAdapter", () => {
         past: [aPatchState],
         present: [book1],
         future: [],
+        paused: false,
       });
     });
     it("handles nothing value to return undefined", () => {
@@ -63,6 +65,7 @@ describe("createHistoryAdapter", () => {
         past: [aPatchState],
         present: undefined,
         future: [],
+        paused: false,
       });
     });
     it("allows deriving from arguments whether update should be undoable", () => {
@@ -78,6 +81,7 @@ describe("createHistoryAdapter", () => {
         past: [],
         present: [book1],
         future: [],
+        paused: false,
       });
     });
     it("can be used as a mutator if already working with drafts", () => {
@@ -92,6 +96,7 @@ describe("createHistoryAdapter", () => {
         past: [aPatchState],
         present: [book1],
         future: [],
+        paused: false,
       });
     });
     it("can be provided with a selector if working with nested state", () => {
@@ -113,6 +118,7 @@ describe("createHistoryAdapter", () => {
           past: [aPatchState],
           present: [book1],
           future: [],
+          paused: false,
         },
       });
     });
@@ -130,6 +136,7 @@ describe("createHistoryAdapter", () => {
         past: [],
         present: [],
         future: [aPatchState],
+        paused: false,
       });
     });
     it("can be used as a mutator if already working with drafts", () => {
@@ -141,6 +148,7 @@ describe("createHistoryAdapter", () => {
         past: [],
         present: [],
         future: [aPatchState],
+        paused: false,
       });
     });
   });
@@ -159,6 +167,7 @@ describe("createHistoryAdapter", () => {
         past: [aPatchState],
         present: [book1],
         future: [],
+        paused: false,
       });
     });
     it("can be used as a mutator if already working with drafts", () => {
@@ -170,6 +179,7 @@ describe("createHistoryAdapter", () => {
         past: [aPatchState],
         present: [book1],
         future: [],
+        paused: false,
       });
     });
   });
@@ -187,6 +197,7 @@ describe("createHistoryAdapter", () => {
         past: [],
         present: [],
         future: [aPatchState, aPatchState],
+        paused: false,
       });
       const jumpedForwardState = booksHistoryAdapter.jump(jumpedState, 2);
       expect(jumpedForwardState).toEqual(secondState);
@@ -200,6 +211,96 @@ describe("createHistoryAdapter", () => {
         past: [],
         present: [],
         future: [aPatchState, aPatchState],
+        paused: false,
+      });
+    });
+  });
+  describe("pause", () => {
+    it("can be used to pause history tracking", () => {
+      const initialState = booksHistoryAdapter.getInitialState([]);
+      const pausedState = booksHistoryAdapter.pause(initialState);
+      expect(pausedState).toEqual<HistoryState<Array<Book>>>({
+        past: [],
+        present: [],
+        future: [],
+        paused: true,
+      });
+    });
+    it("can be used as a mutator if already working with drafts", () => {
+      const initialState = booksHistoryAdapter.getInitialState([]);
+      expect(
+        produce(initialState, (draft) => {
+          booksHistoryAdapter.pause(draft);
+        }),
+      ).toEqual<HistoryState<Array<Book>>>({
+        past: [],
+        present: [],
+        future: [],
+        paused: true,
+      });
+    });
+    it("is respected by undoable functions", () => {
+      const addBook = booksHistoryAdapter.undoable((books, book: Book) => {
+        books.push(book);
+      });
+      const initialState = booksHistoryAdapter.getInitialState([]);
+      const pausedState = booksHistoryAdapter.pause(initialState);
+      const nextState = addBook(pausedState, book1);
+      expect(nextState).toEqual<HistoryState<Array<Book>>>({
+        past: [],
+        present: [book1],
+        future: [],
+        paused: true,
+      });
+    });
+  });
+  describe("resume", () => {
+    it("can be used to resume history tracking", () => {
+      const initialState = booksHistoryAdapter.getInitialState([]);
+      const pausedState = booksHistoryAdapter.pause(initialState);
+      const resumedState = booksHistoryAdapter.resume(pausedState);
+      expect(resumedState).toEqual<HistoryState<Array<Book>>>({
+        past: [],
+        present: [],
+        future: [],
+        paused: false,
+      });
+    });
+    it("can be used as a mutator if already working with drafts", () => {
+      const initialState = booksHistoryAdapter.getInitialState([]);
+      const pausedState = booksHistoryAdapter.pause(initialState);
+      expect(
+        produce(pausedState, (draft) => {
+          booksHistoryAdapter.resume(draft);
+        }),
+      ).toEqual<HistoryState<Array<Book>>>({
+        past: [],
+        present: [],
+        future: [],
+        paused: false,
+      });
+    });
+    it("is respected by undoable functions", () => {
+      const addBook = booksHistoryAdapter.undoable((books, book: Book) => {
+        books.push(book);
+      });
+      const initialState = booksHistoryAdapter.getInitialState([]);
+      const pausedState = booksHistoryAdapter.pause(initialState);
+      const withBook = addBook(pausedState, book1);
+      expect(withBook).toEqual<HistoryState<Array<Book>>>({
+        past: [],
+        present: [book1],
+        future: [],
+        paused: true,
+      });
+
+      const resumedState = booksHistoryAdapter.resume(withBook);
+      const nextState = addBook(resumedState, book2);
+      expect(nextState).toEqual<HistoryState<Array<Book>>>({
+        past: [aPatchState],
+        present: [book1, book2],
+        future: [],
+        paused: false,
       });
     });
   });

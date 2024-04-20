@@ -34,6 +34,8 @@ describe("createReduxHistoryAdapter", () => {
       undo: create.reducer(booksHistoryAdapter.undo),
       redo: create.reducer(booksHistoryAdapter.redo),
       jump: create.reducer(booksHistoryAdapter.jump),
+      pause: create.reducer(booksHistoryAdapter.pause),
+      resume: create.reducer(booksHistoryAdapter.resume),
       clearHistory: create.reducer(booksHistoryAdapter.clearHistory),
       addBook: create.preparedReducer(
         booksHistoryAdapter.withPayload<Book>(),
@@ -55,12 +57,21 @@ describe("createReduxHistoryAdapter", () => {
         localisedSelectors.selectPresent,
         (books) => books.at(-1),
       ),
+      selectPaused: localisedSelectors.selectPaused,
     },
   });
 
-  const { undo, redo, jump, clearHistory, addBook, removeLastBook } =
-    booksHistorySlice.actions;
-  const { selectCanRedo, selectCanUndo, selectLastBook } =
+  const {
+    undo,
+    redo,
+    jump,
+    pause,
+    resume,
+    clearHistory,
+    addBook,
+    removeLastBook,
+  } = booksHistorySlice.actions;
+  const { selectCanRedo, selectCanUndo, selectLastBook, selectPaused } =
     booksHistorySlice.selectors;
 
   const reducer = combineSlices(booksHistorySlice);
@@ -115,6 +126,14 @@ describe("createReduxHistoryAdapter", () => {
     store.dispatch(removeLastBook());
 
     expect(selectLastBook(store.getState())).toBeUndefined();
+
+    store.dispatch(pause());
+
+    expect(selectPaused(store.getState())).toBe(true);
+
+    store.dispatch(resume());
+
+    expect(selectPaused(store.getState())).toBe(false);
   });
 
   it("can derive undoable from action", () => {
