@@ -142,6 +142,23 @@ console.log(tryUndoState.present); // [{ id: 1, title: "Dune" }]
 
 Just like undoable functions, these methods will act mutably when passed an immer draft and immutably otherwise.
 
+### Pausing history
+
+If you need to make changes to the state without affecting the history, you can use the `pause` and `resume` methods.
+
+```ts
+const pausedState = booksHistoryAdapter.pause(resetState);
+
+const withBook = addBook(pausedState, { id: 2, title: "Foundation" });
+
+const resumedState = booksHistoryAdapter.resume(withBook);
+
+const undoneState = booksHistoryAdapter.undo(resumedState);
+
+// changes while paused cannot be undone
+console.log(undoneState.present); // [{ id: 1, title: "Dune" }, { id: 2, title: "Foundation" }]
+```
+
 ## Redux helper methods
 
 If imported from `"history-adapter/redux"`, the history adapter will have additional methods to assist use with Redux, specifically with Redux Toolkit.
@@ -247,7 +264,7 @@ dispatch(addBook(book, true)); // action.meta.undoable === true
 dispatch(addBook(book, false)); // action.meta.undoable === false
 ```
 
-As a tip, `undo`, `redo` and `clearHistory` are all valid reducers due to not needing an argument. The version of `jump` on a Redux history adapter allows for either a number or payload action, making it also valid.
+As a tip, `undo`, `redo`, `pause`, `resume` and `clearHistory` are all valid reducers due to not needing an argument. The version of `jump` on a Redux history adapter allows for either a number or payload action, making it also valid.
 
 ```ts
 const booksSlice = createSlice({
@@ -257,6 +274,8 @@ const booksSlice = createSlice({
     undo: booksHistoryAdapter.undo,
     redo: booksHistoryAdapter.redo,
     jump: booksHistoryAdapter.jump,
+    pause: booksHistoryAdapter.pause,
+    resume: booksHistoryAdapter.resume,
     clearHistory: booksHistoryAdapter.clearHistory,
     addBook: {
       prepare: booksHistoryAdapter.withPayload<Book>(),
@@ -275,20 +294,24 @@ const booksSlice = createSlice({
 A method which returns some useful selectors.
 
 ```ts
-const { selectCanUndo, selectCanRedo, selectPresent } =
+const { selectCanUndo, selectCanRedo, selectPresent, selectPaused } =
   booksHistoryAdapter.getSelectors();
 
 console.log(
   selectPresent(initialState), // []
   selectCanUndo(initialState), // false
   selectCanRedo(initialState), // false
+  selectPaused(initialState), // false
 );
 
 console.log(
   selectPresent(nextState), // [{ id: 1, title: "Dune" }]
   selectCanUndo(nextState), // true
   selectCanRedo(nextState), // false
+  selectPaused(nextState), // false
 );
+
+console.log(selectPaused(pausedState)); // true
 ```
 
 If an input selector is provided, the selectors will be combined using [reselect](https://github.com/reduxjs/reselect).
