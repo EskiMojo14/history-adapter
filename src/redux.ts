@@ -43,6 +43,11 @@ export interface HistorySelectors<Data, State = HistoryState<Data>> {
    * A selector which automatically extracts the present state
    */
   selectPresent: (state: State) => Data;
+
+  /**
+   * Returns true if the history is paused
+   */
+  selectPaused: (state: State) => boolean;
 }
 
 function globaliseSelectors<
@@ -79,7 +84,8 @@ function makeSelectorFactory<Data>() {
       selectCanUndo: (state) => state.past.length > 0,
       selectCanRedo: (state) => state.future.length > 0,
       selectPresent: (state) => state.present,
-    } satisfies Record<string, (state: HistoryState<Data>) => unknown>;
+      selectPaused: (state) => state.paused,
+    } satisfies HistorySelectors<any>;
     if (!selectState) {
       return localisedSelectors;
     }
