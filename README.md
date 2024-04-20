@@ -326,7 +326,7 @@ const { selectPresent } = booksHistoryAdapter.getSelectors(
 console.log(selectPresent({ books: initialState })); // []
 ```
 
-The instance of `createSelector` used can be customised:
+The instance of `createSelector` used can be customised, and defaults to RTK's [`createDraftSafeSelector`](https://redux-toolkit.js.org/api/createSelector#createdraftsafeselector):
 
 ```ts
 import { createSelectorCreator, lruMemoize } from "reselect";
