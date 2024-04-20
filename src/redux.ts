@@ -2,7 +2,7 @@ import type { Action, CaseReducer, PayloadAction } from "@reduxjs/toolkit";
 import type { Draft } from "immer";
 import {
   isFluxStandardAction,
-  createDraftSafeSelector as _createSelector,
+  createDraftSafeSelector,
 } from "@reduxjs/toolkit";
 import type {
   HistoryAdapter as Adapter,
@@ -78,7 +78,7 @@ function makeSelectorFactory<Data>() {
   ): HistorySelectors<Data, RootState>;
   function getSelectors<RootState>(
     selectState?: (rootState: RootState) => HistoryState<Data>,
-    { createSelector = _createSelector }: GetSelectorsOptions = {},
+    { createSelector = createDraftSafeSelector }: GetSelectorsOptions = {},
   ): HistorySelectors<Data, any> {
     const localisedSelectors = {
       selectCanUndo: (state) => state.past.length > 0,
