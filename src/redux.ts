@@ -102,11 +102,22 @@ export interface HistoryAdapter<Data> extends Adapter<Data> {
   /**
    * Moves the state back or forward in history by n steps.
    * @param state History state shape, with patches
-   * @param n Number of steps to move, or an action with a payload of the number of steps to move. Negative numbers move backwards.
+   * @param n Number of steps to moveNegative numbers move backwards.
    */
   jump<State extends MaybeDraftHistoryState<Data>>(
     state: State,
-    n: number | PayloadAction<number>,
+    // eslint-disable-next-line @typescript-eslint/unified-signatures
+    n: number,
+  ): State;
+  /**
+   * Moves the state back or forward in history by n steps.
+   * @param state History state shape, with patches
+   * @param action An action with a payload of the number of steps to move. Negative numbers move backwards.
+   */
+  jump<State extends MaybeDraftHistoryState<Data>>(
+    state: State,
+    // eslint-disable-next-line @typescript-eslint/unified-signatures
+    action: PayloadAction<number>,
   ): State;
   /** An action creator prepare callback which doesn't take a payload */
   withoutPayload(): (undoable?: boolean) => {

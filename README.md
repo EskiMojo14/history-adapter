@@ -273,12 +273,12 @@ const booksSlice = createSlice({
   name: "books",
   initialState: booksHistoryAdapter.getInitialState([]),
   reducers: {
-    undo: booksHistoryAdapter.undo,
-    redo: booksHistoryAdapter.redo,
-    jump: booksHistoryAdapter.jump,
-    pause: booksHistoryAdapter.pause,
-    resume: booksHistoryAdapter.resume,
-    clearHistory: booksHistoryAdapter.clearHistory,
+    undone: booksHistoryAdapter.undo,
+    redone: booksHistoryAdapter.redo,
+    jumped: booksHistoryAdapter.jump,
+    paused: booksHistoryAdapter.pause,
+    resumed: booksHistoryAdapter.resume,
+    historyCleared: booksHistoryAdapter.clearHistory,
     addBook: {
       prepare: booksHistoryAdapter.withPayload<Book>(),
       reducer: booksHistoryAdapter.undoableReducer(

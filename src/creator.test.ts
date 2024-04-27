@@ -55,12 +55,13 @@ describe("Slice creators", () => {
     });
     const {
       actions: {
-        undo,
-        redo,
-        jump,
-        pause,
-        resume,
-        clearHistory,
+        undone,
+        redone,
+        jumped,
+        paused,
+        resumed,
+        pauseToggled,
+        historyCleared,
         reset,
         addBook,
         removeLastBook,
@@ -80,11 +81,11 @@ describe("Slice creators", () => {
 
     expect(selectLastBook(store.getState())).toBeUndefined();
 
-    store.dispatch(undo());
+    store.dispatch(undone());
 
     expect(selectLastBook(store.getState())).toStrictEqual(book1);
 
-    store.dispatch(redo());
+    store.dispatch(redone());
 
     expect(selectLastBook(store.getState())).toBeUndefined();
 
@@ -92,17 +93,17 @@ describe("Slice creators", () => {
 
     expect(selectLastBook(store.getState())).toStrictEqual(book2);
 
-    store.dispatch(undo());
+    store.dispatch(undone());
 
     expect(selectLastBook(store.getState())).toBe(book2);
 
-    store.dispatch(jump(-1));
+    store.dispatch(jumped(-1));
 
     expect(selectLastBook(store.getState())).toStrictEqual(book2);
 
-    store.dispatch(clearHistory());
+    store.dispatch(historyCleared());
 
-    store.dispatch(undo());
+    store.dispatch(undone());
 
     expect(selectLastBook(store.getState())).toStrictEqual(book2);
 
@@ -112,15 +113,25 @@ describe("Slice creators", () => {
 
     expect(selectLastBook(store.getState())).toBeUndefined();
 
-    store.dispatch(pause());
+    store.dispatch(paused());
 
     store.dispatch(addBook(book1));
 
-    store.dispatch(resume());
+    store.dispatch(resumed());
 
-    store.dispatch(undo());
+    store.dispatch(undone());
 
     expect(selectLastBook(store.getState())).toEqual(book1);
+
+    store.dispatch(pauseToggled());
+
+    store.dispatch(addBook(book2));
+
+    store.dispatch(pauseToggled());
+
+    store.dispatch(undone());
+
+    expect(selectLastBook(store.getState())).toEqual(book2);
   });
   it("works with nested state", () => {
     const bookSlice = createAppSlice({
@@ -153,12 +164,13 @@ describe("Slice creators", () => {
 
     const {
       actions: {
-        undo,
-        redo,
-        jump,
-        pause,
-        resume,
-        clearHistory,
+        undone,
+        redone,
+        jumped,
+        paused,
+        resumed,
+        pauseToggled,
+        historyCleared,
         reset,
         addBook,
         removeLastBook,
@@ -178,11 +190,11 @@ describe("Slice creators", () => {
 
     expect(selectLastBook(store.getState())).toBeUndefined();
 
-    store.dispatch(undo());
+    store.dispatch(undone());
 
     expect(selectLastBook(store.getState())).toStrictEqual(book1);
 
-    store.dispatch(redo());
+    store.dispatch(redone());
 
     expect(selectLastBook(store.getState())).toBeUndefined();
 
@@ -190,17 +202,17 @@ describe("Slice creators", () => {
 
     expect(selectLastBook(store.getState())).toStrictEqual(book2);
 
-    store.dispatch(undo());
+    store.dispatch(undone());
 
     expect(selectLastBook(store.getState())).toBe(book2);
 
-    store.dispatch(jump(-1));
+    store.dispatch(jumped(-1));
 
     expect(selectLastBook(store.getState())).toStrictEqual(book2);
 
-    store.dispatch(clearHistory());
+    store.dispatch(historyCleared());
 
-    store.dispatch(undo());
+    store.dispatch(undone());
 
     expect(selectLastBook(store.getState())).toStrictEqual(book2);
 
@@ -210,13 +222,23 @@ describe("Slice creators", () => {
 
     expect(selectLastBook(store.getState())).toBeUndefined();
 
-    store.dispatch(pause());
+    store.dispatch(paused());
 
     store.dispatch(addBook(book1));
 
-    store.dispatch(resume());
+    store.dispatch(resumed());
 
     expect(selectLastBook(store.getState())).toEqual(book1);
+
+    store.dispatch(pauseToggled());
+
+    store.dispatch(addBook(book2));
+
+    store.dispatch(pauseToggled());
+
+    store.dispatch(undone());
+
+    expect(selectLastBook(store.getState())).toEqual(book2);
   });
   it("can be destructured", () => {
     const bookSlice = createAppSlice({
@@ -243,11 +265,11 @@ describe("Slice creators", () => {
     });
 
     const {
-      actions: { undo, addBook },
+      actions: { undone, addBook },
       selectors: { selectLastBook },
     } = bookSlice;
 
-    expect(undo).toBeTypeOf("function");
+    expect(undone).toBeTypeOf("function");
 
     const store = configureStore({ reducer: combineSlices(bookSlice) });
 
@@ -257,7 +279,7 @@ describe("Slice creators", () => {
 
     expect(selectLastBook(store.getState())).toStrictEqual(book1);
 
-    store.dispatch(undo());
+    store.dispatch(undone());
 
     expect(selectLastBook(store.getState())).toBeUndefined();
   });

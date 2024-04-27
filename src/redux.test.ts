@@ -31,12 +31,12 @@ describe("createReduxHistoryAdapter", () => {
     name: "books",
     initialState: booksHistoryAdapter.getInitialState([]),
     reducers: (create) => ({
-      undo: create.reducer(booksHistoryAdapter.undo),
-      redo: create.reducer(booksHistoryAdapter.redo),
-      jump: create.reducer(booksHistoryAdapter.jump),
-      pause: create.reducer(booksHistoryAdapter.pause),
-      resume: create.reducer(booksHistoryAdapter.resume),
-      clearHistory: create.reducer(booksHistoryAdapter.clearHistory),
+      undone: create.reducer(booksHistoryAdapter.undo),
+      redone: create.reducer(booksHistoryAdapter.redo),
+      jumped: create.reducer(booksHistoryAdapter.jump),
+      paused: create.reducer(booksHistoryAdapter.pause),
+      resumed: create.reducer(booksHistoryAdapter.resume),
+      historyCleared: create.reducer(booksHistoryAdapter.clearHistory),
       addBook: create.preparedReducer(
         booksHistoryAdapter.withPayload<Book>(),
         booksHistoryAdapter.undoableReducer((state, action) => {
@@ -62,12 +62,12 @@ describe("createReduxHistoryAdapter", () => {
   });
 
   const {
-    undo,
-    redo,
-    jump,
-    pause,
-    resume,
-    clearHistory,
+    undone,
+    redone,
+    jumped,
+    paused,
+    resumed,
+    historyCleared,
     addBook,
     removeLastBook,
   } = booksHistorySlice.actions;
@@ -93,7 +93,7 @@ describe("createReduxHistoryAdapter", () => {
 
     expect(selectCanRedo(store.getState())).toBe(false);
 
-    store.dispatch(undo());
+    store.dispatch(undone());
 
     expect(selectLastBook(store.getState())).toBeUndefined();
 
@@ -101,7 +101,7 @@ describe("createReduxHistoryAdapter", () => {
 
     expect(selectCanRedo(store.getState())).toBe(true);
 
-    store.dispatch(redo());
+    store.dispatch(redone());
 
     expect(selectLastBook(store.getState())).toStrictEqual(book1);
 
@@ -109,17 +109,17 @@ describe("createReduxHistoryAdapter", () => {
 
     expect(selectLastBook(store.getState())).toStrictEqual(book2);
 
-    store.dispatch(jump(-2));
+    store.dispatch(jumped(-2));
 
     expect(selectLastBook(store.getState())).toBe(undefined);
 
-    store.dispatch(jump(1));
+    store.dispatch(jumped(1));
 
     expect(selectLastBook(store.getState())).toStrictEqual(book1);
 
-    store.dispatch(clearHistory());
+    store.dispatch(historyCleared());
 
-    store.dispatch(undo());
+    store.dispatch(undone());
 
     expect(selectLastBook(store.getState())).toStrictEqual(book1);
 
@@ -127,11 +127,11 @@ describe("createReduxHistoryAdapter", () => {
 
     expect(selectLastBook(store.getState())).toBeUndefined();
 
-    store.dispatch(pause());
+    store.dispatch(paused());
 
     expect(selectPaused(store.getState())).toBe(true);
 
-    store.dispatch(resume());
+    store.dispatch(resumed());
 
     expect(selectPaused(store.getState())).toBe(false);
   });
@@ -143,7 +143,7 @@ describe("createReduxHistoryAdapter", () => {
 
     expect(selectLastBook(store.getState())).toStrictEqual(book1);
 
-    store.dispatch(undo());
+    store.dispatch(undone());
 
     expect(selectLastBook(store.getState())).toStrictEqual(book1);
   });
@@ -155,7 +155,7 @@ describe("createReduxHistoryAdapter", () => {
         books: booksHistoryAdapter.getInitialState([]),
       },
       reducers: (create) => ({
-        undo: create.reducer((state) => {
+        undone: create.reducer((state) => {
           booksHistoryAdapter.undo(state.books);
         }),
         addBook: create.preparedReducer(
@@ -176,7 +176,7 @@ describe("createReduxHistoryAdapter", () => {
       },
     });
 
-    const { addBook, undo } = nestedSlice.actions;
+    const { addBook, undone } = nestedSlice.actions;
     const { selectLastBook } = nestedSlice.selectors;
 
     const reducer = combineSlices(nestedSlice);
@@ -187,7 +187,7 @@ describe("createReduxHistoryAdapter", () => {
 
     expect(selectLastBook(store.getState())).toStrictEqual(book1);
 
-    store.dispatch(undo());
+    store.dispatch(undone());
 
     expect(selectLastBook(store.getState())).toBeUndefined();
   });
