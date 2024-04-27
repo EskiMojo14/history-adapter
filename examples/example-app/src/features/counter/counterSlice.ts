@@ -25,8 +25,8 @@ export const counterSlice = createSlice({
         state.value -= action.payload;
       },
     ),
-    undo: counterAdapter.undo,
-    redo: counterAdapter.redo,
+    undone: counterAdapter.undo,
+    redone: counterAdapter.redo,
     pauseToggled(state) {
       if (state.paused) {
         counterAdapter.resume(state);
@@ -34,8 +34,8 @@ export const counterSlice = createSlice({
         counterAdapter.pause(state);
       }
     },
-    jump: counterAdapter.jump,
-    clearHistory: counterAdapter.clearHistory,
+    jumped: counterAdapter.jump,
+    historyCleared: counterAdapter.clearHistory,
     reset: () => initialState,
   },
   selectors: {
@@ -47,11 +47,11 @@ export const counterSlice = createSlice({
 export const {
   incremented,
   decremented,
-  undo,
-  redo,
+  undone,
+  redone,
   pauseToggled,
-  jump,
-  clearHistory,
+  jumped,
+  historyCleared,
   reset,
 } = counterSlice.actions;
 

@@ -1,17 +1,17 @@
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import {
-  clearHistory,
+  historyCleared,
   decremented,
   incremented,
-  jump,
+  jumped,
   pauseToggled,
-  redo,
+  redone,
   reset,
   selectCanRedo,
   selectCanUndo,
   selectCount,
   selectPaused,
-  undo,
+  undone,
 } from "./counterSlice";
 
 export function Count() {
@@ -28,19 +28,19 @@ export function Count() {
       <button onClick={() => dispatch(pauseToggled())}>
         {paused ? "resume" : "pause"} history
       </button>
-      <button disabled={!canUndo} onClick={() => dispatch(undo())}>
+      <button disabled={!canUndo} onClick={() => dispatch(undone())}>
         undo
       </button>
-      <button disabled={!canRedo} onClick={() => dispatch(redo())}>
+      <button disabled={!canRedo} onClick={() => dispatch(redone())}>
         redo
       </button>
-      <button disabled={!canUndo} onClick={() => dispatch(jump(-2))}>
+      <button disabled={!canUndo} onClick={() => dispatch(jumped(-2))}>
         jump back 2
       </button>
-      <button disabled={!canRedo} onClick={() => dispatch(jump(2))}>
+      <button disabled={!canRedo} onClick={() => dispatch(jumped(2))}>
         jump forward 2
       </button>
-      <button onClick={() => dispatch(clearHistory())}>clear history</button>
+      <button onClick={() => dispatch(historyCleared())}>clear history</button>
       <button onClick={() => dispatch(reset())}>reset</button>
     </>
   );
