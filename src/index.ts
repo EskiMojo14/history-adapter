@@ -9,7 +9,7 @@ import {
 } from "immer";
 import type { NoInfer } from "./utils";
 
-type MaybeDraft<T> = T | Draft<T>;
+export type MaybeDraft<T> = T | Draft<T>;
 
 type ValidRecipeReturnType<State> =
   | State
@@ -42,7 +42,7 @@ export type MaybeDraftNonPatchHistoryState<Data> =
   | NonPatchHistoryState<Data>
   | Draft<NonPatchHistoryState<Data>>;
 
-interface HistoryStateFn {
+export interface HistoryStateFn {
   state: BaseHistoryState<this["data"], unknown>;
   data: unknown;
 }
@@ -55,7 +55,7 @@ interface NonPatchHistoryStateFn extends HistoryStateFn {
   state: NonPatchHistoryState<this["data"]>;
 }
 
-type ApplyDataType<Data, StateFn extends HistoryStateFn> = (StateFn & {
+export type ApplyDataType<Data, StateFn extends HistoryStateFn> = (StateFn & {
   data: Data;
 })["state"];
 
@@ -208,6 +208,16 @@ type BuildHistoryAdapterConfig<StateFn extends HistoryStateFn> = {
       ) => ApplyDataType<Data, StateFn>;
     });
 
+export interface CreateHistoryAdapter<StateFn extends HistoryStateFn> {
+  <Data>(
+    adapterConfig?: HistoryAdapterConfig,
+  ): HistoryAdapter<Data, ApplyDataType<Data, StateFn>>;
+  /** not real keys, included for inference */
+  __Types: {
+    stateFn: StateFn;
+  };
+}
+
 function buildCreateHistoryAdapter<StateType extends HistoryStateFn>({
   undoMutably,
   redoMutably,
@@ -215,7 +225,7 @@ function buildCreateHistoryAdapter<StateType extends HistoryStateFn>({
   onCreate,
   getInitialState: getInitialStateCustom = getInitialState,
 }: BuildHistoryAdapterConfig<StateType>) {
-  return function createHistoryAdapter<Data>(
+  function createHistoryAdapter<Data>(
     adapterConfig: HistoryAdapterConfig = {},
   ): HistoryAdapter<Data, ApplyDataType<Data, StateType>> {
     type State = ApplyDataType<Data, StateType>;
@@ -270,7 +280,8 @@ function buildCreateHistoryAdapter<StateType extends HistoryStateFn>({
         });
       },
     };
-  };
+  }
+  return createHistoryAdapter as CreateHistoryAdapter<StateType>;
 }
 
 export const createHistoryAdapter =
