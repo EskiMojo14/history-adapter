@@ -208,16 +208,6 @@ type BuildHistoryAdapterConfig<StateFn extends HistoryStateFn> = {
       ) => ApplyDataType<Data, StateFn>;
     });
 
-export interface CreateHistoryAdapter<StateFn extends HistoryStateFn> {
-  <Data>(
-    adapterConfig?: HistoryAdapterConfig,
-  ): HistoryAdapter<Data, ApplyDataType<Data, StateFn>>;
-  /** not real keys, included for inference */
-  __Types: {
-    stateFn: StateFn;
-  };
-}
-
 function buildCreateHistoryAdapter<StateType extends HistoryStateFn>({
   undoMutably,
   redoMutably,
@@ -225,7 +215,7 @@ function buildCreateHistoryAdapter<StateType extends HistoryStateFn>({
   onCreate,
   getInitialState: getInitialStateCustom = getInitialState,
 }: BuildHistoryAdapterConfig<StateType>) {
-  function createHistoryAdapter<Data>(
+  return function createHistoryAdapter<Data>(
     adapterConfig: HistoryAdapterConfig = {},
   ): HistoryAdapter<Data, ApplyDataType<Data, StateType>> {
     type State = ApplyDataType<Data, StateType>;
@@ -280,8 +270,7 @@ function buildCreateHistoryAdapter<StateType extends HistoryStateFn>({
         });
       },
     };
-  }
-  return createHistoryAdapter as CreateHistoryAdapter<StateType>;
+  };
 }
 
 export const createHistoryAdapter =
