@@ -98,7 +98,8 @@ export interface UndoableMeta {
   undoable?: boolean;
 }
 
-export interface HistoryAdapter<Data> extends Adapter<Data> {
+export interface HistoryAdapter<Data>
+  extends Adapter<Data, MaybeDraftHistoryState<Data>> {
   /**
    * Moves the state back or forward in history by n steps.
    * @param state History state shape, with patches
@@ -138,7 +139,15 @@ export interface HistoryAdapter<Data> extends Adapter<Data> {
     RootState = HistoryState<Data>,
   >(
     reducer: CaseReducer<Data, A>,
-    config?: Omit<UndoableConfig<Data, [action: A], RootState>, "isUndoable">,
+    config?: Omit<
+      UndoableConfig<
+        Data,
+        MaybeDraftHistoryState<Data>,
+        [action: A],
+        RootState
+      >,
+      "isUndoable"
+    >,
   ): <State extends RootState | Draft<RootState>>(
     state: State,
     action: A,

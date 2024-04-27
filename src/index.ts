@@ -1,4 +1,4 @@
-import type { Patch, Draft } from "immer";
+import type { Patch, Draft, Immutable } from "immer";
 import {
   nothing,
   enablePatches,
@@ -6,8 +6,9 @@ import {
   produceWithPatches,
   produce,
   isDraft,
+  current,
 } from "immer";
-import type { NoInfer } from "./utils";
+import type { NoInfer, Overwrite } from "./utils";
 
 type ValidRecipeReturnType<State> =
   | State
@@ -33,7 +34,37 @@ export type MaybeDraftHistoryState<Data> =
   | HistoryState<Data>
   | Draft<HistoryState<Data>>;
 
-enablePatches();
+export type NonPatchHistoryState<Data> = Overwrite<
+  HistoryState<Data>,
+  {
+    past: Array<Data>;
+    future: Array<Data>;
+  }
+>;
+
+export type MaybeDraftNonPatchHistoryState<Data> =
+  | NonPatchHistoryState<Data>
+  | Draft<NonPatchHistoryState<Data>>;
+
+type MaybeDraftMaybePatchHistoryState<Data> =
+  | MaybeDraftHistoryState<Data>
+  | MaybeDraftNonPatchHistoryState<Data>;
+
+interface HistoryStateType {
+  state: MaybeDraftHistoryState<this["data"]>;
+  data: unknown;
+}
+
+interface NonPatchHistoryStateType {
+  state: MaybeDraftNonPatchHistoryState<this["data"]>;
+  data: unknown;
+}
+
+type ApplyDataType<
+  Data,
+  StateType extends HistoryStateType | NonPatchHistoryStateType,
+> = (StateType & { data: Data })["state"] &
+  MaybeDraftMaybePatchHistoryState<Data>;
 
 const isDraftTyped = isDraft as <T>(value: T | Draft<T>) => value is Draft<T>;
 
@@ -59,7 +90,12 @@ export interface HistoryAdapterConfig {
   limit?: number;
 }
 
-export interface UndoableConfig<Data, Args extends Array<any>, RootState> {
+export interface UndoableConfig<
+  Data,
+  HistoryStateType extends MaybeDraftMaybePatchHistoryState<Data>,
+  Args extends Array<any>,
+  RootState,
+> {
   /**
    * A function to extract from the arguments whether the action was undoable or not.
    * If not provided (or if function returns undefined), defaults to true.
@@ -69,10 +105,13 @@ export interface UndoableConfig<Data, Args extends Array<any>, RootState> {
   /**
    * A function to select the history state from the root state.
    */
-  selectHistoryState?: (state: Draft<RootState>) => HistoryState<Data>;
+  selectHistoryState?: (state: Draft<RootState>) => Draft<HistoryStateType>;
 }
 
-export interface HistoryAdapter<Data> {
+export interface HistoryAdapter<
+  Data,
+  HistoryStateType extends MaybeDraftMaybePatchHistoryState<Data>,
+> {
   /**
    * Construct an initial state with no history.
    * @param initialData Data to include
@@ -84,36 +123,33 @@ export interface HistoryAdapter<Data> {
    * Will mutate directly if passed a draft, otherwise will return a new state immutably.
    * @param state History state shape, with patches
    */
-  undo<State extends MaybeDraftHistoryState<Data>>(state: State): State;
+  undo<State extends HistoryStateType>(state: State): State;
   /**
    * Applies next patch if available, and returns state.
    * Will mutate directly if passed a draft, otherwise will return a new state immutably.
    * @param state History state shape, with patches
    */
-  redo<State extends MaybeDraftHistoryState<Data>>(state: State): State;
+  redo<State extends HistoryStateType>(state: State): State;
   /**
    * Moves the state back or forward in history by n steps.
    * @param state History state shape, with patches
    * @param n steps to move. Negative numbers move backwards.
    */
-  jump<State extends MaybeDraftHistoryState<Data>>(
-    state: State,
-    n: number,
-  ): State;
+  jump<State extends HistoryStateType>(state: State, n: number): State;
   /**
    * Clears past and present history.
    * @param state History state shape, with patches
    */
-  clearHistory<State extends MaybeDraftHistoryState<Data>>(state: State): State;
+  clearHistory<State extends HistoryStateType>(state: State): State;
 
   /**
    * Wraps a function to automatically update patch history according to changes
    * @param recipe An immer-style recipe, which can mutate the draft or return new state
    * @param config Configuration for undoable action
    */
-  undoable<Args extends Array<any>, RootState = HistoryState<Data>>(
+  undoable<Args extends Array<any>, RootState = HistoryStateType>(
     recipe: (draft: Draft<Data>, ...args: Args) => ValidRecipeReturnType<Data>,
-    config?: UndoableConfig<Data, Args, RootState>,
+    config?: UndoableConfig<Data, HistoryStateType, Args, RootState>,
   ): <State extends RootState | Draft<RootState>>(
     state: State,
     ...args: Args
@@ -158,61 +194,120 @@ export function getInitialState<Data>(initialData: Data): HistoryState<Data> {
   };
 }
 
-export function createHistoryAdapter<Data>({
-  limit,
-}: HistoryAdapterConfig = {}): HistoryAdapter<Data> {
-  function undoMutably(state: Draft<HistoryState<unknown>>) {
-    const historyEntry = state.past.pop();
-    if (historyEntry) {
-      applyPatches(state, historyEntry.undo);
-      state.future.unshift(historyEntry);
-    }
-  }
-  function redoMutably(state: Draft<HistoryState<unknown>>) {
-    const historyEntry = state.future.shift();
-    if (historyEntry) {
-      applyPatches(state, historyEntry.redo);
-      state.past.push(historyEntry);
-    }
-  }
+interface BuildHistoryAdapterConfig<
+  StateType extends HistoryStateType | NonPatchHistoryStateType,
+> {
+  undoMutably: (state: StateType["state"]) => void;
+  redoMutably: (state: StateType["state"]) => void;
+  wrapRecipe: <Data, Args extends Array<any>, RootState>(
+    recipe: (draft: Draft<Data>, ...args: Args) => ValidRecipeReturnType<Data>,
+    config: UndoableConfig<
+      Data,
+      ApplyDataType<Data, StateType>,
+      Args,
+      RootState
+    >,
+    adapterConfig: HistoryAdapterConfig,
+  ) => (state: Draft<RootState>, ...args: Args) => void;
+  init?: (config: HistoryAdapterConfig) => void;
+}
 
-  return {
-    getInitialState,
-    undo: makeStateOperator(undoMutably),
-    redo: makeStateOperator(redoMutably),
-    jump: makeStateOperator<HistoryState<Data>, [number]>((state, n) => {
-      if (n < 0) {
-        for (let i = 0; i < -n; i++) {
-          undoMutably(state);
+function buildCreateHistoryAdapter<
+  StateType extends HistoryStateType | NonPatchHistoryStateType,
+>({
+  undoMutably,
+  redoMutably,
+  wrapRecipe,
+  init,
+}: BuildHistoryAdapterConfig<StateType>) {
+  return function createHistoryAdapter<Data>(
+    adapterConfig: HistoryAdapterConfig = {},
+  ): HistoryAdapter<Data, ApplyDataType<Data, StateType>> {
+    type State = ApplyDataType<Data, StateType>;
+    init?.(adapterConfig);
+    return {
+      getInitialState,
+      undo: makeStateOperator(undoMutably),
+      redo: makeStateOperator(redoMutably),
+      jump: makeStateOperator<State, [number]>((state, n) => {
+        if (n < 0) {
+          for (let i = 0; i < -n; i++) {
+            undoMutably(state);
+          }
+        } else {
+          for (let i = 0; i < n; i++) {
+            redoMutably(state);
+          }
         }
-      } else {
-        for (let i = 0; i < n; i++) {
-          redoMutably(state);
-        }
+      }),
+      clearHistory: makeStateOperator<State>((state) => {
+        state.past = [];
+        state.future = [];
+      }),
+      pause: makeStateOperator<State>((state) => {
+        state.paused = true;
+      }),
+      resume: makeStateOperator<State>((state) => {
+        state.paused = false;
+      }),
+      undoable: <Args extends Array<any>, RootState>(
+        recipe: (
+          draft: Draft<Data>,
+          ...args: Args
+        ) => ValidRecipeReturnType<Data>,
+        configOrIsUndoable?:
+          | UndoableConfig<Data, State, Args, RootState>
+          | ((...args: Args) => boolean | undefined),
+      ) => {
+        const config: UndoableConfig<Data, State, Args, RootState> =
+          typeof configOrIsUndoable === "function"
+            ? { isUndoable: configOrIsUndoable }
+            : configOrIsUndoable ?? {};
+        return makeStateOperator(
+          wrapRecipe<Data, Args, RootState>(recipe, config, adapterConfig),
+        );
+      },
+    };
+  };
+}
+
+export const createHistoryAdapter = buildCreateHistoryAdapter<HistoryStateType>(
+  {
+    init() {
+      enablePatches();
+    },
+    undoMutably(state) {
+      const historyEntry = state.past.pop();
+      if (historyEntry) {
+        applyPatches(state, historyEntry.undo);
+        state.future.unshift(historyEntry);
       }
-    }),
-    clearHistory: makeStateOperator<HistoryState<Data>>((state) => {
-      state.past = [];
-      state.future = [];
-    }),
-    undoable<Args extends Array<any>, RootState>(
-      recipe: (
-        draft: Draft<Data>,
-        ...args: Args
-      ) => ValidRecipeReturnType<Data>,
-      configOrIsUndoable?:
-        | UndoableConfig<Data, Args, RootState>
-        | ((...args: Args) => boolean | undefined),
-    ) {
-      const {
-        isUndoable,
-        selectHistoryState = (s) => s as HistoryState<Data>,
-      }: UndoableConfig<Data, Args, RootState> =
-        typeof configOrIsUndoable === "function"
-          ? { isUndoable: configOrIsUndoable }
-          : configOrIsUndoable ?? {};
-      return makeStateOperator<RootState, Args>((rootState, ...args) => {
-        const state = selectHistoryState(rootState);
+    },
+    redoMutably(state) {
+      const historyEntry = state.future.shift();
+      if (historyEntry) {
+        applyPatches(state, historyEntry.redo);
+        state.past.push(historyEntry);
+      }
+    },
+    wrapRecipe:
+      <Data, Args extends Array<any>, RootState>(
+        recipe: (
+          draft: Draft<Data>,
+          ...args: Args
+        ) => ValidRecipeReturnType<Data>,
+        config: UndoableConfig<
+          Data,
+          ApplyDataType<Data, HistoryStateType>,
+          Args,
+          RootState
+        >,
+        adapterConfig: HistoryAdapterConfig,
+      ) =>
+      (rootState: Draft<RootState>, ...args: Args) => {
+        const state =
+          config.selectHistoryState?.(rootState) ??
+          (rootState as ApplyDataType<Data, HistoryStateType>);
         const [{ present }, redo, undo] = produceWithPatches(state, (draft) => {
           const result = recipe(draft.present as Draft<Data>, ...args);
           if (result === nothing) {
@@ -226,22 +321,76 @@ export function createHistoryAdapter<Data>({
         // if paused, don't add to history
         if (state.paused) return;
 
-        const undoable = isUndoable?.(...args) ?? true;
+        const undoable = config.isUndoable?.(...args) ?? true;
         if (undoable) {
           const lengthWithoutFuture = state.past.length + 1;
-          if (limit && lengthWithoutFuture > limit) {
+          if (
+            adapterConfig.limit &&
+            lengthWithoutFuture > adapterConfig.limit
+          ) {
             state.past.shift();
           }
           state.past.push({ undo, redo });
           state.future = [];
         }
-      });
+      },
+  },
+);
+
+export const createNoPatchHistoryAdapter =
+  buildCreateHistoryAdapter<NonPatchHistoryStateType>({
+    undoMutably(state) {
+      if (!state.past.length) return;
+      const historyEntry = state.past.pop();
+      state.present = historyEntry;
+      state.future.unshift(historyEntry);
     },
-    pause: makeStateOperator<HistoryState<Data>>((state) => {
-      state.paused = true;
-    }),
-    resume: makeStateOperator<HistoryState<Data>>((state) => {
-      state.paused = false;
-    }),
-  };
-}
+    redoMutably(state) {
+      if (!state.future.length) return;
+      const historyEntry = state.future.shift();
+      state.present = historyEntry;
+      state.past.push(historyEntry);
+    },
+    wrapRecipe: <Data, Args extends Array<any>, RootState>(
+      recipe: (
+        draft: Draft<Data>,
+        ...args: Args
+      ) => ValidRecipeReturnType<Data>,
+      config: UndoableConfig<
+        Data,
+        ApplyDataType<Data, NonPatchHistoryStateType>,
+        Args,
+        RootState
+      >,
+      adapterConfig: HistoryAdapterConfig,
+    ) => {
+      return (rootState: Draft<RootState>, ...args: Args) => {
+        const state =
+          (config.selectHistoryState?.(rootState) as
+            | Draft<NonPatchHistoryState<Data>>
+            | undefined) ?? (rootState as never);
+        const result = recipe(state.present as Draft<Data>, ...args);
+        if (result === nothing) {
+          state.present = undefined as Draft<Data>;
+        } else if (typeof result !== "undefined") {
+          state.present = result as Draft<Data>;
+        }
+
+        // if paused, don't add to history
+        if (state.paused) return;
+
+        const undoable = config.isUndoable?.(...args) ?? true;
+        if (undoable) {
+          const lengthWithoutFuture = state.past.length + 1;
+          if (
+            adapterConfig.limit &&
+            lengthWithoutFuture > adapterConfig.limit
+          ) {
+            state.past.shift();
+          }
+          state.past.push(state.present);
+          state.future = [];
+        }
+      };
+    },
+  });
