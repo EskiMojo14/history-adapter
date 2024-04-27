@@ -19,6 +19,11 @@ export default [
     name: "import { createHistoryAdapter } from 'history-adapter'",
   },
   {
+    path: "dist/index.js",
+    import: "{ createNoPatchHistoryAdapter }",
+    name: "import { createNoPatchHistoryAdapter } from 'history-adapter' (CJS)",
+  },
+  {
     path: "dist/redux.js",
     import: "{ createHistoryAdapter }",
     name: "import { createHistoryAdapter } from 'history-adapter/redux'",
