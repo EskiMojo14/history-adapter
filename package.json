@@ -46,7 +46,8 @@
     "publint": "publint",
     "type": "tsc",
     "prepack": "yarn build && yarn publint",
-    "size": "size-limit"
+    "size": "size-limit",
+    "example": "yarn workspace example-app dev"
   },
   "repository": "https://github.com/EskiMojo14/history-adapter.git",
   "author": "EskiMojo14 <ben.j.durrant@gmail.com>",
