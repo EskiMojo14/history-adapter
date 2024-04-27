@@ -157,7 +157,7 @@ interface ReduxMethods<Data, State extends BaseHistoryState<Data, unknown>> {
   /** Wraps a reducer in logic which automatically updates the state history, and extracts whether an action is undoable from its meta (`action.meta.undoable`) */
   undoableReducer<
     A extends Action & { meta?: UndoableMeta },
-    RootState = HistoryState<Data>,
+    RootState = State,
   >(
     reducer: CaseReducer<Data, A>,
     config?: Omit<
