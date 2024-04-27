@@ -6,6 +6,7 @@ import {
   produceWithPatches,
   produce,
   isDraft,
+  current,
 } from "immer";
 import type { NoInfer } from "./utils";
 
@@ -335,14 +336,14 @@ export const createNoPatchHistoryAdapter =
     undoMutably(state) {
       if (!state.past.length) return;
       const historyEntry = state.past.pop();
+      state.future.unshift(state.present);
       state.present = historyEntry;
-      state.future.unshift(historyEntry);
     },
     redoMutably(state) {
       if (!state.future.length) return;
       const historyEntry = state.future.shift();
+      state.past.push(state.present);
       state.present = historyEntry;
-      state.past.push(historyEntry);
     },
     wrapRecipe:
       <Data, Args extends Array<any>>(
@@ -354,6 +355,9 @@ export const createNoPatchHistoryAdapter =
         adapterConfig: HistoryAdapterConfig,
       ) =>
       (state: Draft<NonPatchHistoryState<Data>>, ...args: Args) => {
+        const before = (
+          isDraft(state.present) ? current(state.present) : state.present
+        ) as Data;
         const result = recipe(state.present as Draft<Data>, ...args);
         if (result === nothing) {
           state.present = undefined as never;
@@ -373,7 +377,7 @@ export const createNoPatchHistoryAdapter =
           ) {
             state.past.shift();
           }
-          state.past.push(state.present as never);
+          state.past.push(before as never);
           state.future = [];
         }
       },
