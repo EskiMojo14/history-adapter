@@ -302,7 +302,7 @@ export const createHistoryAdapter =
         config: WrapRecipeConfig<Args>,
         adapterConfig: HistoryAdapterConfig,
       ) =>
-      (state, ...args: Args) => {
+      (state: Draft<HistoryState<Data>>, ...args: Args) => {
         const [{ present }, redo, undo] = produceWithPatches(state, (draft) => {
           const result = recipe(draft.present as Draft<Data>, ...args);
           if (result === nothing) {
