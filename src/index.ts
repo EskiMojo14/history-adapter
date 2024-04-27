@@ -1,4 +1,4 @@
-import type { Patch, Draft, Immutable } from "immer";
+import type { Patch, Draft } from "immer";
 import {
   nothing,
   enablePatches,
@@ -6,7 +6,6 @@ import {
   produceWithPatches,
   produce,
   isDraft,
-  current,
 } from "immer";
 import type { NoInfer, Overwrite } from "./utils";
 
@@ -46,25 +45,27 @@ export type MaybeDraftNonPatchHistoryState<Data> =
   | NonPatchHistoryState<Data>
   | Draft<NonPatchHistoryState<Data>>;
 
-type MaybeDraftMaybePatchHistoryState<Data> =
-  | MaybeDraftHistoryState<Data>
-  | MaybeDraftNonPatchHistoryState<Data>;
-
 interface HistoryStateType {
+  state: {
+    past: Array<unknown>;
+    present: unknown;
+    future: Array<unknown>;
+    paused: boolean;
+  };
+  data: unknown;
+}
+
+interface PatchHistoryStateType extends HistoryStateType {
   state: MaybeDraftHistoryState<this["data"]>;
-  data: unknown;
 }
 
-interface NonPatchHistoryStateType {
+interface NonPatchHistoryStateType extends HistoryStateType {
   state: MaybeDraftNonPatchHistoryState<this["data"]>;
-  data: unknown;
 }
 
-type ApplyDataType<
-  Data,
-  StateType extends HistoryStateType | NonPatchHistoryStateType,
-> = (StateType & { data: Data })["state"] &
-  MaybeDraftMaybePatchHistoryState<Data>;
+type ApplyDataType<Data, StateType extends HistoryStateType> = (StateType & {
+  data: Data;
+})["state"];
 
 const isDraftTyped = isDraft as <T>(value: T | Draft<T>) => value is Draft<T>;
 
@@ -91,8 +92,7 @@ export interface HistoryAdapterConfig {
 }
 
 export interface UndoableConfig<
-  Data,
-  HistoryStateType extends MaybeDraftMaybePatchHistoryState<Data>,
+  HistoryStateType,
   Args extends Array<any>,
   RootState,
 > {
@@ -108,10 +108,7 @@ export interface UndoableConfig<
   selectHistoryState?: (state: Draft<RootState>) => Draft<HistoryStateType>;
 }
 
-export interface HistoryAdapter<
-  Data,
-  HistoryStateType extends MaybeDraftMaybePatchHistoryState<Data>,
-> {
+export interface HistoryAdapter<Data, HistoryStateType> {
   /**
    * Construct an initial state with no history.
    * @param initialData Data to include
@@ -149,7 +146,7 @@ export interface HistoryAdapter<
    */
   undoable<Args extends Array<any>, RootState = HistoryStateType>(
     recipe: (draft: Draft<Data>, ...args: Args) => ValidRecipeReturnType<Data>,
-    config?: UndoableConfig<Data, HistoryStateType, Args, RootState>,
+    config?: UndoableConfig<HistoryStateType, Args, RootState>,
   ): <State extends RootState | Draft<RootState>>(
     state: State,
     ...args: Args
@@ -194,37 +191,28 @@ export function getInitialState<Data>(initialData: Data): HistoryState<Data> {
   };
 }
 
-interface BuildHistoryAdapterConfig<
-  StateType extends HistoryStateType | NonPatchHistoryStateType,
-> {
+interface BuildHistoryAdapterConfig<StateType extends HistoryStateType> {
   undoMutably: (state: StateType["state"]) => void;
   redoMutably: (state: StateType["state"]) => void;
   wrapRecipe: <Data, Args extends Array<any>, RootState>(
     recipe: (draft: Draft<Data>, ...args: Args) => ValidRecipeReturnType<Data>,
-    config: UndoableConfig<
-      Data,
-      ApplyDataType<Data, StateType>,
-      Args,
-      RootState
-    >,
+    config: UndoableConfig<ApplyDataType<Data, StateType>, Args, RootState>,
     adapterConfig: HistoryAdapterConfig,
   ) => (state: Draft<RootState>, ...args: Args) => void;
-  init?: (config: HistoryAdapterConfig) => void;
+  onCreate?: (config: HistoryAdapterConfig) => void;
 }
 
-function buildCreateHistoryAdapter<
-  StateType extends HistoryStateType | NonPatchHistoryStateType,
->({
+function buildCreateHistoryAdapter<StateType extends HistoryStateType>({
   undoMutably,
   redoMutably,
   wrapRecipe,
-  init,
+  onCreate,
 }: BuildHistoryAdapterConfig<StateType>) {
   return function createHistoryAdapter<Data>(
     adapterConfig: HistoryAdapterConfig = {},
   ): HistoryAdapter<Data, ApplyDataType<Data, StateType>> {
     type State = ApplyDataType<Data, StateType>;
-    init?.(adapterConfig);
+    onCreate?.(adapterConfig);
     return {
       getInitialState,
       undo: makeStateOperator(undoMutably),
@@ -256,10 +244,10 @@ function buildCreateHistoryAdapter<
           ...args: Args
         ) => ValidRecipeReturnType<Data>,
         configOrIsUndoable?:
-          | UndoableConfig<Data, State, Args, RootState>
+          | UndoableConfig<State, Args, RootState>
           | ((...args: Args) => boolean | undefined),
       ) => {
-        const config: UndoableConfig<Data, State, Args, RootState> =
+        const config: UndoableConfig<State, Args, RootState> =
           typeof configOrIsUndoable === "function"
             ? { isUndoable: configOrIsUndoable }
             : configOrIsUndoable ?? {};
@@ -271,9 +259,9 @@ function buildCreateHistoryAdapter<
   };
 }
 
-export const createHistoryAdapter = buildCreateHistoryAdapter<HistoryStateType>(
-  {
-    init() {
+export const createHistoryAdapter =
+  buildCreateHistoryAdapter<PatchHistoryStateType>({
+    onCreate() {
       enablePatches();
     },
     undoMutably(state) {
@@ -297,7 +285,6 @@ export const createHistoryAdapter = buildCreateHistoryAdapter<HistoryStateType>(
           ...args: Args
         ) => ValidRecipeReturnType<Data>,
         config: UndoableConfig<
-          Data,
           ApplyDataType<Data, HistoryStateType>,
           Args,
           RootState
@@ -334,8 +321,7 @@ export const createHistoryAdapter = buildCreateHistoryAdapter<HistoryStateType>(
           state.future = [];
         }
       },
-  },
-);
+  });
 
 export const createNoPatchHistoryAdapter =
   buildCreateHistoryAdapter<NonPatchHistoryStateType>({
@@ -357,7 +343,6 @@ export const createNoPatchHistoryAdapter =
         ...args: Args
       ) => ValidRecipeReturnType<Data>,
       config: UndoableConfig<
-        Data,
         ApplyDataType<Data, NonPatchHistoryStateType>,
         Args,
         RootState
