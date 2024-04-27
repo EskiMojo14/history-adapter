@@ -28,11 +28,7 @@ export const counterSlice = createSlice({
     undone: counterAdapter.undo,
     redone: counterAdapter.redo,
     pauseToggled(state) {
-      if (state.paused) {
-        counterAdapter.resume(state);
-      } else {
-        counterAdapter.pause(state);
-      }
+      state.paused = !state.paused;
     },
     jumped: counterAdapter.jump,
     historyCleared: counterAdapter.clearHistory,
