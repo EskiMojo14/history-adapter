@@ -16,6 +16,7 @@ import type {
 } from "@reduxjs/toolkit";
 import type { HistoryAdapter, HistoryState } from "./redux";
 import type { WithRequiredProp } from "./utils";
+import type { BaseHistoryState } from ".";
 
 const historyMethodsCreatorType = Symbol("historyMethodsCreator");
 const undoableCreatorsCreatorType = Symbol("undoableCreatorsCreator");
@@ -33,12 +34,20 @@ interface HistoryReducers<State> {
   };
 }
 
-interface HistoryMethodsCreatorConfig<State, Data> {
-  selectHistoryState?: (state: Draft<State>) => HistoryState<Data>;
+interface HistoryMethodsCreatorConfig<
+  RootState,
+  Data,
+  State extends BaseHistoryState<unknown, unknown> = HistoryState<Data>,
+> {
+  selectHistoryState?: (state: Draft<RootState>) => Draft<State>;
 }
 
-interface UndoableCreatorsCreatorConfig<State, Data> {
-  selectHistoryState?: (state: Draft<State>) => HistoryState<Data>;
+interface UndoableCreatorsCreatorConfig<
+  RootState,
+  Data,
+  State extends BaseHistoryState<unknown, unknown> = HistoryState<Data>,
+> {
+  selectHistoryState?: (state: Draft<RootState>) => Draft<State>;
 }
 
 type ActionForPrepare<Prepare extends PrepareAction<any>> = ReturnType<
@@ -68,24 +77,24 @@ declare module "@reduxjs/toolkit" {
     ReducerPath extends string,
   > {
     [historyMethodsCreatorType]: ReducerCreatorEntry<
-      State extends HistoryState<infer Data>
+      State extends BaseHistoryState<infer Data, any>
         ? {
             (
-              adapter: HistoryAdapter<Data>,
-              config?: HistoryMethodsCreatorConfig<State, Data>,
+              adapter: HistoryAdapter<Data, State>,
+              config?: HistoryMethodsCreatorConfig<State, Data, State>,
             ): HistoryReducers<State>;
-            <Data>(
-              adapter: HistoryAdapter<Data>,
+            <Data, HState extends BaseHistoryState<Data, unknown>>(
+              adapter: HistoryAdapter<Data, HState>,
               config: WithRequiredProp<
-                HistoryMethodsCreatorConfig<State, Data>,
+                HistoryMethodsCreatorConfig<State, Data, HState>,
                 "selectHistoryState"
               >,
             ): HistoryReducers<State>;
           }
-        : <Data>(
-            adapter: HistoryAdapter<Data>,
+        : <Data, HState extends BaseHistoryState<Data, unknown>>(
+            adapter: HistoryAdapter<Data, HState>,
             config: WithRequiredProp<
-              HistoryMethodsCreatorConfig<State, Data>,
+              HistoryMethodsCreatorConfig<State, Data, HState>,
               "selectHistoryState"
             >,
           ) => HistoryReducers<State>,
@@ -111,24 +120,24 @@ declare module "@reduxjs/toolkit" {
       }
     >;
     [undoableCreatorsCreatorType]: ReducerCreatorEntry<
-      State extends HistoryState<infer Data>
+      State extends BaseHistoryState<infer Data, any>
         ? {
             (
-              adapter: HistoryAdapter<Data>,
-              config?: UndoableCreatorsCreatorConfig<State, Data>,
+              adapter: HistoryAdapter<Data, State>,
+              config?: UndoableCreatorsCreatorConfig<State, Data, State>,
             ): UndoableCreators<Data, State>;
-            <Data>(
-              adapter: HistoryAdapter<Data>,
+            <Data, HState extends BaseHistoryState<Data, unknown>>(
+              adapter: HistoryAdapter<Data, HState>,
               config: WithRequiredProp<
-                UndoableCreatorsCreatorConfig<State, Data>,
+                UndoableCreatorsCreatorConfig<State, Data, HState>,
                 "selectHistoryState"
               >,
             ): UndoableCreators<Data, State>;
           }
-        : <Data>(
-            adapter: HistoryAdapter<Data>,
+        : <Data, HState extends BaseHistoryState<Data, unknown>>(
+            adapter: HistoryAdapter<Data, HState>,
             config: WithRequiredProp<
-              UndoableCreatorsCreatorConfig<State, Data>,
+              UndoableCreatorsCreatorConfig<State, Data, HState>,
               "selectHistoryState"
             >,
           ) => UndoableCreators<Data, State>
@@ -137,10 +146,10 @@ declare module "@reduxjs/toolkit" {
 }
 
 const makeScopedReducerCreator =
-  <State, Data>(
-    selectHistoryState: (state: Draft<State>) => HistoryState<Data>,
+  <State, Data, HState extends BaseHistoryState<Data, unknown>>(
+    selectHistoryState: (state: Draft<State>) => Draft<HState>,
   ) =>
-  <P>(mutator: (state: HistoryState<Data>, action: PayloadAction<P>) => void) =>
+  <P>(mutator: (state: Draft<HState>, action: PayloadAction<P>) => void) =>
     (reducerCreator.create as ReducerCreators<State>["reducer"])<P>(
       (state, action) => {
         mutator(selectHistoryState(state), action);
@@ -151,11 +160,15 @@ export const historyMethodsCreator: ReducerCreator<
   typeof historyMethodsCreatorType
 > = {
   type: historyMethodsCreatorType,
-  create<Data, State = HistoryState<Data>>(
-    adapter: HistoryAdapter<Data>,
+  create<
+    Data,
+    State = HistoryState<Data>,
+    HState extends BaseHistoryState<Data, unknown> = HistoryState<Data>,
+  >(
+    adapter: HistoryAdapter<Data, HState>,
     {
-      selectHistoryState = (state) => state as HistoryState<Data>,
-    }: HistoryMethodsCreatorConfig<State, Data> = {},
+      selectHistoryState = (state) => state as never,
+    }: HistoryMethodsCreatorConfig<State, Data, HState> = {},
   ): HistoryReducers<State> {
     const createReducer = makeScopedReducerCreator(selectHistoryState);
     return {
