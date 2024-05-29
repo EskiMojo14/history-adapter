@@ -9,14 +9,13 @@ import type {
   HistoryState,
   UndoableConfig,
   HistoryAdapterConfig,
-  MaybeDraft,
-  NonPatchHistoryState,
+  PatchHistoryState,
 } from ".";
 import {
   createHistoryAdapter as createAdapter,
-  createNoPatchHistoryAdapter as createNoPatchAdapter,
+  createPatchHistoryAdapter as createPatchAdapter,
 } from ".";
-import type { IfMaybeUndefined } from "./utils";
+import type { IfMaybeUndefined, MaybeDraft } from "./utils";
 import type { CreateSelectorFunction, Selector } from "reselect";
 
 export type { HistoryState, HistoryAdapterConfig } from ".";
@@ -221,10 +220,10 @@ export const createHistoryAdapter = <Data>(
   };
 };
 
-export const createNoPatchHistoryAdapter = <Data>(
+export const createPatchHistoryAdapter = <Data>(
   config?: HistoryAdapterConfig,
-): HistoryAdapter<Data, NonPatchHistoryState<Data>> => {
-  const adapter = createNoPatchAdapter<Data>(config);
+): HistoryAdapter<Data, PatchHistoryState<Data>> => {
+  const adapter = createPatchAdapter<Data>(config);
   return {
     ...adapter,
     ...getReduxMethods(adapter),

@@ -6,7 +6,7 @@ import {
 import { describe, expect, it } from "vitest";
 import { historyMethodsCreator, undoableCreatorsCreator } from "./creator";
 import type { HistoryState } from "./redux";
-import { createHistoryAdapter, createNoPatchHistoryAdapter } from "./redux";
+import { createHistoryAdapter, createPatchHistoryAdapter } from "./redux";
 
 interface Book {
   title: string;
@@ -95,9 +95,9 @@ describe("Slice creators", () => {
 
     store.dispatch(undone());
 
-    expect(selectLastBook(store.getState())).toBe(book2);
+    expect(selectLastBook(store.getState())).toBe(book1);
 
-    store.dispatch(jumped(-1));
+    store.dispatch(jumped(1));
 
     expect(selectLastBook(store.getState())).toStrictEqual(book2);
 
@@ -204,9 +204,9 @@ describe("Slice creators", () => {
 
     store.dispatch(undone());
 
-    expect(selectLastBook(store.getState())).toBe(book2);
+    expect(selectLastBook(store.getState())).toBe(book1);
 
-    store.dispatch(jumped(-1));
+    store.dispatch(jumped(1));
 
     expect(selectLastBook(store.getState())).toStrictEqual(book2);
 
@@ -283,8 +283,8 @@ describe("Slice creators", () => {
 
     expect(selectLastBook(store.getState())).toBeUndefined();
   });
-  it("works without patches", () => {
-    const bookAdapter = createNoPatchHistoryAdapter<Array<Book>>();
+  it("works with patches", () => {
+    const bookAdapter = createPatchHistoryAdapter<Array<Book>>();
     const bookSlice = createAppSlice({
       name: "book",
       initialState: bookAdapter.getInitialState([]),
