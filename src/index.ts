@@ -279,34 +279,35 @@ interface HistoryStateFn extends BaseHistoryStateFn {
   state: HistoryState<this["data"]>;
 }
 
-export const createHistoryAdapter = buildCreateHistoryAdapter<HistoryStateFn>({
-  applyEntry(state, historyEntry) {
-    const stateBefore = state.present;
-    state.present = historyEntry;
-    return stateBefore;
-  },
-  wrapRecipe:
-    <Data, Args extends Array<any>>(
-      recipe: (
-        draft: Draft<Data>,
-        ...args: Args
-      ) => ValidRecipeReturnType<Data>,
-    ) =>
-    (state: Draft<HistoryState<Data>>, ...args: Args) => {
-      // we need to get the present state before the recipe is applied
-      // and because the recipe might mutate it, we need the non-draft version
-      const before = ensureCurrent(state.present) as Data;
-
-      const result = recipe(state.present as Draft<Data>, ...args);
-      if (result === nothing) {
-        state.present = undefined as never;
-      } else if (typeof result !== "undefined") {
-        state.present = result as never;
-      }
-
-      return before;
+export const createHistoryAdapter =
+  /* @__PURE__ */ buildCreateHistoryAdapter<HistoryStateFn>({
+    applyEntry(state, historyEntry) {
+      const stateBefore = state.present;
+      state.present = historyEntry;
+      return stateBefore;
     },
-});
+    wrapRecipe:
+      <Data, Args extends Array<any>>(
+        recipe: (
+          draft: Draft<Data>,
+          ...args: Args
+        ) => ValidRecipeReturnType<Data>,
+      ) =>
+      (state: Draft<HistoryState<Data>>, ...args: Args) => {
+        // we need to get the present state before the recipe is applied
+        // and because the recipe might mutate it, we need the non-draft version
+        const before = ensureCurrent(state.present) as Data;
+
+        const result = recipe(state.present as Draft<Data>, ...args);
+        if (result === nothing) {
+          state.present = undefined as never;
+        } else if (typeof result !== "undefined") {
+          state.present = result as never;
+        }
+
+        return before;
+      },
+  });
 
 export type PatchState = Record<ApplyOp, Array<Patch>>;
 
@@ -317,7 +318,7 @@ interface PatchHistoryStateFn extends BaseHistoryStateFn {
 }
 
 export const createPatchHistoryAdapter =
-  buildCreateHistoryAdapter<PatchHistoryStateFn>({
+  /* @__PURE__ */ buildCreateHistoryAdapter<PatchHistoryStateFn>({
     onCreate() {
       enablePatches();
     },
