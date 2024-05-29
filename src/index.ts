@@ -171,8 +171,6 @@ type BuildHistoryAdapterConfig<StateFn extends BaseHistoryStateFn> = {
     | Record<"undo" | "redo", ApplyEntry<StateFn>>;
   wrapRecipe: <Data, Args extends Array<any>>(
     recipe: (draft: Draft<Data>, ...args: Args) => ValidRecipeReturnType<Data>,
-    config: WrapRecipeConfig<Args>,
-    adapterConfig?: GetConfigType<Data, StateFn>,
   ) => (
     state: Draft<GetStateType<Data, StateFn>>,
     ...args: Args
@@ -245,12 +243,12 @@ function buildCreateHistoryAdapter<StateFn extends BaseHistoryStateFn>({
       ) => {
         const {
           selectHistoryState,
-          ...config
+          isUndoable,
         }: UndoableConfig<Data, Args, RootState, State> =
           typeof configOrIsUndoable === "function"
             ? { isUndoable: configOrIsUndoable }
             : configOrIsUndoable ?? {};
-        const finalRecipe = wrapRecipe(recipe, config, adapterConfig);
+        const finalRecipe = wrapRecipe(recipe);
         return makeStateOperator<RootState, Args>((rootState, ...args) => {
           const state =
             selectHistoryState?.(rootState as never) ??
@@ -261,7 +259,7 @@ function buildCreateHistoryAdapter<StateFn extends BaseHistoryStateFn>({
           // if paused, don't add to history
           if (state.paused) return;
 
-          const undoable = config.isUndoable?.(...args) ?? true;
+          const undoable = isUndoable?.(...args) ?? true;
           if (undoable) {
             const lengthWithoutFuture = state.past.length + 1;
             if (
