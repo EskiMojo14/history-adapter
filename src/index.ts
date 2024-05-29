@@ -8,7 +8,7 @@ import {
   isDraft,
   current,
 } from "immer";
-import type { NoInfer } from "./utils";
+import { ensureCurrent, type NoInfer } from "./utils";
 
 export type MaybeDraft<T> = T | Draft<T>;
 
@@ -355,9 +355,9 @@ export const createNoPatchHistoryAdapter =
         adapterConfig: HistoryAdapterConfig,
       ) =>
       (state: Draft<NonPatchHistoryState<Data>>, ...args: Args) => {
-        const before = (
-          isDraft(state.present) ? current(state.present) : state.present
-        ) as Data;
+        // we need to get the present state before the recipe is applied
+        // and because the recipe might mutate it, we need the non-draft version
+        const before = ensureCurrent(state.present);
         const result = recipe(state.present as Draft<Data>, ...args);
         if (result === nothing) {
           state.present = undefined as never;
@@ -377,7 +377,7 @@ export const createNoPatchHistoryAdapter =
           ) {
             state.past.shift();
           }
-          state.past.push(before as never);
+          state.past.push(before);
           state.future = [];
         }
       },
