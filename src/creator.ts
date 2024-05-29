@@ -204,3 +204,8 @@ export const undoableCreatorsCreator: ReducerCreator<
     };
   },
 };
+
+export const historyCreators = {
+  historyMethods: historyMethodsCreator,
+  undoableCreators: undoableCreatorsCreator,
+};

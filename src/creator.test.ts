@@ -4,7 +4,7 @@ import {
   configureStore,
 } from "@reduxjs/toolkit";
 import { describe, expect, it } from "vitest";
-import { historyMethodsCreator, undoableCreatorsCreator } from "./creator";
+import { historyCreators } from "./creator";
 import type { HistoryState } from "./redux";
 import { createHistoryAdapter } from "./redux";
 
@@ -25,8 +25,7 @@ const book2: Book = {
 describe("Slice creators", () => {
   const createAppSlice = buildCreateSlice({
     creators: {
-      historyMethods: historyMethodsCreator,
-      undoableCreators: undoableCreatorsCreator,
+      ...historyCreators,
     },
   });
   const bookAdapter = createHistoryAdapter<Array<Book>>();
