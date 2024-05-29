@@ -9,7 +9,7 @@ import type {
   BaseHistoryState,
   HistoryState,
   UndoableConfig,
-  HistoryAdapterConfig,
+  BaseHistoryAdapterConfig,
   PatchHistoryState,
 } from ".";
 import {
@@ -215,7 +215,7 @@ export function getReduxMethods<
 }
 
 export const createHistoryAdapter = <Data>(
-  config?: HistoryAdapterConfig,
+  config?: BaseHistoryAdapterConfig,
 ): HistoryAdapter<Data> => {
   const adapter = createAdapter<Data>(config);
   return {
@@ -225,7 +225,7 @@ export const createHistoryAdapter = <Data>(
 };
 
 export const createPatchHistoryAdapter = <Data>(
-  config?: HistoryAdapterConfig,
+  config?: BaseHistoryAdapterConfig,
 ): HistoryAdapter<Data, PatchHistoryState<Data>> => {
   const adapter = createPatchAdapter<Data>(config);
   return {

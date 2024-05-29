@@ -27,7 +27,7 @@ type HistoryEntryType<State> = State extends BaseHistoryState<any, infer T>
   ? T
   : never;
 
-export interface HistoryAdapterConfig {
+export interface BaseHistoryAdapterConfig {
   /**
    * Maximum number of past states to keep.
    * If limit is reached, the oldest state will be removed.
@@ -39,7 +39,7 @@ export interface HistoryAdapterConfig {
 export interface BaseHistoryStateFn {
   state: BaseHistoryState<this["data"], unknown>;
   data: unknown;
-  config: HistoryAdapterConfig;
+  config: BaseHistoryAdapterConfig;
 }
 
 type GetStateType<Data, StateFn extends BaseHistoryStateFn> = (StateFn & {
