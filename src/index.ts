@@ -148,6 +148,8 @@ type GetInitialState<StateFn extends BaseHistoryStateFn> = <Data>(
   initialData: Data,
 ) => GetStateType<Data, StateFn>;
 
+type ApplyOp = "undo" | "redo";
+
 export type BuildHistoryAdapterConfig<StateFn extends BaseHistoryStateFn> = {
   /**
    * Function to apply a history entry to the state.
@@ -156,7 +158,7 @@ export type BuildHistoryAdapterConfig<StateFn extends BaseHistoryStateFn> = {
   applyEntry: (
     state: StateFn["state"],
     historyEntry: HistoryEntryType<StateFn["state"]>,
-    op: "undo" | "redo",
+    op: ApplyOp,
   ) => HistoryEntryType<StateFn["state"]>;
   /**
    * Function to wrap a recipe to automatically update patch history according to changes.
@@ -304,10 +306,7 @@ export const createHistoryAdapter = buildCreateHistoryAdapter<HistoryStateFn>({
     },
 });
 
-export interface PatchState {
-  undo: Array<Patch>;
-  redo: Array<Patch>;
-}
+export type PatchState = Record<ApplyOp, Array<Patch>>;
 
 export type PatchHistoryState<Data> = BaseHistoryState<Data, PatchState>;
 
