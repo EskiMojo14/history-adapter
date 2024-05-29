@@ -148,19 +148,16 @@ type GetInitialState<StateFn extends BaseHistoryStateFn> = <Data>(
   initialData: Data,
 ) => GetStateType<Data, StateFn>;
 
-type ApplyEntry<StateFn extends BaseHistoryStateFn> = (
-  state: StateFn["state"],
-  historyEntry: HistoryEntryType<StateFn["state"]>,
-) => HistoryEntryType<StateFn["state"]>;
-
 export type BuildHistoryAdapterConfig<StateFn extends BaseHistoryStateFn> = {
   /**
    * Function to apply a history entry to the state.
    * Should return a history entry to be added to the opposite stack (i.e. past or future).
    */
-  applyEntry:
-    | ApplyEntry<StateFn>
-    | Record<"undo" | "redo", ApplyEntry<StateFn>>;
+  applyEntry: (
+    state: StateFn["state"],
+    historyEntry: HistoryEntryType<StateFn["state"]>,
+    op: "undo" | "redo",
+  ) => HistoryEntryType<StateFn["state"]>;
   /**
    * Function to wrap a recipe to automatically update patch history according to changes.
    * Should return a function that receives the state and arguments, and returns a history entry to be added to the past stack.
@@ -197,17 +194,13 @@ export function buildCreateHistoryAdapter<StateFn extends BaseHistoryStateFn>({
   onCreate,
   getInitialState: getInitialStateCustom = getInitialState,
 }: BuildHistoryAdapterConfig<StateFn>) {
-  const { undo, redo } =
-    typeof applyEntry === "function"
-      ? { undo: applyEntry, redo: applyEntry }
-      : applyEntry;
   function undoMutably(state: StateFn["state"]) {
     if (!state.past.length) return;
-    state.future.unshift(undo(state, state.past.pop() as never));
+    state.future.unshift(applyEntry(state, state.past.pop() as never, "undo"));
   }
   function redoMutably(state: StateFn["state"]) {
     if (!state.future.length) return;
-    state.past.push(redo(state, state.future.shift() as never));
+    state.past.push(applyEntry(state, state.future.shift() as never, "redo"));
   }
   return function createHistoryAdapter<Data>(
     adapterConfig?: GetConfigType<Data, StateFn>,
@@ -327,15 +320,9 @@ export const createPatchHistoryAdapter =
     onCreate() {
       enablePatches();
     },
-    applyEntry: {
-      undo(state, historyEntry) {
-        applyPatches(state, historyEntry.undo);
-        return historyEntry;
-      },
-      redo(state, historyEntry) {
-        applyPatches(state, historyEntry.redo);
-        return historyEntry;
-      },
+    applyEntry(state, historyEntry, op) {
+      applyPatches(state, historyEntry[op]);
+      return historyEntry;
     },
     wrapRecipe:
       <Data, Args extends Array<any>>(
