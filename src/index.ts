@@ -166,21 +166,40 @@ type ApplyEntry<StateFn extends BaseHistoryStateFn> = (
 ) => HistoryEntryType<StateFn["state"]>;
 
 type BuildHistoryAdapterConfig<StateFn extends BaseHistoryStateFn> = {
+  /**
+   * Function to apply a history entry to the state.
+   * Should return a history entry to be added to the opposite stack (i.e. past or future).
+   */
   applyEntry:
     | ApplyEntry<StateFn>
     | Record<"undo" | "redo", ApplyEntry<StateFn>>;
+  /**
+   * Function to wrap a recipe to automatically update patch history according to changes.
+   * Should return a function that receives the state and arguments, and returns a history entry to be added to the past stack.
+   */
   wrapRecipe: <Data, Args extends Array<any>>(
     recipe: (draft: Draft<Data>, ...args: Args) => ValidRecipeReturnType<Data>,
   ) => (
     state: Draft<GetStateType<Data, StateFn>>,
     ...args: Args
   ) => HistoryEntryType<GetStateType<Data, StateFn>>;
+  /**
+   * A function to run when the adapter is created.
+   *
+   * Useful for setup such as enabling patches.
+   */
   onCreate?: (config?: GetConfigType<unknown, StateFn>) => void;
 } & (BaseHistoryState<any, any> extends GetStateType<unknown, StateFn>
   ? {
+      /**
+       * Function to construct an initial state with no history.
+       */
       getInitialState?: GetInitialState<StateFn>;
     }
   : {
+      /**
+       * Function to construct an initial state with no history.
+       */
       getInitialState: GetInitialState<StateFn>;
     });
 
