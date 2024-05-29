@@ -64,7 +64,7 @@ describe("createHistoryAdapter", () => {
         (books, book: Book, undoable?: boolean) => {
           books.push(book);
         },
-        (book, undoable) => undoable,
+        { isUndoable: (book, undoable) => undoable },
       );
       const initialState = booksHistoryAdapter.getInitialState([]);
       const nextState = addBook(initialState, book1, false);
@@ -383,7 +383,7 @@ describe("createPatchHistoryAdapter", () => {
         (books, book: Book, undoable?: boolean) => {
           books.push(book);
         },
-        (book, undoable) => undoable,
+        { isUndoable: (book, undoable) => undoable },
       );
       const initialState = booksHistoryAdapter.getInitialState([]);
       const nextState = addBook(initialState, book1, false);
