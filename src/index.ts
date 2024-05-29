@@ -6,7 +6,6 @@ import {
   produceWithPatches,
   produce,
   isDraft,
-  current,
 } from "immer";
 import { ensureCurrent, type NoInfer } from "./utils";
 
