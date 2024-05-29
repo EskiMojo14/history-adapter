@@ -6,7 +6,7 @@ import {
   produceWithPatches,
 } from "immer";
 import { ensureCurrent, makeStateOperator } from "./utils";
-import type { MaybeDraft, NoInfer } from "./utils";
+import type { MaybeDraft } from "./utils";
 
 type ValidRecipeReturnType<State> =
   | State
@@ -117,16 +117,6 @@ export interface HistoryAdapter<
     state: State,
     ...args: Args
   ) => State;
-  /**
-   * Wraps a function to automatically update patch history according to changes
-   * @param recipe An immer-style recipe, which can mutate the draft or return new state
-   * @param isUndoable A function to extract from the arguments whether the action was undoable or not. If not provided (or if function returns undefined), defaults to true.
-   * Non-undoable actions will not be included in state history.
-   */
-  undoable<Args extends Array<any>>(
-    recipe: (draft: Draft<Data>, ...args: Args) => ValidRecipeReturnType<Data>,
-    isUndoable?: (...args: NoInfer<Args>) => boolean | undefined,
-  ): <S extends MaybeDraft<State>>(state: S, ...args: Args) => S;
 
   /**
    * Pauses the history, preventing any new patches from being added.
@@ -256,17 +246,9 @@ function buildCreateHistoryAdapter<StateFn extends BaseHistoryStateFn>({
           draft: Draft<Data>,
           ...args: Args
         ) => ValidRecipeReturnType<Data>,
-        configOrIsUndoable?:
-          | UndoableConfig<Data, Args, RootState, State>
-          | ((...args: Args) => boolean | undefined),
+        config?: UndoableConfig<Data, Args, RootState, State>,
       ) => {
-        const {
-          selectHistoryState,
-          isUndoable,
-        }: UndoableConfig<Data, Args, RootState, State> =
-          typeof configOrIsUndoable === "function"
-            ? { isUndoable: configOrIsUndoable }
-            : configOrIsUndoable ?? {};
+        const { selectHistoryState, isUndoable } = config ?? {};
         const finalRecipe = wrapRecipe(recipe);
         return makeStateOperator<RootState, Args>((rootState, ...args) => {
           const state =
