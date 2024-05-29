@@ -178,9 +178,10 @@ export interface HistoryAdapter<
 > extends Omit<Adapter<Data, State>, "jump">,
     ReduxMethods<Data, State> {}
 
-function getReduxMethods<Data, State extends BaseHistoryState<Data, unknown>>(
-  adapter: Adapter<Data, State>,
-): ReduxMethods<Data, State> {
+export function getReduxMethods<
+  Data,
+  State extends BaseHistoryState<Data, unknown>,
+>(adapter: Adapter<Data, State>): ReduxMethods<Data, State> {
   return {
     jump(state, payloadOrAction) {
       return adapter.jump(state, getPayload(payloadOrAction));
