@@ -33,6 +33,11 @@ type ApplyDataType<Data, StateFn extends BaseHistoryStateFn> = (StateFn & {
 })["state"];
 
 export interface HistoryAdapterConfig {
+  /**
+   * Maximum number of past states to keep.
+   * If limit is reached, the oldest state will be removed.
+   * If not provided, all states will be kept.
+   */
   limit?: number;
 }
 
@@ -253,8 +258,8 @@ export const createHistoryAdapter = buildCreateHistoryAdapter<HistoryStateFn>({
         draft: Draft<Data>,
         ...args: Args
       ) => ValidRecipeReturnType<Data>,
-      config: WrapRecipeConfig<Args>,
-      adapterConfig: HistoryAdapterConfig,
+      { isUndoable }: WrapRecipeConfig<Args>,
+      { limit }: HistoryAdapterConfig,
     ) =>
     (state: Draft<HistoryState<Data>>, ...args: Args) => {
       // we need to get the present state before the recipe is applied
@@ -270,10 +275,10 @@ export const createHistoryAdapter = buildCreateHistoryAdapter<HistoryStateFn>({
       // if paused, don't add to history
       if (state.paused) return;
 
-      const undoable = config.isUndoable?.(...args) ?? true;
+      const undoable = isUndoable?.(...args) ?? true;
       if (undoable) {
         const lengthWithoutFuture = state.past.length + 1;
-        if (adapterConfig.limit && lengthWithoutFuture > adapterConfig.limit) {
+        if (limit && lengthWithoutFuture > limit) {
           state.past.shift();
         }
         state.past.push(before);
@@ -318,8 +323,8 @@ export const createPatchHistoryAdapter =
           draft: Draft<Data>,
           ...args: Args
         ) => ValidRecipeReturnType<Data>,
-        config: WrapRecipeConfig<Args>,
-        adapterConfig: HistoryAdapterConfig,
+        { isUndoable }: WrapRecipeConfig<Args>,
+        { limit }: HistoryAdapterConfig,
       ) =>
       (state: Draft<PatchHistoryState<Data>>, ...args: Args) => {
         const [{ present }, redo, undo] = produceWithPatches(state, (draft) => {
@@ -335,13 +340,10 @@ export const createPatchHistoryAdapter =
         // if paused, don't add to history
         if (state.paused) return;
 
-        const undoable = config.isUndoable?.(...args) ?? true;
+        const undoable = isUndoable?.(...args) ?? true;
         if (undoable) {
           const lengthWithoutFuture = state.past.length + 1;
-          if (
-            adapterConfig.limit &&
-            lengthWithoutFuture > adapterConfig.limit
-          ) {
+          if (limit && lengthWithoutFuture > limit) {
             state.past.shift();
           }
           state.past.push({ undo, redo });
