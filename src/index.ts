@@ -154,6 +154,8 @@ export type BuildHistoryAdapterConfig<StateFn extends BaseHistoryStateFn> = {
   /**
    * Function to apply a history entry to the state.
    * Should return a history entry to be added to the opposite stack (i.e. past or future).
+   *
+   * For example, when undoing, the entry is removed from the past stack, provided to `applyEntry`, and the result is added to the future stack.
    */
   applyEntry: (
     state: StateFn["state"],
