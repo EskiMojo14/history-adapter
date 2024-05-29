@@ -36,7 +36,7 @@ export interface HistoryAdapterConfig {
   limit?: number;
 }
 
-interface BaseHistoryStateFn {
+export interface BaseHistoryStateFn {
   state: BaseHistoryState<this["data"], unknown>;
   data: unknown;
   config: HistoryAdapterConfig;
@@ -104,7 +104,6 @@ export interface HistoryAdapter<
    * @param state History state shape, with patches
    */
   clearHistory<S extends MaybeDraft<State>>(state: S): S;
-
   /**
    * Wraps a function to automatically update patch history according to changes
    * @param recipe An immer-style recipe, which can mutate the draft or return new state
@@ -117,7 +116,6 @@ export interface HistoryAdapter<
     state: State,
     ...args: Args
   ) => State;
-
   /**
    * Pauses the history, preventing any new patches from being added.
    * @param state History state shape, with patches
@@ -155,7 +153,7 @@ type ApplyEntry<StateFn extends BaseHistoryStateFn> = (
   historyEntry: HistoryEntryType<StateFn["state"]>,
 ) => HistoryEntryType<StateFn["state"]>;
 
-type BuildHistoryAdapterConfig<StateFn extends BaseHistoryStateFn> = {
+export type BuildHistoryAdapterConfig<StateFn extends BaseHistoryStateFn> = {
   /**
    * Function to apply a history entry to the state.
    * Should return a history entry to be added to the opposite stack (i.e. past or future).
@@ -193,7 +191,7 @@ type BuildHistoryAdapterConfig<StateFn extends BaseHistoryStateFn> = {
       getInitialState: GetInitialState<StateFn>;
     });
 
-function buildCreateHistoryAdapter<StateFn extends BaseHistoryStateFn>({
+export function buildCreateHistoryAdapter<StateFn extends BaseHistoryStateFn>({
   applyEntry,
   wrapRecipe,
   onCreate,
