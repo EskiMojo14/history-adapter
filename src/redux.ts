@@ -1,3 +1,4 @@
+/* eslint-disable import/export */
 import type { Action, CaseReducer, PayloadAction } from "@reduxjs/toolkit";
 import {
   isFluxStandardAction,
@@ -18,8 +19,7 @@ import {
 import type { IfMaybeUndefined, MaybeDraft } from "./utils";
 import type { CreateSelectorFunction, Selector } from "reselect";
 
-export type { HistoryState, HistoryAdapterConfig } from ".";
-export { getInitialState } from ".";
+export * from ".";
 
 type AnyFunction = (...args: any) => any;
 type AnyCreateSelectorFunction = CreateSelectorFunction<
@@ -119,7 +119,10 @@ function getPayload<P>(payloadOrAction: PayloadAction<P> | P): P {
     : payloadOrAction;
 }
 
-interface ReduxMethods<Data, State extends BaseHistoryState<Data, unknown>> {
+export interface ReduxMethods<
+  Data,
+  State extends BaseHistoryState<Data, unknown>,
+> {
   /**
    * Moves the state back or forward in history by n steps.
    * @param state History state shape, with patches
