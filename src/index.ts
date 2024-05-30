@@ -177,16 +177,16 @@ export type BuildHistoryAdapterConfig<StateFn extends BaseHistoryStateFn> = {
    *
    * For example, when undoing, the entry is removed from the past stack, provided to `applyEntry`, and the result is added to the future stack.
    */
-  applyEntry: (
-    state: StateFn["state"],
-    historyEntry: HistoryEntryType<StateFn["state"]>,
+  applyEntry: <Data extends StateFn["dataConstraint"]>(
+    state: GetStateType<Data, StateFn>,
+    historyEntry: HistoryEntryType<GetStateType<Data, StateFn>>,
     op: ApplyOp,
-  ) => HistoryEntryType<StateFn["state"]>;
+  ) => HistoryEntryType<GetStateType<Data, StateFn>>;
   /**
    * Function to wrap a recipe to automatically update patch history according to changes.
    * Should return a function that receives the state and arguments, and returns a history entry to be added to the past stack.
    */
-  wrapRecipe: <Data, Args extends Array<any>>(
+  wrapRecipe: <Data extends StateFn["dataConstraint"], Args extends Array<any>>(
     recipe: ImmerRecipe<Data, Args>,
   ) => (
     state: Draft<GetStateType<Data, StateFn>>,
