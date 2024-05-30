@@ -45,17 +45,27 @@ export interface BaseHistoryAdapterConfig {
 }
 
 export interface BaseHistoryStateFn {
-  data: unknown;
+  dataConstraint: unknown;
+  _rawData: unknown;
+  data: this["_rawData"] extends this["dataConstraint"]
+    ? this["_rawData"]
+    : never;
   state: BaseHistoryState<this["data"], unknown>;
   config: BaseHistoryAdapterConfig;
 }
 
-type GetStateType<Data, StateFn extends BaseHistoryStateFn> = (StateFn & {
-  data: Data;
+export type GetStateType<
+  Data,
+  StateFn extends BaseHistoryStateFn,
+> = (StateFn & {
+  _rawData: Data;
 })["state"];
 
-type GetConfigType<Data, StateFn extends BaseHistoryStateFn> = (StateFn & {
-  data: Data;
+export type GetConfigType<
+  Data,
+  StateFn extends BaseHistoryStateFn,
+> = (StateFn & {
+  _rawData: Data;
 })["config"];
 
 export interface WrapRecipeConfig<Args extends Array<any>> {
@@ -152,7 +162,9 @@ export function getInitialState<Data, HistoryEntry>(
   };
 }
 
-type GetInitialState<StateFn extends BaseHistoryStateFn> = <Data>(
+type GetInitialState<StateFn extends BaseHistoryStateFn> = <
+  Data extends StateFn["dataConstraint"],
+>(
   initialData: Data,
 ) => GetStateType<Data, StateFn>;
 
@@ -185,8 +197,13 @@ export type BuildHistoryAdapterConfig<StateFn extends BaseHistoryStateFn> = {
    *
    * Useful for setup such as enabling patches.
    */
-  onCreate?: (config?: GetConfigType<unknown, StateFn>) => void;
-} & (BaseHistoryState<any, any> extends GetStateType<unknown, StateFn>
+  onCreate?: (
+    config?: GetConfigType<StateFn["dataConstraint"], StateFn>,
+  ) => void;
+} & (BaseHistoryState<any, any> extends GetStateType<
+  StateFn["dataConstraint"],
+  StateFn
+>
   ? {
       /**
        * Function to construct an initial state with no history.
@@ -200,12 +217,18 @@ export type BuildHistoryAdapterConfig<StateFn extends BaseHistoryStateFn> = {
       getInitialState: GetInitialState<StateFn>;
     });
 
+export type CreateHistoryAdapter<StateFn extends BaseHistoryStateFn> = <
+  Data extends StateFn["dataConstraint"],
+>(
+  adapterConfig?: GetConfigType<Data, StateFn>,
+) => HistoryAdapter<Data, GetStateType<Data, StateFn>>;
+
 export function buildCreateHistoryAdapter<StateFn extends BaseHistoryStateFn>({
   applyEntry,
   wrapRecipe,
   onCreate,
   getInitialState: getInitialStateCustom = getInitialState,
-}: BuildHistoryAdapterConfig<StateFn>) {
+}: BuildHistoryAdapterConfig<StateFn>): CreateHistoryAdapter<StateFn> {
   function undoMutably(state: StateFn["state"]) {
     if (!state.past.length) return;
     state.future.unshift(applyEntry(state, state.past.pop() as never, "undo"));
@@ -214,7 +237,7 @@ export function buildCreateHistoryAdapter<StateFn extends BaseHistoryStateFn>({
     if (!state.future.length) return;
     state.past.push(applyEntry(state, state.future.shift() as never, "redo"));
   }
-  return function createHistoryAdapter<Data extends StateFn["data"]>(
+  return function createHistoryAdapter<Data extends StateFn["dataConstraint"]>(
     adapterConfig?: GetConfigType<Data, StateFn>,
   ): HistoryAdapter<Data, GetStateType<Data, StateFn>> {
     type State = GetStateType<Data, StateFn>;
@@ -283,11 +306,11 @@ export function buildCreateHistoryAdapter<StateFn extends BaseHistoryStateFn>({
 
 export type HistoryState<Data> = BaseHistoryState<Data, Data>;
 
-interface HistoryStateFn extends BaseHistoryStateFn {
+export interface HistoryStateFn extends BaseHistoryStateFn {
   state: HistoryState<this["data"]>;
 }
 
-export const applyRecipe = <
+const applyRecipe = <
   Data,
   Args extends Array<any>,
   State extends MaybeDraft<BaseHistoryState<Data, unknown>>,
@@ -302,7 +325,6 @@ export const applyRecipe = <
   } else if (typeof result !== "undefined") {
     state.present = result as never;
   }
-  return state;
 };
 
 export const createHistoryAdapter =
@@ -331,7 +353,7 @@ export type PatchState = Record<ApplyOp, Array<Patch>>;
 
 export type PatchHistoryState<Data> = BaseHistoryState<Data, PatchState>;
 
-interface PatchHistoryStateFn extends BaseHistoryStateFn {
+export interface PatchHistoryStateFn extends BaseHistoryStateFn {
   state: PatchHistoryState<this["data"]>;
 }
 
@@ -348,11 +370,7 @@ export const createPatchHistoryAdapter =
       (recipe) =>
       (state, ...args) => {
         const [{ present }, redo, undo] = produceWithPatches(state, (draft) => {
-          applyRecipe(
-            draft as Draft<PatchHistoryState<DataFromRecipe<typeof recipe>>>,
-            recipe,
-            ...args,
-          );
+          applyRecipe(draft as never, recipe, ...args);
         });
         state.present = present;
 

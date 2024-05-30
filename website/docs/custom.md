@@ -194,7 +194,7 @@ If your custom adapter is only meant to work with a specific data type, you can 
 
 ```ts
 interface CustomHistoryStateFn extends BaseHistoryStateFn {
-  data: Record<string, unknown>;
+  dataConstraint: Record<string, unknown>;
   state: CustomHistoryState<Data>;
   config: CustomConfig;
 }
@@ -214,3 +214,25 @@ const exampleAdapter = createCustomHistoryAdapter<number>();
 ```
 
 :::
+
+## Redux methods
+
+If you want to include the Redux methods in your custom adapter, this is possible with the `withRedux` enhancer:
+
+```ts
+import { withRedux } from "history-adapter/redux";
+
+const createCustomHistoryAdapter = withRedux(
+  buildCreateHistoryAdapter<CustomHistoryStateFn>({
+    // ...
+  }),
+);
+```
+
+If you want the raw methods separately, a `getReduxMethods` function is also available.
+
+```ts
+import { getReduxMethods } from "history-adapter/redux";
+
+const reduxMethods = getReduxMethods(counterAdapter);
+```

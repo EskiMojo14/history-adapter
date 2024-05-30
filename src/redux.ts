@@ -9,14 +9,17 @@ import type {
   BaseHistoryState,
   HistoryState,
   UndoableConfig,
-  BaseHistoryAdapterConfig,
-  PatchHistoryState,
+  BaseHistoryStateFn,
+  CreateHistoryAdapter as CreateAdapter,
+  GetConfigType,
+  GetStateType,
 } from ".";
 import {
+  buildCreateHistoryAdapter,
   createHistoryAdapter as createAdapter,
   createPatchHistoryAdapter as createPatchAdapter,
 } from ".";
-import type { IfMaybeUndefined, MaybeDraft } from "./utils";
+import type { IfMaybeUndefined, MaybeDraft, Overwrite } from "./utils";
 import type { CreateSelectorFunction, Selector } from "reselect";
 
 export * from ".";
@@ -76,7 +79,7 @@ function globaliseSelectors<
 
 function makeSelectorFactory<
   Data,
-  State extends BaseHistoryState<Data, unknown>,
+  State extends BaseHistoryState<unknown, unknown>,
 >() {
   function getSelectors(): HistorySelectors<Data, State>;
   function getSelectors<RootState>(
@@ -90,7 +93,7 @@ function makeSelectorFactory<
     const localisedSelectors = {
       selectCanUndo: (state) => state.past.length > 0,
       selectCanRedo: (state) => state.future.length > 0,
-      selectPresent: (state) => state.present,
+      selectPresent: (state) => state.present as Data,
       selectPaused: (state) => state.paused,
     } satisfies HistorySelectors<Data, State>;
     if (!selectState) {
@@ -121,7 +124,7 @@ function getPayload<P>(payloadOrAction: PayloadAction<P> | P): P {
 
 export interface ReduxMethods<
   Data,
-  State extends BaseHistoryState<Data, unknown>,
+  State extends BaseHistoryState<unknown, unknown>,
 > {
   /**
    * Moves the state back or forward in history by n steps.
@@ -177,13 +180,13 @@ export interface ReduxMethods<
 
 export interface HistoryAdapter<
   Data,
-  State extends BaseHistoryState<Data, unknown> = HistoryState<Data>,
+  State extends BaseHistoryState<unknown, unknown> = HistoryState<Data>,
 > extends Omit<Adapter<Data, State>, "jump">,
     ReduxMethods<Data, State> {}
 
 export function getReduxMethods<
   Data,
-  State extends BaseHistoryState<Data, unknown>,
+  State extends BaseHistoryState<unknown, unknown>,
 >(adapter: Adapter<Data, State>): ReduxMethods<Data, State> {
   return {
     jump(state, payloadOrAction) {
@@ -214,22 +217,27 @@ export function getReduxMethods<
   };
 }
 
-export const createHistoryAdapter = <Data>(
-  config?: BaseHistoryAdapterConfig,
-): HistoryAdapter<Data> => {
-  const adapter = createAdapter<Data>(config);
-  return {
-    ...adapter,
-    ...getReduxMethods(adapter),
-  };
-};
+export type CreateHistoryAdapter<StateFn extends BaseHistoryStateFn> = <
+  Data extends StateFn["dataConstraint"],
+>(
+  adapterConfig?: GetConfigType<Data, StateFn>,
+) => Overwrite<
+  HistoryAdapter<Data, GetStateType<Data, StateFn>>,
+  ReduxMethods<Data, GetStateType<Data, StateFn>>
+>;
 
-export const createPatchHistoryAdapter = <Data>(
-  config?: BaseHistoryAdapterConfig,
-): HistoryAdapter<Data, PatchHistoryState<Data>> => {
-  const adapter = createPatchAdapter<Data>(config);
-  return {
-    ...adapter,
-    ...getReduxMethods(adapter),
+export function withRedux<StateFn extends BaseHistoryStateFn>(
+  createAdapter: CreateAdapter<StateFn>,
+): CreateHistoryAdapter<StateFn> {
+  return function createReduxAdapter(config) {
+    const adapter = createAdapter(config);
+    return {
+      ...adapter,
+      ...getReduxMethods(adapter),
+    };
   };
-};
+}
+
+export const createHistoryAdapter = withRedux(createAdapter);
+
+export const createPatchHistoryAdapter = withRedux(createPatchAdapter);
