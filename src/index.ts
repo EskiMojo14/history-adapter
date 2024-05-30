@@ -23,6 +23,12 @@ export interface BaseHistoryState<Data, HistoryEntry> {
   paused: boolean;
 }
 
+type DataFromState<State> = State extends MaybeDraft<
+  BaseHistoryState<infer T, any>
+>
+  ? T
+  : never;
+
 type HistoryEntryType<State> = State extends BaseHistoryState<any, infer T>
   ? T
   : never;
@@ -305,16 +311,13 @@ export const createHistoryAdapter =
       return stateBefore;
     },
     wrapRecipe:
-      <Data, Args extends Array<any>>(
-        recipe: (
-          draft: Draft<Data>,
-          ...args: Args
-        ) => ValidRecipeReturnType<Data>,
-      ) =>
-      (state: Draft<HistoryState<Data>>, ...args: Args) => {
+      (recipe) =>
+      (state, ...args) => {
         // we need to get the present state before the recipe is applied
         // and because the recipe might mutate it, we need the non-draft version
-        const before = ensureCurrent(state.present) as Data;
+        const before = ensureCurrent(state.present) as DataFromState<
+          typeof state
+        >;
 
         applyRecipe(state, recipe, ...args);
 
@@ -340,15 +343,14 @@ export const createPatchHistoryAdapter =
       return historyEntry;
     },
     wrapRecipe:
-      <Data, Args extends Array<any>>(
-        recipe: (
-          draft: Draft<Data>,
-          ...args: Args
-        ) => ValidRecipeReturnType<Data>,
-      ) =>
-      (state: Draft<PatchHistoryState<Data>>, ...args: Args) => {
+      (recipe) =>
+      (state, ...args) => {
         const [{ present }, redo, undo] = produceWithPatches(state, (draft) => {
-          applyRecipe(draft as Draft<PatchHistoryState<Data>>, recipe, ...args);
+          applyRecipe(
+            draft as Draft<PatchHistoryState<DataFromState<typeof state>>>,
+            recipe,
+            ...args,
+          );
         });
         state.present = present;
 
