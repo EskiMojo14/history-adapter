@@ -1,22 +1,25 @@
+/* eslint-disable import/export */
 import type { Action, CaseReducer, PayloadAction } from "@reduxjs/toolkit";
-import type { Draft } from "immer";
 import {
   isFluxStandardAction,
   createDraftSafeSelector,
 } from "@reduxjs/toolkit";
 import type {
   HistoryAdapter as Adapter,
-  HistoryAdapterConfig,
+  BaseHistoryState,
   HistoryState,
-  MaybeDraftHistoryState,
   UndoableConfig,
+  BaseHistoryAdapterConfig,
+  PatchHistoryState,
 } from ".";
-import { createHistoryAdapter as createAdapter } from ".";
-import type { IfMaybeUndefined } from "./utils";
+import {
+  createHistoryAdapter as createAdapter,
+  createPatchHistoryAdapter as createPatchAdapter,
+} from ".";
+import type { IfMaybeUndefined, MaybeDraft } from "./utils";
 import type { CreateSelectorFunction, Selector } from "reselect";
 
-export type { HistoryState, HistoryAdapterConfig } from ".";
-export { getInitialState } from ".";
+export * from ".";
 
 type AnyFunction = (...args: any) => any;
 type AnyCreateSelectorFunction = CreateSelectorFunction<
@@ -53,12 +56,13 @@ export interface HistorySelectors<Data, State = HistoryState<Data>> {
 function globaliseSelectors<
   Data,
   RootState,
+  State extends BaseHistoryState<Data, unknown>,
   Selected extends Record<string, unknown>,
 >(
   createSelector: AnyCreateSelectorFunction,
-  selectState: (rootState: RootState) => HistoryState<Data>,
+  selectState: (rootState: RootState) => State,
   selectors: {
-    [K in keyof Selected]: (state: HistoryState<Data>) => Selected[K];
+    [K in keyof Selected]: (state: State) => Selected[K];
   },
 ): {
   [K in keyof Selected]: (rootState: RootState) => Selected[K];
@@ -70,14 +74,17 @@ function globaliseSelectors<
   return result as never;
 }
 
-function makeSelectorFactory<Data>() {
-  function getSelectors(): HistorySelectors<Data>;
+function makeSelectorFactory<
+  Data,
+  State extends BaseHistoryState<Data, unknown>,
+>() {
+  function getSelectors(): HistorySelectors<Data, State>;
   function getSelectors<RootState>(
-    selectState: (rootState: RootState) => HistoryState<Data>,
+    selectState: (rootState: RootState) => State,
     options?: GetSelectorsOptions,
   ): HistorySelectors<Data, RootState>;
   function getSelectors<RootState>(
-    selectState?: (rootState: RootState) => HistoryState<Data>,
+    selectState?: (rootState: RootState) => State,
     { createSelector = createDraftSafeSelector }: GetSelectorsOptions = {},
   ): HistorySelectors<Data, any> {
     const localisedSelectors = {
@@ -85,7 +92,7 @@ function makeSelectorFactory<Data>() {
       selectCanRedo: (state) => state.future.length > 0,
       selectPresent: (state) => state.present,
       selectPaused: (state) => state.paused,
-    } satisfies HistorySelectors<any>;
+    } satisfies HistorySelectors<Data, State>;
     if (!selectState) {
       return localisedSelectors;
     }
@@ -96,59 +103,6 @@ function makeSelectorFactory<Data>() {
 
 export interface UndoableMeta {
   undoable?: boolean;
-}
-
-export interface HistoryAdapter<Data> extends Adapter<Data> {
-  /**
-   * Moves the state back or forward in history by n steps.
-   * @param state History state shape, with patches
-   * @param n Number of steps to moveNegative numbers move backwards.
-   */
-  jump<State extends MaybeDraftHistoryState<Data>>(
-    state: State,
-    // eslint-disable-next-line @typescript-eslint/unified-signatures
-    n: number,
-  ): State;
-  /**
-   * Moves the state back or forward in history by n steps.
-   * @param state History state shape, with patches
-   * @param action An action with a payload of the number of steps to move. Negative numbers move backwards.
-   */
-  jump<State extends MaybeDraftHistoryState<Data>>(
-    state: State,
-    // eslint-disable-next-line @typescript-eslint/unified-signatures
-    action: PayloadAction<number>,
-  ): State;
-  /** An action creator prepare callback which doesn't take a payload */
-  withoutPayload(): (undoable?: boolean) => {
-    payload: undefined;
-    meta: UndoableMeta;
-  };
-  /** An action creator prepare callback which takes a single payload */
-  withPayload<P>(): (
-    ...args: IfMaybeUndefined<
-      P,
-      [payload?: P, undoable?: boolean],
-      [payload: P, undoable?: boolean]
-    >
-  ) => { payload: P; meta: UndoableMeta };
-  /** Wraps a reducer in logic which automatically updates the state history, and extracts whether an action is undoable from its meta (`action.meta.undoable`) */
-  undoableReducer<
-    A extends Action & { meta?: UndoableMeta },
-    RootState = HistoryState<Data>,
-  >(
-    reducer: CaseReducer<Data, A>,
-    config?: Omit<UndoableConfig<Data, [action: A], RootState>, "isUndoable">,
-  ): <State extends RootState | Draft<RootState>>(
-    state: State,
-    action: A,
-  ) => State;
-
-  getSelectors(): HistorySelectors<Data>;
-  getSelectors<RootState>(
-    selectState: (rootState: RootState) => HistoryState<Data>,
-    options?: GetSelectorsOptions,
-  ): HistorySelectors<Data, RootState>;
 }
 
 export function getUndoableMeta(action: { meta?: UndoableMeta }) {
@@ -165,12 +119,73 @@ function getPayload<P>(payloadOrAction: PayloadAction<P> | P): P {
     : payloadOrAction;
 }
 
-export function createHistoryAdapter<Data>(
-  config?: HistoryAdapterConfig,
-): HistoryAdapter<Data> {
-  const adapter = createAdapter<Data>(config);
+export interface ReduxMethods<
+  Data,
+  State extends BaseHistoryState<Data, unknown>,
+> {
+  /**
+   * Moves the state back or forward in history by n steps.
+   * @param state History state shape, with patches
+   * @param n Number of steps to moveNegative numbers move backwards.
+   */
+  jump<S extends MaybeDraft<State>>(
+    state: S,
+    // eslint-disable-next-line @typescript-eslint/unified-signatures
+    n: number,
+  ): S;
+  /**
+   * Moves the state back or forward in history by n steps.
+   * @param state History state shape, with patches
+   * @param action An action with a payload of the number of steps to move. Negative numbers move backwards.
+   */
+  jump<S extends MaybeDraft<State>>(
+    state: S,
+    // eslint-disable-next-line @typescript-eslint/unified-signatures
+    action: PayloadAction<number>,
+  ): S;
+  /** An action creator prepare callback which doesn't take a payload */
+  withoutPayload(): (undoable?: boolean) => {
+    payload: undefined;
+    meta: UndoableMeta;
+  };
+  /** An action creator prepare callback which takes a single payload */
+  withPayload<P>(): (
+    ...args: IfMaybeUndefined<
+      P,
+      [payload?: P, undoable?: boolean],
+      [payload: P, undoable?: boolean]
+    >
+  ) => { payload: P; meta: UndoableMeta };
+  /** Wraps a reducer in logic which automatically updates the state history, and extracts whether an action is undoable from its meta (`action.meta.undoable`) */
+  undoableReducer<
+    A extends Action & { meta?: UndoableMeta },
+    RootState = State,
+  >(
+    reducer: CaseReducer<Data, A>,
+    config?: Omit<
+      UndoableConfig<Data, [action: A], RootState, State>,
+      "isUndoable"
+    >,
+  ): <State extends MaybeDraft<RootState>>(state: State, action: A) => State;
+
+  getSelectors(): HistorySelectors<Data, State>;
+  getSelectors<RootState>(
+    selectState: (rootState: RootState) => State,
+    options?: GetSelectorsOptions,
+  ): HistorySelectors<Data, RootState>;
+}
+
+export interface HistoryAdapter<
+  Data,
+  State extends BaseHistoryState<Data, unknown> = HistoryState<Data>,
+> extends Omit<Adapter<Data, State>, "jump">,
+    ReduxMethods<Data, State> {}
+
+export function getReduxMethods<
+  Data,
+  State extends BaseHistoryState<Data, unknown>,
+>(adapter: Adapter<Data, State>): ReduxMethods<Data, State> {
   return {
-    ...adapter,
     jump(state, payloadOrAction) {
       return adapter.jump(state, getPayload(payloadOrAction));
     },
@@ -195,6 +210,26 @@ export function createHistoryAdapter<Data>(
         isUndoable: getUndoableMeta,
       });
     },
-    getSelectors: makeSelectorFactory<Data>(),
+    getSelectors: makeSelectorFactory<Data, State>(),
   };
 }
+
+export const createHistoryAdapter = <Data>(
+  config?: BaseHistoryAdapterConfig,
+): HistoryAdapter<Data> => {
+  const adapter = createAdapter<Data>(config);
+  return {
+    ...adapter,
+    ...getReduxMethods(adapter),
+  };
+};
+
+export const createPatchHistoryAdapter = <Data>(
+  config?: BaseHistoryAdapterConfig,
+): HistoryAdapter<Data, PatchHistoryState<Data>> => {
+  const adapter = createPatchAdapter<Data>(config);
+  return {
+    ...adapter,
+    ...getReduxMethods(adapter),
+  };
+};

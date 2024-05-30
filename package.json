@@ -92,8 +92,7 @@
       "esm",
       "cjs"
     ],
-    "dts": true,
-    "minify": true
+    "dts": true
   },
   "dependencies": {
     "immer": "^10.0.3"

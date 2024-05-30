@@ -19,8 +19,23 @@ export default [
     name: "import { createHistoryAdapter } from 'history-adapter'",
   },
   {
+    path: "dist/index.js",
+    import: "{ createPatchHistoryAdapter }",
+    name: "import { createPatchHistoryAdapter } from 'history-adapter'",
+  },
+  {
+    path: "dist/index.js",
+    import: "{ buildCreateHistoryAdapter }",
+    name: "import { buildCreateHistoryAdapter } from 'history-adapter'",
+  },
+  {
     path: "dist/redux.js",
     import: "{ createHistoryAdapter }",
     name: "import { createHistoryAdapter } from 'history-adapter/redux'",
+  },
+  {
+    path: "dist/redux.js",
+    import: "{ createPatchHistoryAdapter }",
+    name: "import { createPatchHistoryAdapter } from 'history-adapter/redux'",
   },
 ] satisfies SizeLimitConfig;
