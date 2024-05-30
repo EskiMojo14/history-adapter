@@ -4,25 +4,6 @@ A "history adapter" for managing undoable (and redoable) state changes with [imm
 
 Includes generic methods along with Redux-specific helpers.
 
-## History state
-
-A history state shape looks like:
-
-```ts
-export interface PatchState {
-  undo: Array<Patch>;
-  redo: Array<Patch>;
-}
-
-export interface HistoryState<Data> {
-  past: Array<PatchState>;
-  present: Data;
-  future: Array<PatchState>;
-}
-```
-
-The current data is stored under the `present` key, and changes are stored as collections of JSON Patches (created by immer).
-
 ## Generic helper methods
 
 To access the helper methods, create an adapter instance with a specific data type:
@@ -354,6 +335,26 @@ const booksHistoryAdapter = createHistoryAdapter({
 ### `limit`
 
 Defines a maximum history size.
+
+## Patches
+
+By default, the history adapter uses copies of the state's history to track changes. However, `createPatchHistoryAdapter` can be used instead, which will store JSON patches of changes made.
+
+```ts
+import { createPatchHistoryAdapter } from "history-adapter";
+
+const booksHistoryAdapter = createPatchHistoryAdapter<Array<Book>>();
+
+const addBook = booksHistoryAdapter.undoable((books, book: Book) => {
+  books.push(book);
+});
+
+const initialState = booksHistoryAdapter.getInitialState([]);
+
+const nextState = addBook(initialState, { id: 1, title: "Dune" });
+
+console.log(initialState.present, nextState.present); // [] [{ id: 1, title: "Dune" }]
+```
 
 ## Credits
 
