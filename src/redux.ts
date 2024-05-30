@@ -178,11 +178,10 @@ export interface ReduxMethods<
   ): HistorySelectors<Data, RootState>;
 }
 
-export interface HistoryAdapter<
+export type HistoryAdapter<
   Data,
   State extends BaseHistoryState<unknown, unknown> = HistoryState<Data>,
-> extends Omit<Adapter<Data, State>, "jump">,
-    ReduxMethods<Data, State> {}
+> = Overwrite<Adapter<Data, State>, ReduxMethods<Data, State>>;
 
 export function getReduxMethods<
   Data,
