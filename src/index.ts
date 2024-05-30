@@ -279,6 +279,24 @@ interface HistoryStateFn extends BaseHistoryStateFn {
   state: HistoryState<this["data"]>;
 }
 
+export const applyRecipe = <
+  Data,
+  Args extends Array<any>,
+  State extends MaybeDraft<BaseHistoryState<Data, unknown>>,
+>(
+  state: State,
+  recipe: (draft: Draft<Data>, ...args: Args) => ValidRecipeReturnType<Data>,
+  ...args: Args
+) => {
+  const result = recipe(state.present as Draft<Data>, ...args);
+  if (result === nothing) {
+    state.present = undefined as never;
+  } else if (typeof result !== "undefined") {
+    state.present = result as never;
+  }
+  return state;
+};
+
 export const createHistoryAdapter =
   /* @__PURE__ */ buildCreateHistoryAdapter<HistoryStateFn>({
     applyEntry(state, historyEntry) {
@@ -298,12 +316,7 @@ export const createHistoryAdapter =
         // and because the recipe might mutate it, we need the non-draft version
         const before = ensureCurrent(state.present) as Data;
 
-        const result = recipe(state.present as Draft<Data>, ...args);
-        if (result === nothing) {
-          state.present = undefined as never;
-        } else if (typeof result !== "undefined") {
-          state.present = result as never;
-        }
+        applyRecipe(state, recipe, ...args);
 
         return before;
       },
@@ -335,12 +348,7 @@ export const createPatchHistoryAdapter =
       ) =>
       (state: Draft<PatchHistoryState<Data>>, ...args: Args) => {
         const [{ present }, redo, undo] = produceWithPatches(state, (draft) => {
-          const result = recipe(draft.present as Draft<Data>, ...args);
-          if (result === nothing) {
-            draft.present = undefined as never;
-          } else if (typeof result !== "undefined") {
-            draft.present = result as never;
-          }
+          applyRecipe(draft as Draft<PatchHistoryState<Data>>, recipe, ...args);
         });
         state.present = present;
 
