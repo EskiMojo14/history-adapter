@@ -16,7 +16,7 @@ import {
   createHistoryAdapter as createAdapter,
   createPatchHistoryAdapter as createPatchAdapter,
 } from ".";
-import type { IfMaybeUndefined, MaybeDraft, Overwrite } from "./utils";
+import type { IfMaybeUndefined, MaybeDraft } from "./utils";
 import type { CreateSelectorFunction, Selector } from "reselect";
 
 export * from ".";
@@ -175,20 +175,11 @@ export interface ReduxMethods<
   ): HistorySelectors<Data, RootState>;
 }
 
-export type WithReduxMethods<
-  HistoryAdapter extends Adapter<unknown, BaseHistoryState<unknown, unknown>>,
-> = HistoryAdapter extends Adapter<
-  infer Data,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  infer State extends BaseHistoryState<any, unknown>
->
-  ? Overwrite<HistoryAdapter, ReduxMethods<Data, State>>
-  : never;
-
-export type HistoryAdapter<
+export interface HistoryAdapter<
   Data,
   State extends BaseHistoryState<Data, unknown> = HistoryState<Data>,
-> = WithReduxMethods<Adapter<Data, State>>;
+> extends Omit<Adapter<Data, State>, "jump">,
+    ReduxMethods<Data, State> {}
 
 export function getReduxMethods<
   Data,
