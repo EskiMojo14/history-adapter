@@ -2,11 +2,14 @@
 sidebar_position: 1
 ---
 
+import { code as ts } from "/src/components/CustomSandpack";
+import { ConsoleSandbox } from "/src/components/ConsoleSandbox";
+
 # Standard Methods
 
 This page documents the standard methods available when using a history adapter instance.
 
-```ts
+```ts title="Adapter setup"
 import { createHistoryAdapter } from "history-adapter";
 
 interface CounterState {
@@ -20,21 +23,23 @@ const counterAdapter = createHistoryAdapter<CounterState>({ limit: 10 });
 
 Receives an initial state value and returns a "history state" shape.
 
-```ts
+<ConsoleSandbox code={ts`
 const initialState = counterAdapter.getInitialState({ value: 0 });
 
-// { past: [], present: { value: 0 }, future: [], paused: false }
-```
+print("initialState", initialState)
+`} />
 
 :::tip
 
 A standalone version of this method is available as `getInitialState`.
 
-```ts
-import { getInitialState } from "history-adapter";
-
+<ConsoleSandbox includeCounterSetup={false} imports={{
+  "history-adapter": "{ getInitialState }"
+}} code={ts`
 const initialState = getInitialState({ value: 0 });
-```
+
+print("initialState", initialState)
+`} />
 
 :::
 
@@ -42,31 +47,41 @@ const initialState = getInitialState({ value: 0 });
 
 Wraps an immer recipe to automatically manage undo and redo state. Because immer wraps the state in a draft, you can safely mutate the state directly.
 
-```ts
+<ConsoleSandbox code={ts`
 const increment = counterAdapter.undoable((draft) => {
   draft.value += 1;
 });
 
 const initialState = counterAdapter.getInitialState({ value: 0 });
 
+print("initialState", initialState)
+
 const nextState = increment(initialState);
 
-// { past: [{ value: 0 }], present: { value: 1 }, future: [], paused: false }
-```
+print("nextState", nextState)
+`} />
 
 :::tip State operators
 
 All of the methods to update state (`undo`, `redo`, etc.) will act mutably when passed a draft, otherwise return a new state. The same applies to the function returned by `undoable`.
 
-```ts
-console.log(initialState.present.value, nextState.present.value); // 0, 1
-
-const withDraft = produce(initialState, (draft) => {
-  increment(draft);
+<ConsoleSandbox imports={{ immer: "{ produce }" }} code={ts`
+const increment = counterAdapter.undoable((draft) => {
+  draft.value += 1;
 });
 
-console.log(initialState.present.value, withDraft.present.value); // 0, 1
-```
+const initialState = counterAdapter.getInitialState({ value: 0 });
+
+const nextState = increment(initialState); // creates a new state
+
+const withDraft = produce(initialState, (draft) => {
+increment(draft); // called as a mutator
+});
+
+print("initialState", initialState.present.value)
+print("nextState", nextState.present.value)
+print("withDraft", withDraft.present.value)
+`} />
 
 :::
 

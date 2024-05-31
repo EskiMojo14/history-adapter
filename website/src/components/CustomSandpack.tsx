@@ -8,7 +8,7 @@ const removeLeadingTrailingNewlines: typeof String.raw = (str, ...args) =>
     .replace(/^\n/, "")
     .replace(/\n$/, "");
 
-export const ts = removeLeadingTrailingNewlines;
+export const code = removeLeadingTrailingNewlines;
 
 export function CustomSandpack(props: SandpackProps) {
   const { colorMode } = useColorMode();

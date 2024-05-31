@@ -1,5 +1,5 @@
 import type { SandpackFiles } from "@codesandbox/sandpack-react";
-import { CustomSandpack, ts } from "./CustomSandpack";
+import { CustomSandpack, code as ts } from "./CustomSandpack";
 import { usePatches } from "./PatchesTabs";
 
 export const defaultFiles = {
