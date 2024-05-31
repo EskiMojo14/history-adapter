@@ -237,6 +237,7 @@ export function withRedux<StateFn extends BaseHistoryStateFn>(
   };
 }
 
-export const createHistoryAdapter = withRedux(createAdapter);
+export const createHistoryAdapter = /* @__PURE__ */ withRedux(createAdapter);
 
-export const createPatchHistoryAdapter = withRedux(createPatchAdapter);
+export const createPatchHistoryAdapter =
+  /* @__PURE__ */ withRedux(createPatchAdapter);
