@@ -310,7 +310,12 @@ export interface HistoryStateFn extends BaseHistoryStateFn {
   state: HistoryState<this["data"]>;
 }
 
-const applyRecipe = <
+/**
+ * Calls a recipe with the present state and arguments, and applies the result to the state.
+ *
+ * Correctly handles immer's `nothing` and `undefined` return values.
+ */
+export const applyRecipe = <
   Data,
   Args extends Array<any>,
   State extends MaybeDraft<BaseHistoryState<Data, unknown>>,
