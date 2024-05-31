@@ -708,8 +708,10 @@ describe("buildCreateHistoryAdapter", () => {
   });
 
   it("exposes getInitialState", () => {
-    const initialState = createCustomHistoryAdapter().getInitialState([]);
-    expect(initialState).toEqual<CustomHistoryState<Array<any>>>({
+    const initialState = createCustomHistoryAdapter<
+      Array<number>
+    >().getInitialState([]);
+    expect(initialState).toEqual<CustomHistoryState<Array<number>>>({
       past: [],
       present: [],
       future: [],
@@ -719,13 +721,13 @@ describe("buildCreateHistoryAdapter", () => {
   });
 
   it("updates the state correctly", () => {
-    const adapter = createCustomHistoryAdapter();
+    const adapter = createCustomHistoryAdapter<Array<number>>();
     const add = adapter.undoable((state, value: number) => {
       state.push(value);
     });
     const initialState = adapter.getInitialState([]);
     const nextState = add(initialState, 1);
-    expect(nextState).toEqual<CustomHistoryState<Array<any>>>({
+    expect(nextState).toEqual<CustomHistoryState<Array<number>>>({
       past: [{ data: [] }],
       present: [1],
       future: [],
@@ -733,7 +735,7 @@ describe("buildCreateHistoryAdapter", () => {
       extra: "extra",
     });
     const undoneState = adapter.undo(nextState);
-    expect(undoneState).toEqual<CustomHistoryState<Array<any>>>({
+    expect(undoneState).toEqual<CustomHistoryState<Array<number>>>({
       past: [],
       present: [],
       future: [{ data: [1] }],
@@ -741,7 +743,7 @@ describe("buildCreateHistoryAdapter", () => {
       extra: "extra",
     });
     const redoneState = adapter.redo(undoneState);
-    expect(redoneState).toEqual<CustomHistoryState<Array<any>>>({
+    expect(redoneState).toEqual<CustomHistoryState<Array<number>>>({
       past: [{ data: [] }],
       present: [1],
       future: [],
