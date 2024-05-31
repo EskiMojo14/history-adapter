@@ -20,10 +20,9 @@ export const usePatches = <Files extends SandpackFiles>(
       ...files,
       [adapterFileName]: {
         ...asObj,
-        code: asObj.code.replace(
-          /createHistoryAdapter/g,
-          "createPatchHistoryAdapter",
-        ),
+        code: asObj.code
+          .replace(/createHistoryAdapter/g, "createPatchHistoryAdapter")
+          .replace(/HistoryState/g, "PatchHistoryState"),
       },
     };
   }, [files, adapterFileName, patches]);

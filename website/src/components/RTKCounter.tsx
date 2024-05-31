@@ -1,18 +1,10 @@
 import type { SandpackFiles } from "@codesandbox/sandpack-react";
-import { CustomSandpack } from "./CustomSandpack";
+import { CustomSandpack, ts } from "./CustomSandpack";
 import { usePatches } from "./PatchesTabs";
-
-const removeLeadingTrailingNewlines: typeof String.raw = (str, ...args) =>
-  String.raw(str, ...args)
-    .replace(/^\n/, "")
-    .replace(/\n$/, "");
-
-export const ts = removeLeadingTrailingNewlines;
-export const css = removeLeadingTrailingNewlines;
 
 export const defaultFiles = {
   "/counterSlice.ts": ts`
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { createHistoryAdapter } from "history-adapter/redux";
 
 interface CounterState {
@@ -23,18 +15,24 @@ const counterAdapter = createHistoryAdapter({ limit: 5 });
 
 const { selectPresent, ...historySelectors } = counterAdapter.getSelectors();
 
+const initialState = counterAdapter.getInitialState<CounterState>({ value: 0 });
+
 export const counterSlice = createSlice({
   name: "counter",
-  initialState: counterAdapter.getInitialState<CounterState>({ value: 0 }),
+  initialState,
   reducers: {
-    incremented: counterAdapter.undoableReducer((state) => {
-      state.value++;
-    }),
+    incrementedBy: counterAdapter.undoableReducer(
+      (state, action: PayloadAction<number>) => {
+        state.value += action.payload;
+      }
+    ),
     undone: counterAdapter.undo,
     redone: counterAdapter.redo,
     pauseToggled(state) {
       state.paused = !state.paused;
     },
+    historyCleared: counterAdapter.clearHistory,
+    reset: () => initialState,
   },
   selectors: {
     ...historySelectors,
@@ -42,8 +40,14 @@ export const counterSlice = createSlice({
   },
 });
 
-export const { incremented, undone, redone, pauseToggled } =
-  counterSlice.actions;
+export const {
+  incrementedBy,
+  undone,
+  redone,
+  pauseToggled,
+  historyCleared,
+  reset,
+} = counterSlice.actions;
 
 export const { selectCount, selectCanUndo, selectCanRedo, selectPaused } =
   counterSlice.selectors;
@@ -76,9 +80,12 @@ export const useAppDispatch = useDispatch.withTypes<AppDispatch>();
   "/Counter.tsx": ts`
 import { useAppSelector, useAppDispatch } from "./hooks";
 import {
-  incremented,
+  incrementedBy,
   undone,
   redone,
+  pauseToggled,
+  historyCleared,
+  reset,
   selectCount,
   selectCanUndo,
   selectCanRedo,
@@ -95,7 +102,7 @@ export function Counter() {
   return (
     <div>
       <p>Count: {count}</p>
-      <button onClick={() => dispatch(incremented())}>Increment</button>
+      <button onClick={() => dispatch(incrementedBy(1))}>Increment</button>
       <button onClick={() => dispatch(undone())} disabled={!canUndo}>
         Undo
       </button>
@@ -105,6 +112,8 @@ export function Counter() {
       <button onClick={() => dispatch(pauseToggled())}>
         {paused ? "Resume" : "Pause"}
       </button>
+      <button onClick={() => dispatch(historyCleared())}>Clear History</button>
+      <button onClick={() => dispatch(reset())}>Reset</button>
     </div>
   );
 }
@@ -123,7 +132,9 @@ export default function App() {
     <div>
       <h1>Counter</h1>
       <Counter />
-      <Highlight language="json">{JSON.stringify(counterState, null, 2)}</Highlight>
+      <Highlight language="json">
+        {JSON.stringify(counterState, null, 2)}
+      </Highlight>
     </div>
   );
 }
@@ -170,7 +181,7 @@ export default function CounterDemo() {
         externalResources: [
           "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css",
         ],
-        editorHeight: "500px",
+        editorHeight: "400px",
         editorWidthPercentage: 70,
       }}
     />
