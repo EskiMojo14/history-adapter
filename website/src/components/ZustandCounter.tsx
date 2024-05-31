@@ -17,6 +17,8 @@ interface RootState extends HistoryState<CounterState> {
   undo: () => void;
   redo: () => void;
   togglePause: () => void;
+  clearHistory: () => void;
+  reset: () => void;
 }
 
 const counterAdapter = createHistoryAdapter<CounterState>();
