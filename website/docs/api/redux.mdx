@@ -1,0 +1,237 @@
+---
+sidebar_position: 2
+---
+
+# Redux Methods
+
+When imported from `history-adapter/redux`, the `createHistoryAdapter` function returns an object with additional methods for use with Redux Toolkit.
+
+```ts
+import { createHistoryAdapter } from "history-adapter/redux";
+
+interface CounterState {
+  value: number;
+}
+
+const counterAdapter = createHistoryAdapter<CounterState>({ limit: 10 });
+```
+
+:::caution Redux Toolkit
+
+RTK is an optional peer dependency, but required to use the Redux specific entry point. Make sure you have it installed:
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+<Tabs groupId="package-manager">
+  <TabItem value="npm" default>
+    ```bash
+    
+    npm install @reduxjs/toolkit
+
+    ```
+
+  </TabItem>
+  <TabItem value="yarn">
+    ```bash
+
+    yarn add @reduxjs/toolkit
+
+    ```
+
+  </TabItem>
+  <TabItem value="bun">
+    ```bash
+
+    bun add @reduxjs/toolkit
+
+    ```
+
+  </TabItem>
+</Tabs>
+
+:::
+
+All [standard methods](/api/standard) are available, plus the following:
+
+## `undoableReducer`
+
+A wrapper around the `undoable` method that receives a case reducer and returns a wrapped reducer that manages undo and redo state.
+
+Instead of providing an `isUndoable` callback, the reducer checks `action.meta.undoable` to determine if the action should be tracked.
+
+```ts
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+
+const counterSlice = createSlice({
+  name: "counter",
+  initialState: counterAdapter.getInitialState({ value: 0 }),
+  reducers: {
+    incremented: counterAdapter.undoableReducer((draft) => {
+      draft.value += 1;
+    }),
+    incrementedBy: counterAdapter.undoableReducer(
+      (draft, action: PayloadAction<number>) => {
+        draft.value += action.payload;
+      },
+    ),
+  },
+});
+```
+
+It still accepts other configuration options, such as `selectHistoryState`.
+
+```ts
+const counterSlice = createSlice({
+  name: "counter",
+  initialState: { counter: counterAdapter.getInitialState({ value: 0 }) },
+  reducers: {
+    incremented: counterAdapter.undoableReducer(
+      (draft) => {
+        draft.value += 1;
+      },
+      {
+        selectHistoryState: (state: NestedState) => state.counter,
+      },
+    ),
+  },
+});
+```
+
+:::tip Other methods
+
+Other methods that update state (such as `undo`, `redo`, etc.) are valid case reducers and can be used with `createSlice`.
+
+```ts
+const counterSlice = createSlice({
+  name: "counter",
+  initialState: counterAdapter.getInitialState({ value: 0 }),
+  reducers: {
+    undone: counterAdapter.undo,
+    redone: counterAdapter.redo,
+    jumped: counterAdapter.jump,
+    paused: booksHistoryAdapter.pause,
+    resumed: booksHistoryAdapter.resume,
+    historyCleared: booksHistoryAdapter.clearHistory,
+  },
+});
+```
+
+:::
+
+## `withoutPayload`
+
+Creates a [prepare callback](https://redux-toolkit.js.org/api/createSlice#customizing-generated-action-creators) which accepts a single (optional) argument, `undoable`. This is useful when you want to create an action that doesn't require a payload.
+
+```ts
+const counterSlice = createSlice({
+  name: "counter",
+  initialState: counterAdapter.getInitialState({ value: 0 }),
+  reducers: {
+    incremented: {
+      prepare: counterAdapter.withoutPayload(),
+      reducer: counterAdapter.undoableReducer((draft) => {
+        draft.value += 1;
+      }),
+    },
+  },
+});
+
+const { incremented } = counterSlice.actions;
+
+// undefined means the action is undoable
+dispatch(incremented()); // { type: "counter/incremented", meta: { undoable: undefined } }
+dispatch(incremented(false)); // { type: "counter/incremented", meta: { undoable: false } }
+dispatch(incremented(true)); // { type: "counter/incremented", meta: { undoable: true } }
+```
+
+## `withPayload`
+
+Creates a [prepare callback](https://redux-toolkit.js.org/api/createSlice#customizing-generated-action-creators) which accepts two arguments, `payload` (optional if potentially undefined) and `undoable` (optional). This is useful when you want to create an action that requires a payload.
+
+```ts
+const counterSlice = createSlice({
+  name: "counter",
+  initialState: counterAdapter.getInitialState({ value: 0 }),
+  reducers: {
+    incrementedBy: {
+      prepare: counterAdapter.withPayload<number>(),
+      reducer: counterAdapter.undoableReducer(
+        (draft, action: PayloadAction<number>) => {
+          draft.value += action.payload;
+        },
+      ),
+    },
+  },
+});
+
+const { incrementedBy } = counterSlice.actions;
+
+dispatch(incrementedBy(5)); // { type: "counter/incrementedBy", payload: 5, meta: { undoable: undefined } }
+dispatch(incrementedBy(5, false)); // { type: "counter/incrementedBy", payload: 5, meta: { undoable: false } }
+dispatch(incrementedBy(5, true)); // { type: "counter/incrementedBy", payload: 5, meta: { undoable: true } }
+```
+
+## `getSelectors`
+
+Creates a set of useful selectors for the state managed by the adapter.
+
+```ts
+const counterSlice = createSlice({
+  name: "counter",
+  initialState: counterAdapter.getInitialState({ value: 0 }),
+  reducers: {
+    incremented: counterAdapter.undoableReducer((draft) => {
+      draft.value += 1;
+    }),
+  },
+  selectors: {
+    ...counterAdapter.getSelectors(),
+  },
+});
+
+const { selectCanUndo, selectCanRedo, selectPresent, selectPaused } =
+  counterSlice.selectors;
+
+console.log(selectCanUndo(store.getState())); // true if there are past states
+console.log(selectCanRedo(store.getState())); // true if there are future states
+console.log(selectPresent(store.getState())); // { value: 0 }
+console.log(selectPaused(store.getState())); // false
+```
+
+An input selector can be provided if the state is nested, which will be combined using `reselect`'s `createSelector`.
+
+```ts
+const counterSlice = createSlice({
+  name: "counter",
+  initialState: { counter: counterAdapter.getInitialState({ value: 0 }) },
+  reducers: {
+    incremented: counterAdapter.undoableReducer(
+      (draft) => {
+        draft.value += 1;
+      },
+      {
+        selectHistoryState: (state: NestedState) => state.counter,
+      },
+    ),
+  },
+  selectors: {
+    ...counterAdapter.getSelectors((state: NestedState) => state.counter),
+  },
+});
+```
+
+The instance of `createSelector` used can be customised, and defaults to RTK's [`createDraftSafeSelector`](https://redux-toolkit.js.org/api/createSelector#createdraftsafeselector):
+
+```ts
+import { createSelectorCreator, lruMemoize } from "reselect";
+
+const createLruSelector = createSelectorCreator(lruMemoize);
+
+const { selectPresent } = booksHistoryAdapter.getSelectors(
+  (state: RootState) => state.books,
+  { createSelector: createLruSelector },
+);
+
+console.log(selectPresent({ books: initialState })); // []
+```

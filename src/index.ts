@@ -16,6 +16,14 @@ type ValidRecipeReturnType<State> =
   | undefined
   | (State extends undefined ? typeof nothing : never);
 
+export type ImmerRecipe<Data, Args extends Array<any>> = (
+  draft: Draft<Data>,
+  ...args: Args
+) => ValidRecipeReturnType<Data>;
+
+export type DataFromRecipe<Recipe extends ImmerRecipe<any, any>> =
+  Recipe extends ImmerRecipe<infer T, any> ? T : never;
+
 export interface BaseHistoryState<Data, HistoryEntry> {
   past: Array<HistoryEntry>;
   present: Data;
@@ -37,17 +45,27 @@ export interface BaseHistoryAdapterConfig {
 }
 
 export interface BaseHistoryStateFn {
+  dataConstraint: unknown;
+  _rawData: unknown;
+  data: this["_rawData"] extends this["dataConstraint"]
+    ? this["_rawData"]
+    : never;
   state: BaseHistoryState<this["data"], unknown>;
-  data: unknown;
   config: BaseHistoryAdapterConfig;
 }
 
-type GetStateType<Data, StateFn extends BaseHistoryStateFn> = (StateFn & {
-  data: Data;
+export type GetStateType<
+  Data,
+  StateFn extends BaseHistoryStateFn,
+> = (StateFn & {
+  _rawData: Data;
 })["state"];
 
-type GetConfigType<Data, StateFn extends BaseHistoryStateFn> = (StateFn & {
-  data: Data;
+export type GetConfigType<
+  Data,
+  StateFn extends BaseHistoryStateFn,
+> = (StateFn & {
+  _rawData: Data;
 })["config"];
 
 export interface WrapRecipeConfig<Args extends Array<any>> {
@@ -110,7 +128,7 @@ export interface HistoryAdapter<
    * @param config Configuration for undoable action
    */
   undoable<Args extends Array<any>, RootState = State>(
-    recipe: (draft: Draft<Data>, ...args: Args) => ValidRecipeReturnType<Data>,
+    recipe: ImmerRecipe<Data, Args>,
     config?: UndoableConfig<Data, Args, RootState, State>,
   ): <State extends MaybeDraft<RootState>>(
     state: State,
@@ -144,7 +162,9 @@ export function getInitialState<Data, HistoryEntry>(
   };
 }
 
-type GetInitialState<StateFn extends BaseHistoryStateFn> = <Data>(
+type GetInitialState<StateFn extends BaseHistoryStateFn> = <
+  Data extends StateFn["dataConstraint"],
+>(
   initialData: Data,
 ) => GetStateType<Data, StateFn>;
 
@@ -157,17 +177,17 @@ export type BuildHistoryAdapterConfig<StateFn extends BaseHistoryStateFn> = {
    *
    * For example, when undoing, the entry is removed from the past stack, provided to `applyEntry`, and the result is added to the future stack.
    */
-  applyEntry: (
-    state: StateFn["state"],
-    historyEntry: HistoryEntryType<StateFn["state"]>,
+  applyEntry: <Data extends StateFn["dataConstraint"]>(
+    state: GetStateType<Data, StateFn>,
+    historyEntry: HistoryEntryType<GetStateType<Data, StateFn>>,
     op: ApplyOp,
-  ) => HistoryEntryType<StateFn["state"]>;
+  ) => HistoryEntryType<GetStateType<Data, StateFn>>;
   /**
    * Function to wrap a recipe to automatically update patch history according to changes.
    * Should return a function that receives the state and arguments, and returns a history entry to be added to the past stack.
    */
-  wrapRecipe: <Data, Args extends Array<any>>(
-    recipe: (draft: Draft<Data>, ...args: Args) => ValidRecipeReturnType<Data>,
+  wrapRecipe: <Data extends StateFn["dataConstraint"], Args extends Array<any>>(
+    recipe: ImmerRecipe<Data, Args>,
   ) => (
     state: Draft<GetStateType<Data, StateFn>>,
     ...args: Args
@@ -177,8 +197,13 @@ export type BuildHistoryAdapterConfig<StateFn extends BaseHistoryStateFn> = {
    *
    * Useful for setup such as enabling patches.
    */
-  onCreate?: (config?: GetConfigType<unknown, StateFn>) => void;
-} & (BaseHistoryState<any, any> extends GetStateType<unknown, StateFn>
+  onCreate?: (
+    config?: GetConfigType<StateFn["dataConstraint"], StateFn>,
+  ) => void;
+} & (BaseHistoryState<any, any> extends GetStateType<
+  StateFn["dataConstraint"],
+  StateFn
+>
   ? {
       /**
        * Function to construct an initial state with no history.
@@ -192,12 +217,18 @@ export type BuildHistoryAdapterConfig<StateFn extends BaseHistoryStateFn> = {
       getInitialState: GetInitialState<StateFn>;
     });
 
+export type CreateHistoryAdapter<StateFn extends BaseHistoryStateFn> = <
+  Data extends StateFn["dataConstraint"],
+>(
+  adapterConfig?: GetConfigType<Data, StateFn>,
+) => HistoryAdapter<Data, GetStateType<Data, StateFn>>;
+
 export function buildCreateHistoryAdapter<StateFn extends BaseHistoryStateFn>({
   applyEntry,
   wrapRecipe,
   onCreate,
   getInitialState: getInitialStateCustom = getInitialState,
-}: BuildHistoryAdapterConfig<StateFn>) {
+}: BuildHistoryAdapterConfig<StateFn>): CreateHistoryAdapter<StateFn> {
   function undoMutably(state: StateFn["state"]) {
     if (!state.past.length) return;
     state.future.unshift(applyEntry(state, state.past.pop() as never, "undo"));
@@ -206,7 +237,7 @@ export function buildCreateHistoryAdapter<StateFn extends BaseHistoryStateFn>({
     if (!state.future.length) return;
     state.past.push(applyEntry(state, state.future.shift() as never, "redo"));
   }
-  return function createHistoryAdapter<Data>(
+  return function createHistoryAdapter<Data extends StateFn["dataConstraint"]>(
     adapterConfig?: GetConfigType<Data, StateFn>,
   ): HistoryAdapter<Data, GetStateType<Data, StateFn>> {
     type State = GetStateType<Data, StateFn>;
@@ -275,9 +306,31 @@ export function buildCreateHistoryAdapter<StateFn extends BaseHistoryStateFn>({
 
 export type HistoryState<Data> = BaseHistoryState<Data, Data>;
 
-interface HistoryStateFn extends BaseHistoryStateFn {
+export interface HistoryStateFn extends BaseHistoryStateFn {
   state: HistoryState<this["data"]>;
 }
+
+/**
+ * Calls a recipe with the present state and arguments, and applies the result to the state.
+ *
+ * Correctly handles immer's `nothing` and `undefined` return values.
+ */
+export const applyRecipe = <
+  Data,
+  Args extends Array<any>,
+  State extends MaybeDraft<BaseHistoryState<Data, unknown>>,
+>(
+  state: State,
+  recipe: (draft: Draft<Data>, ...args: Args) => ValidRecipeReturnType<Data>,
+  ...args: Args
+) => {
+  const result = recipe(state.present as Draft<Data>, ...args);
+  if (result === nothing) {
+    state.present = undefined as never;
+  } else if (typeof result !== "undefined") {
+    state.present = result as never;
+  }
+};
 
 export const createHistoryAdapter =
   /* @__PURE__ */ buildCreateHistoryAdapter<HistoryStateFn>({
@@ -287,23 +340,15 @@ export const createHistoryAdapter =
       return stateBefore;
     },
     wrapRecipe:
-      <Data, Args extends Array<any>>(
-        recipe: (
-          draft: Draft<Data>,
-          ...args: Args
-        ) => ValidRecipeReturnType<Data>,
-      ) =>
-      (state: Draft<HistoryState<Data>>, ...args: Args) => {
+      (recipe) =>
+      (state, ...args) => {
         // we need to get the present state before the recipe is applied
         // and because the recipe might mutate it, we need the non-draft version
-        const before = ensureCurrent(state.present) as Data;
+        const before = ensureCurrent(state.present) as DataFromRecipe<
+          typeof recipe
+        >;
 
-        const result = recipe(state.present as Draft<Data>, ...args);
-        if (result === nothing) {
-          state.present = undefined as never;
-        } else if (typeof result !== "undefined") {
-          state.present = result as never;
-        }
+        applyRecipe(state, recipe, ...args);
 
         return before;
       },
@@ -313,7 +358,7 @@ export type PatchState = Record<ApplyOp, Array<Patch>>;
 
 export type PatchHistoryState<Data> = BaseHistoryState<Data, PatchState>;
 
-interface PatchHistoryStateFn extends BaseHistoryStateFn {
+export interface PatchHistoryStateFn extends BaseHistoryStateFn {
   state: PatchHistoryState<this["data"]>;
 }
 
@@ -327,20 +372,10 @@ export const createPatchHistoryAdapter =
       return historyEntry;
     },
     wrapRecipe:
-      <Data, Args extends Array<any>>(
-        recipe: (
-          draft: Draft<Data>,
-          ...args: Args
-        ) => ValidRecipeReturnType<Data>,
-      ) =>
-      (state: Draft<PatchHistoryState<Data>>, ...args: Args) => {
+      (recipe) =>
+      (state, ...args) => {
         const [{ present }, redo, undo] = produceWithPatches(state, (draft) => {
-          const result = recipe(draft.present as Draft<Data>, ...args);
-          if (result === nothing) {
-            draft.present = undefined as never;
-          } else if (typeof result !== "undefined") {
-            draft.present = result as never;
-          }
+          applyRecipe(draft as never, recipe, ...args);
         });
         state.present = present;
 

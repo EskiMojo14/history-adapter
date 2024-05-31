@@ -1,0 +1,164 @@
+@use "sass:color";
+@use "sass:map";
+@use "sass:meta";
+@use "util";
+
+// percentages to tint/shade by (positive = tint, negative = shade) - or just colours
+$shades: (
+  "lightest": 30%,
+  "lighter": 15%,
+  "light": 10%,
+  "dark": -10%,
+  "darker": -15%,
+  "darkest": -30%,
+);
+
+$contrast: (
+  light: (
+    background: 90%,
+    foreground: -70%,
+  ),
+  dark: (
+    background: -70%,
+    foreground: 90%,
+  ),
+);
+
+@mixin infima-color(
+  $name,
+  $color,
+  $custom-shades: (),
+  $custom-contrast: (),
+  $dark: false
+) {
+  --ifm-color-#{$name}: #{$color};
+  @each $shade, $colorOrPct in map.deep-merge($shades, $custom-shades) {
+    --ifm-color-#{$name}#{if($shade == '', '', '-')}#{$shade}: #{if(
+        meta.type-of($colorOrPct) == color,
+        $colorOrPct,
+        util.tintOrShade($color, $colorOrPct)
+      )};
+  }
+  @each $contrast,
+    $colorOrPct
+      in map.get(
+        map.deep-merge($contrast, $custom-contrast),
+        if($dark, dark, light)
+      )
+  {
+    --ifm-color-#{$name}-contrast#{if($contrast == '', '', '-')}#{$contrast}: #{if(
+        meta.type-of($colorOrPct) == color,
+        $colorOrPct,
+        util.tintOrShade($color, $colorOrPct)
+      )};
+  }
+}
+
+@mixin infima-emphasis($stops: ()) {
+  $start: map.get($stops, 0);
+  $end: map.get($stops, 1000);
+  @if (meta.type-of($start) == color and meta.type-of($end) == color) {
+    @for $i from 0 through 10 {
+      $stop: $i * 100;
+      $color: map.get($stops, $stop);
+      --ifm-color-emphasis-#{$stop}: #{if(
+          $color,
+          $color,
+          color.mix($start, $end, ($i * -10%) + 100%)
+        )};
+    }
+  } @else {
+    @error 'Invalid stops provided #{meta.inspect($stops)}';
+  }
+}
+
+@mixin infima-theme($theme) {
+  $colors: map.get($theme, colors);
+  @each $name, $color in if($colors, $colors, ()) {
+    @include infima-color(
+      $name,
+      if(meta.type-of($color) == color, $color, map.get($color, color)),
+      if(meta.type-of($color) == color, (), map.get($color, shades)),
+      if(meta.type-of($color) == color, (), map.get($color, contrast)),
+      $dark: map.get($theme, dark)
+    );
+  }
+  @if (map.has-key(if($colors, $colors, ()), background)) {
+    --ifm-background-color: var(--ifm-color-background);
+  }
+  @if (map.has-key(if($colors, $colors, ()), surface)) {
+    --ifm-background-surface-color: var(--ifm-color-surface);
+  }
+
+  $emphasis: map.get($theme, emphasis);
+  @if ($emphasis) {
+    @include infima-emphasis($emphasis);
+  }
+
+  $fonts: map.get($theme, fonts);
+  @each $family, $fonts in if($fonts, $fonts, ()) {
+    --ifm-font-family-#{$family}: #{$fonts};
+  }
+}
+
+@mixin docusaurus-theme($theme) {
+  $highlights: map.get($theme, highlights);
+  @each $name, $highlight in if($highlights, $highlights, ()) {
+    --docusaurus-#{$name}-code-line-border: #{map.get($highlight, border)};
+    --docusaurus-#{$name}-code-line-bg: #{map.get($highlight, background)};
+    @if $name != "highlighted" {
+      $selector: map.get($highlight, selector);
+
+      #{if(
+        $selector,
+        $selector,
+        '.code-block-#{$name}-line'
+      )} {
+        // specificity shenanigans
+        :where(&) {
+          display: block;
+        }
+        background-color: var(--docusaurus-#{$name}-code-line-bg);
+        box-shadow: inset
+          var(
+            --docusaurus-#{$name}-code-line-border-width,
+            var(--docusaurus-highlighted-code-line-border-width)
+          )
+          0
+          0
+          var(--docusaurus-#{$name}-code-line-border);
+        margin: 0 calc(-1 * var(--ifm-pre-padding));
+        padding: 0 var(--ifm-pre-padding);
+        .code-block-line-number {
+          box-shadow: var(
+              --docusaurus-#{$name}-code-line-border-width,
+              var(--docusaurus-highlighted-code-line-border-width)
+            )
+            0
+            0
+            var(--docusaurus-#{$name}-code-line-border);
+          &::before {
+            @if (meta.type-of(map.get($highlight, number)) == color) {
+              color: map.get($highlight, number);
+            }
+            opacity: 0.8;
+          }
+        }
+      }
+    }
+  }
+}
+
+$mobile-breakpoint: 996px;
+
+@mixin on-mobile {
+  @media screen and (max-width: $mobile-breakpoint) {
+    @content;
+  }
+}
+
+@mixin not-mobile {
+  @media screen and (min-width: $mobile-breakpoint) {
+    @content;
+  }
+}

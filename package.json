@@ -12,7 +12,8 @@
     "state"
   ],
   "workspaces": [
-    "examples/*"
+    "examples/*",
+    "website"
   ],
   "type": "module",
   "main": "./dist/index.cjs",
@@ -47,7 +48,8 @@
     "type": "tsc",
     "prepack": "yarn build && yarn publint",
     "size": "size-limit",
-    "example": "yarn workspace example-app dev"
+    "example": "yarn workspace example-app dev",
+    "website": "yarn workspace website start"
   },
   "repository": "https://github.com/EskiMojo14/history-adapter.git",
   "author": "EskiMojo14 <ben.j.durrant@gmail.com>",

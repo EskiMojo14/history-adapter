@@ -1,7 +1,21 @@
-import { describe, it, expect } from "vitest";
-import type { PatchHistoryState, HistoryState } from ".";
-import { createHistoryAdapter, createPatchHistoryAdapter } from ".";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import type {
+  PatchHistoryState,
+  HistoryState,
+  BaseHistoryStateFn,
+  BaseHistoryState,
+  BaseHistoryAdapterConfig,
+} from ".";
+import {
+  applyRecipe,
+  buildCreateHistoryAdapter,
+  createHistoryAdapter,
+  createPatchHistoryAdapter,
+  getInitialState,
+} from ".";
 import { nothing, produce } from "immer";
+
+import { ensureCurrent } from "./utils";
 
 interface Book {
   title: string;
@@ -636,6 +650,105 @@ describe("createPatchHistoryAdapter", () => {
       currentState = historyAdapter.jump(currentState, -5);
 
       expect(currentState.present).toEqual({ value: 3 });
+    });
+  });
+});
+
+describe("buildCreateHistoryAdapter", () => {
+  const onCreate = vi.fn<[CustomConfig?], void>();
+  beforeEach(() => {
+    onCreate.mockClear();
+  });
+
+  interface CustomHistoryEntry<Data extends Array<any>> {
+    data: Data;
+  }
+  interface CustomHistoryState<Data extends Array<any>>
+    extends BaseHistoryState<Data, CustomHistoryEntry<Data>> {
+    extra: string;
+  }
+  interface CustomConfig extends BaseHistoryAdapterConfig {
+    extra?: string;
+  }
+  interface CustomHistoryStateFn extends BaseHistoryStateFn {
+    dataConstraint: Array<any>;
+    state: CustomHistoryState<this["data"]>;
+    config: CustomConfig;
+  }
+
+  const createCustomHistoryAdapter =
+    buildCreateHistoryAdapter<CustomHistoryStateFn>({
+      onCreate,
+      getInitialState(data) {
+        return {
+          ...getInitialState(data),
+          extra: "extra",
+        } as never;
+      },
+      wrapRecipe(recipe) {
+        return (state, ...args) => {
+          const prev = ensureCurrent(state.present);
+
+          applyRecipe(state, recipe, ...args);
+
+          return { data: prev } as never;
+        };
+      },
+      applyEntry(state, entry) {
+        const stateBefore = state.present;
+        state.present = entry.data;
+        return { data: stateBefore } as never;
+      },
+    });
+
+  it("calls onCreate with config", () => {
+    const config = { extra: "foo" };
+    createCustomHistoryAdapter(config);
+    expect(onCreate).toHaveBeenCalledWith(config);
+  });
+
+  it("exposes getInitialState", () => {
+    const initialState = createCustomHistoryAdapter<
+      Array<number>
+    >().getInitialState([]);
+    expect(initialState).toEqual<CustomHistoryState<Array<number>>>({
+      past: [],
+      present: [],
+      future: [],
+      paused: false,
+      extra: "extra",
+    });
+  });
+
+  it("updates the state correctly", () => {
+    const adapter = createCustomHistoryAdapter<Array<number>>();
+    const add = adapter.undoable((state, value: number) => {
+      state.push(value);
+    });
+    const initialState = adapter.getInitialState([]);
+    const nextState = add(initialState, 1);
+    expect(nextState).toEqual<CustomHistoryState<Array<number>>>({
+      past: [{ data: [] }],
+      present: [1],
+      future: [],
+      paused: false,
+      extra: "extra",
+    });
+    const undoneState = adapter.undo(nextState);
+    expect(undoneState).toEqual<CustomHistoryState<Array<number>>>({
+      past: [],
+      present: [],
+      future: [{ data: [1] }],
+      paused: false,
+      extra: "extra",
+    });
+    const redoneState = adapter.redo(undoneState);
+    expect(redoneState).toEqual<CustomHistoryState<Array<number>>>({
+      past: [{ data: [] }],
+      present: [1],
+      future: [],
+      paused: false,
+      extra: "extra",
     });
   });
 });
