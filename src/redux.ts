@@ -15,7 +15,6 @@ import type {
   GetStateType,
 } from ".";
 import {
-  buildCreateHistoryAdapter,
   createHistoryAdapter as createAdapter,
   createPatchHistoryAdapter as createPatchAdapter,
 } from ".";
