@@ -1,6 +1,6 @@
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
 import type { SandpackFiles } from "@codesandbox/sandpack-react";
 
@@ -28,7 +28,7 @@ export const usePatches = <Files extends SandpackFiles>(
   }, [files, adapterFileName, patches]);
 };
 
-export default function PatchesTabs({ children }: { children: ReactNode }) {
+function PatchesTabs({ children }: { children: ReactNode }) {
   return (
     <Tabs groupId="patches">
       <TabItem value="noPatch" label="Default">
@@ -39,4 +39,20 @@ export default function PatchesTabs({ children }: { children: ReactNode }) {
       </TabItem>
     </Tabs>
   );
+}
+
+export function withPatchTabs<Props extends {}>(
+  Component: ComponentType<Props>,
+) {
+  function WithPatchTabs(props: Props) {
+    return (
+      <PatchesTabs>
+        <Component {...props} />
+      </PatchesTabs>
+    );
+  }
+  WithPatchTabs.displayName = `withPatchTabs(${
+    Component.displayName ?? Component.name
+  })`;
+  return WithPatchTabs;
 }

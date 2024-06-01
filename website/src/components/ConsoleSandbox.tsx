@@ -1,10 +1,12 @@
 import type { SandpackProps } from "@codesandbox/sandpack-react";
 import { CustomSandpack } from "./CustomSandpack";
 import code from "../lib/code";
+import { usePatches, withPatchTabs } from "./PatchesTabs";
+import { useMemo } from "react";
 
 const { ts, tsx, css } = code;
 
-export function ConsoleSandbox({
+export const ConsoleSandbox = withPatchTabs(function ConsoleSandbox({
   code,
   imports = {},
   includeCounterSetup = true,
@@ -24,19 +26,9 @@ export function ConsoleSandbox({
       imports[path] = imports[path].replace(" }", ", createHistoryAdapter }");
     }
   }
-  return (
-    <CustomSandpack
-      template="vanilla-ts"
-      {...props}
-      customSetup={{
-        ...props.customSetup,
-        dependencies: {
-          "highlight.js": "latest",
-          "mini-jsx": "latest",
-          ...props.customSetup?.dependencies,
-        },
-      }}
-      files={{
+  const files = usePatches(
+    useMemo(
+      () => ({
         "/tsconfig.json": {
           code: JSON.stringify({
             compilerOptions: {
@@ -141,7 +133,24 @@ const counterAdapter = createHistoryAdapter<CounterState>({ limit: 10 });
 }
 ${code}
 `,
+      }),
+      [imports, code, includeCounterSetup],
+    ),
+    "/index.ts",
+  );
+  return (
+    <CustomSandpack
+      template="vanilla-ts"
+      {...props}
+      customSetup={{
+        ...props.customSetup,
+        dependencies: {
+          "highlight.js": "latest",
+          "mini-jsx": "latest",
+          ...props.customSetup?.dependencies,
+        },
       }}
+      files={files}
       options={{
         editorHeight: "500px",
         editorWidthPercentage: 65,
@@ -154,4 +163,4 @@ ${code}
       }}
     />
   );
-}
+});

@@ -1,6 +1,6 @@
 import type { SandpackFiles } from "@codesandbox/sandpack-react";
 import { CustomSandpack } from "./CustomSandpack";
-import { usePatches } from "./PatchesTabs";
+import { usePatches, withPatchTabs } from "./PatchesTabs";
 import code from "../lib/code";
 
 const { ts } = code;
@@ -166,7 +166,7 @@ root.render(
   },
 } satisfies SandpackFiles;
 
-export default function CounterDemo() {
+export default withPatchTabs(function CounterDemo() {
   const files = usePatches(defaultFiles, "/counterSlice.ts");
   return (
     <CustomSandpack
@@ -189,4 +189,4 @@ export default function CounterDemo() {
       }}
     />
   );
-}
+});
