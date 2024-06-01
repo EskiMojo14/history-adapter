@@ -57,37 +57,45 @@ export function ConsoleSandbox({
         "/utils.tsx": {
           hidden: true,
           code: tsx`
-          import { highlight } from "highlight.js";
+import { highlight } from "highlight.js";
 
-          export function getPrint() {
-            const tbody = (
-              <tbody>
-                <tr>
-                  <th>Name</th>
-                  <th>Value</th>
-                </tr>
-              </tbody>
-            );
-            document.body.appendChild(<table>{tbody}</table>);
-          
-            return function print(title: string, value: unknown) {
-              const code = <code className="hljs json" />;
-              code.innerHTML = highlight(JSON.stringify(value, null, 2) ?? "undefined", {
-                language: "json",
-              }).value;
-              const tr = (
-                <tr>
-                  <td>
-                    <code>{title}</code>
-                  </td>
-                  <td>
-                    <pre>{code}</pre>
-                  </td>
-                </tr>
-              );
-              tbody.appendChild(tr);
-            };
-          }
+export function getPrint() {
+  const tbody = (
+    <tbody>
+      <tr>
+        <th>Name</th>
+        <th>Value</th>
+      </tr>
+    </tbody>
+  );
+  document.body.appendChild(<table>{tbody}</table>);
+
+  function print(table: Record<string, unknown>): void;
+  function print(title: string, value: unknown): void;
+  function print(titleOrTable: string | Record<string, unknown>, value?: unknown) {
+    if (typeof titleOrTable === "object") {
+      Object.entries(titleOrTable).forEach(([title, value]) => print(title, value));
+      return;
+    }
+    const code = <code className="hljs json" />;
+    code.innerHTML = highlight(JSON.stringify(value, null, 2) ?? "undefined", {
+      language: "json",
+    }).value;
+    const tr = (
+      <tr>
+        <td>
+          <code>{titleOrTable}</code>
+        </td>
+        <td>
+          <pre>{code}</pre>
+        </td>
+      </tr>
+    );
+    tbody.appendChild(tr);
+  }
+
+  return print;
+}
 `,
         },
         "/styles.css": {
