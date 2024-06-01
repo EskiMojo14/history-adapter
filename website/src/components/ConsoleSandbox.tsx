@@ -147,6 +147,7 @@ ${code}
         dependencies: {
           "highlight.js": "latest",
           "mini-jsx": "latest",
+          ...(redux && { "@reduxjs/toolkit": "latest" }),
           ...props.customSetup?.dependencies,
         },
       }}
