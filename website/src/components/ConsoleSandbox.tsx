@@ -62,12 +62,12 @@ import { getPrint } from "./utils";
 
 export function makePrintStore<S, A extends Action>(reducer: Reducer<S, A>) {
   const print = getPrint(
-    { name: "Action", value: "State" },
-    { highlightName: true, flipColumns: true },
+    { name: "State", value: "Action" },
+    { highlightName: true },
   );
   function wrappedReducer(state: S | undefined, action: A) {
     const newState = reducer(state, action);
-    print(JSON.stringify(action, null, 2), newState);
+    print(JSON.stringify(newState, null, 2), action);
     return newState;
   }
   return configureStore({ reducer: wrappedReducer });
@@ -81,16 +81,13 @@ import { highlight } from "highlight.js";
 
 export function getPrint(
   { name = "Name", value = "Value" }: Partial<Record<"name" | "value", string>> = {},
-  {
-    highlightName,
-    flipColumns,
-  }: { highlightName?: boolean; flipColumns?: boolean } = {},
+  { highlightName }: { highlightName?: boolean; } = {},
 ) {
   const tbody = (
     <tbody>
       <tr>
-        <th>{flipColumns ? value : name}</th>
-        <th>{flipColumns ? name : value}</th>
+        <th>{name}</th>
+        <th>{value}</th>
       </tr>
     </tbody>
   );
@@ -124,10 +121,10 @@ export function getPrint(
     const tr = (
       <tr>
         <td>
-          <pre>{flipColumns ? valueCode : nameCode}</pre>
+          <pre>{nameCode}</pre>
         </td>
         <td>
-          <pre>{flipColumns ? nameCode : valueCode}</pre>
+          <pre>{valueCode}</pre>
         </td>
       </tr>
     );
