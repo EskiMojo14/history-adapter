@@ -1,6 +1,9 @@
 import type { SandpackFiles } from "@codesandbox/sandpack-react";
-import { CustomSandpack, code as ts } from "./CustomSandpack";
+import { CustomSandpack } from "./CustomSandpack";
 import { usePatches } from "./PatchesTabs";
+import code from "../lib/code";
+
+const { ts } = code;
 
 export const defaultFiles = {
   "/counterStore.ts": ts`

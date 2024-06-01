@@ -3,13 +3,6 @@ import { Sandpack } from "@codesandbox/sandpack-react";
 import { dracula, githubLight } from "@codesandbox/sandpack-themes";
 import { useColorMode } from "@docusaurus/theme-common";
 
-const removeLeadingTrailingNewlines: typeof String.raw = (str, ...args) =>
-  String.raw(str, ...args)
-    .replace(/^\n/, "")
-    .replace(/\n$/, "");
-
-export const code = removeLeadingTrailingNewlines;
-
 export function CustomSandpack(props: SandpackProps) {
   const { colorMode } = useColorMode();
   const theme = colorMode === "dark" ? dracula : githubLight;

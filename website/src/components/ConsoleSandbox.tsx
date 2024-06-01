@@ -1,10 +1,8 @@
 import type { SandpackProps } from "@codesandbox/sandpack-react";
-import {
-  CustomSandpack,
-  code as ts,
-  code as tsx,
-  code as css,
-} from "./CustomSandpack";
+import { CustomSandpack } from "./CustomSandpack";
+import code from "../lib/code";
+
+const { ts, tsx, css } = code;
 
 export function ConsoleSandbox({
   code,
