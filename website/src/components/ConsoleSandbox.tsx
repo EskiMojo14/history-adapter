@@ -6,6 +6,18 @@ import { useMemo } from "react";
 
 const { ts, tsx, css } = code;
 
+const addToImports = (
+  imports: Record<string, string>,
+  path: string,
+  name: string,
+) => {
+  if (!imports[path]) {
+    imports[path] = `{ ${name} }`;
+  } else if (!imports[path].includes(name)) {
+    imports[path] = imports[path].replace(" }", `, ${name} }`);
+  }
+};
+
 export const ConsoleSandbox = withPatchTabs(function ConsoleSandbox({
   code,
   imports = {},
@@ -20,11 +32,7 @@ export const ConsoleSandbox = withPatchTabs(function ConsoleSandbox({
 } & Omit<SandpackProps, "files">) {
   if (includeCounterSetup) {
     const path = redux ? "history-adapter/redux" : "history-adapter";
-    if (!imports[path]) {
-      imports[path] = "{ createHistoryAdapter }";
-    } else if (!imports[path].includes("createHistoryAdapter")) {
-      imports[path] = imports[path].replace(" }", ", createHistoryAdapter }");
-    }
+    addToImports(imports, path, "createHistoryAdapter");
   }
   const files = usePatches(
     useMemo(
@@ -46,17 +54,43 @@ export const ConsoleSandbox = withPatchTabs(function ConsoleSandbox({
           }),
           hidden: true,
         },
+        "/reduxUtils.ts": {
+          hidden: true,
+          code: ts`
+import { configureStore, Action, Reducer } from "@reduxjs/toolkit";
+import { getPrint } from "./utils";
+
+export function makePrintStore<S, A extends Action>(reducer: Reducer<S, A>) {
+  const print = getPrint(
+    { name: "Action", value: "State" },
+    { highlightName: true, flipColumns: true },
+  );
+  function wrappedReducer(state: S | undefined, action: A) {
+    const newState = reducer(state, action);
+    print(JSON.stringify(action, null, 2), newState);
+    return newState;
+  }
+  return configureStore({ reducer: wrappedReducer });
+}
+`,
+        },
         "/utils.tsx": {
           hidden: true,
           code: tsx`
 import { highlight } from "highlight.js";
 
-export function getPrint() {
+export function getPrint(
+  { name = "Name", value = "Value" }: Partial<Record<"name" | "value", string>> = {},
+  {
+    highlightName,
+    flipColumns,
+  }: { highlightName?: boolean; flipColumns?: boolean } = {},
+) {
   const tbody = (
     <tbody>
       <tr>
-        <th>Name</th>
-        <th>Value</th>
+        <th>{flipColumns ? value : name}</th>
+        <th>{flipColumns ? name : value}</th>
       </tr>
     </tbody>
   );
@@ -64,22 +98,36 @@ export function getPrint() {
 
   function print(table: Record<string, unknown>): void;
   function print(title: string, value: unknown): void;
-  function print(titleOrTable: string | Record<string, unknown>, value?: unknown) {
+  function print(
+    titleOrTable: string | Record<string, unknown>,
+    value?: unknown,
+  ) {
     if (typeof titleOrTable === "object") {
-      Object.entries(titleOrTable).forEach(([title, value]) => print(title, value));
+      Object.entries(titleOrTable).forEach(([title, value]) =>
+        print(title, value),
+      );
       return;
     }
-    const code = <code className="hljs json" />;
-    code.innerHTML = highlight(JSON.stringify(value, null, 2) ?? "undefined", {
-      language: "json",
-    }).value;
+    const nameCode = <code className={highlightName ? "hljs json" : ""} />;
+    if (highlightName) {
+      nameCode.innerHTML = highlight(titleOrTable, { language: "json" }).value;
+    } else {
+      nameCode.textContent = titleOrTable;
+    }
+    const valueCode = <code className="hljs json" />;
+    valueCode.innerHTML = highlight(
+      JSON.stringify(value, null, 2) ?? "undefined",
+      {
+        language: "json",
+      },
+    ).value;
     const tr = (
       <tr>
         <td>
-          <code>{titleOrTable}</code>
+          <pre>{flipColumns ? valueCode : nameCode}</pre>
         </td>
         <td>
-          <pre>{code}</pre>
+          <pre>{flipColumns ? nameCode : valueCode}</pre>
         </td>
       </tr>
     );
@@ -93,6 +141,7 @@ export function getPrint() {
         "/styles.css": {
           hidden: true,
           code: css`
+            @import "highlight.js/styles/github.css";
             code {
               font-family: "Fira Code", monospace;
               font-size: 90%;
@@ -103,24 +152,26 @@ export function getPrint() {
             }
           `,
         },
-        "/styles.ts": {
-          hidden: true,
-          code: ts`
-import "./styles.css";
-import "highlight.js/styles/github.css";
-`,
-        },
         "/index.ts": ts`
-import "./styles";
+import "./styles.css";
+${
+  redux &&
+  ts`
+import { makePrintStore } from "./reduxUtils";
+`
+}
 import { getPrint } from "./utils";
 ${Object.entries(imports)
   .map(([mod, imp]) => `import ${imp} from "${mod}";`)
   .join("\n")}
-        
-const print = getPrint();
 ${
-  includeCounterSetup
-    ? ts`
+  !redux &&
+  ts`
+const print = getPrint();
+`
+}${
+          includeCounterSetup &&
+          ts`
 
 interface CounterState {
   value: number;
@@ -129,12 +180,11 @@ interface CounterState {
 const counterAdapter = createHistoryAdapter<CounterState>({ limit: 10 });
 
 `
-    : ""
-}
+        }
 ${code}
 `,
       }),
-      [imports, code, includeCounterSetup],
+      [imports, code, includeCounterSetup, redux],
     ),
     "/index.ts",
   );
@@ -154,7 +204,7 @@ ${code}
       files={files}
       options={{
         editorHeight: "500px",
-        editorWidthPercentage: 65,
+        editorWidthPercentage: redux ? 55 : 65,
         activeFile: "/index.ts",
         ...props.options,
         externalResources: [
