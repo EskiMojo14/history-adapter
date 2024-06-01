@@ -2,6 +2,9 @@
 sidebar_position: 2
 ---
 
+import ts from "/src/lib/code";
+import { ConsoleSandbox } from "/src/components/ConsoleSandbox";
+
 # Redux Methods
 
 When imported from `history-adapter/redux`, the `createHistoryAdapter` function returns an object with additional methods for use with Redux Toolkit.
@@ -60,9 +63,10 @@ A wrapper around the `undoable` method that receives a case reducer and returns 
 
 Instead of providing an `isUndoable` callback, the reducer checks `action.meta.undoable` to determine if the action should be tracked.
 
-```ts
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
+<ConsoleSandbox
+  redux
+  imports={{ "@reduxjs/toolkit": "{ createSlice, PayloadAction }" }}
+  code={ts`
 const counterSlice = createSlice({
   name: "counter",
   initialState: counterAdapter.getInitialState({ value: 0 }),
@@ -77,11 +81,23 @@ const counterSlice = createSlice({
     ),
   },
 });
-```
+
+const { incremented, incrementedBy } = counterSlice.actions;
+
+const store = makePrintStore(counterSlice.reducer);
+
+store.dispatch(incremented());
+
+store.dispatch(incrementedBy(5));
+`}
+/>
 
 It still accepts other configuration options, such as `selectHistoryState`.
 
-```ts
+<ConsoleSandbox
+  redux
+  imports={{ "@reduxjs/toolkit": "{ createSlice }" }}
+  code={ts`
 const counterSlice = createSlice({
   name: "counter",
   initialState: { counter: counterAdapter.getInitialState({ value: 0 }) },
@@ -96,26 +112,50 @@ const counterSlice = createSlice({
     ),
   },
 });
-```
+
+const { incremented } = counterSlice.actions;
+
+const store = makePrintStore(counterSlice.reducer);
+
+store.dispatch(incremented());
+`} />
 
 :::tip Other methods
 
 Other methods that update state (such as `undo`, `redo`, etc.) are valid case reducers and can be used with `createSlice`.
 
-```ts
+<ConsoleSandbox
+  redux
+  imports={{ "@reduxjs/toolkit": "{ createSlice }" }}
+  code={ts`
 const counterSlice = createSlice({
   name: "counter",
   initialState: counterAdapter.getInitialState({ value: 0 }),
   reducers: {
+    incremented: counterAdapter.undoableReducer((draft) => {
+      draft.value += 1;
+    }),
     undone: counterAdapter.undo,
     redone: counterAdapter.redo,
     jumped: counterAdapter.jump,
-    paused: booksHistoryAdapter.pause,
-    resumed: booksHistoryAdapter.resume,
-    historyCleared: booksHistoryAdapter.clearHistory,
+    paused: counterAdapter.pause,
+    resumed: counterAdapter.resume,
+    historyCleared: counterAdapter.clearHistory,
   },
 });
-```
+
+const { incremented, undone, redone, jumped, paused, resumed, historyCleared } = counterSlice.actions;
+
+const store = makePrintStore(counterSlice.reducer);
+
+store.dispatch(incremented());
+
+store.dispatch(undone());
+
+store.dispatch(redone());
+
+store.dispatch(jumped(-1));
+`} />
 
 :::
 
@@ -123,7 +163,10 @@ const counterSlice = createSlice({
 
 Creates a [prepare callback](https://redux-toolkit.js.org/api/createSlice#customizing-generated-action-creators) which accepts a single (optional) argument, `undoable`. This is useful when you want to create an action that doesn't require a payload.
 
-```ts
+<ConsoleSandbox
+  redux
+  imports={{ "@reduxjs/toolkit": "{ createSlice }" }}
+  code={ts`
 const counterSlice = createSlice({
   name: "counter",
   initialState: counterAdapter.getInitialState({ value: 0 }),
@@ -139,17 +182,22 @@ const counterSlice = createSlice({
 
 const { incremented } = counterSlice.actions;
 
+const store = makePrintStore(counterSlice.reducer);
+
 // undefined means the action is undoable
-dispatch(incremented()); // { type: "counter/incremented", meta: { undoable: undefined } }
-dispatch(incremented(false)); // { type: "counter/incremented", meta: { undoable: false } }
-dispatch(incremented(true)); // { type: "counter/incremented", meta: { undoable: true } }
-```
+store.dispatch(incremented());
+store.dispatch(incremented(false));
+store.dispatch(incremented(true));
+`} />
 
 ## `withPayload`
 
 Creates a [prepare callback](https://redux-toolkit.js.org/api/createSlice#customizing-generated-action-creators) which accepts two arguments, `payload` (optional if potentially undefined) and `undoable` (optional). This is useful when you want to create an action that requires a payload.
 
-```ts
+<ConsoleSandbox
+  redux
+  imports={{ "@reduxjs/toolkit": "{ createSlice }" }}
+  code={ts`
 const counterSlice = createSlice({
   name: "counter",
   initialState: counterAdapter.getInitialState({ value: 0 }),
@@ -167,16 +215,22 @@ const counterSlice = createSlice({
 
 const { incrementedBy } = counterSlice.actions;
 
-dispatch(incrementedBy(5)); // { type: "counter/incrementedBy", payload: 5, meta: { undoable: undefined } }
-dispatch(incrementedBy(5, false)); // { type: "counter/incrementedBy", payload: 5, meta: { undoable: false } }
-dispatch(incrementedBy(5, true)); // { type: "counter/incrementedBy", payload: 5, meta: { undoable: true } }
-```
+const store = makePrintStore(counterSlice.reducer);
+
+// undefined means the action is undoable
+store.dispatch(incrementedBy(5));
+store.dispatch(incrementedBy(5, false));
+store.dispatch(incrementedBy(5, true));
+`} />
 
 ## `getSelectors`
 
 Creates a set of useful selectors for the state managed by the adapter.
 
-```ts
+<ConsoleSandbox
+  redux
+  imports={{ "@reduxjs/toolkit": "{ createSlice }" }}
+  code={ts`
 const counterSlice = createSlice({
   name: "counter",
   initialState: counterAdapter.getInitialState({ value: 0 }),
@@ -190,48 +244,90 @@ const counterSlice = createSlice({
   },
 });
 
-const { selectCanUndo, selectCanRedo, selectPresent, selectPaused } =
-  counterSlice.selectors;
+const { incremented } = counterSlice.actions;
 
-console.log(selectCanUndo(store.getState())); // true if there are past states
-console.log(selectCanRedo(store.getState())); // true if there are future states
-console.log(selectPresent(store.getState())); // { value: 0 }
-console.log(selectPaused(store.getState())); // false
-```
+const { selectCanUndo, selectCanRedo, selectPresent, selectPaused } =
+  counterSlice.getSelectors();
+
+const store = makePrintStore(counterSlice.reducer);
+
+store.dispatch(incremented());
+
+const print = getPrint();
+
+print({
+  canUndo: selectCanUndo(store.getState()), // true if there are past states
+  canRedo: selectCanRedo(store.getState()), // true if there are future states
+  present: selectPresent(store.getState()),
+  paused: selectPaused(store.getState()),
+});
+`} />
 
 An input selector can be provided if the state is nested, which will be combined using `reselect`'s `createSelector`.
 
-```ts
+<ConsoleSandbox
+  redux
+  imports={{ "@reduxjs/toolkit": "{ createSlice }" }}
+  code={ts`
+const initialState = { counter: counterAdapter.getInitialState({ value: 0 }) };
+
 const counterSlice = createSlice({
   name: "counter",
-  initialState: { counter: counterAdapter.getInitialState({ value: 0 }) },
+  initialState,
   reducers: {
     incremented: counterAdapter.undoableReducer(
       (draft) => {
         draft.value += 1;
       },
       {
-        selectHistoryState: (state: NestedState) => state.counter,
+        selectHistoryState: (state: typeof initialState) => state.counter,
       },
     ),
   },
   selectors: {
-    ...counterAdapter.getSelectors((state: NestedState) => state.counter),
+    ...counterAdapter.getSelectors((state: typeof initialState) => state.counter),
   },
 });
-```
+
+const { incremented } = counterSlice.actions;
+
+const { selectCanUndo, selectCanRedo, selectPresent, selectPaused } =
+  counterSlice.getSelectors();
+
+const store = makePrintStore(counterSlice.reducer);
+
+store.dispatch(incremented());
+
+const print = getPrint();
+
+print({
+  canUndo: selectCanUndo(store.getState()), // true if there are past states
+  canRedo: selectCanRedo(store.getState()), // true if there are future states
+  present: selectPresent(store.getState()),
+  paused: selectPaused(store.getState()),
+});
+`} />
 
 The instance of `createSelector` used can be customised, and defaults to RTK's [`createDraftSafeSelector`](https://redux-toolkit.js.org/api/createSelector#createdraftsafeselector):
 
-```ts
-import { createSelectorCreator, lruMemoize } from "reselect";
-
+<ConsoleSandbox
+  redux
+  imports={{ "reselect": "{ createSelectorCreator, lruMemoize }", "history-adapter": "{ HistoryState }" }}
+  code={ts`
 const createLruSelector = createSelectorCreator(lruMemoize);
 
-const { selectPresent } = booksHistoryAdapter.getSelectors(
-  (state: RootState) => state.books,
+interface RootState {
+  counter: HistoryState<CounterState>;
+}
+
+const { selectPresent } = counterAdapter.getSelectors(
+  (state: RootState) => state.counter,
   { createSelector: createLruSelector },
 );
 
-console.log(selectPresent({ books: initialState })); // []
-```
+const initialState: RootState = { counter: counterAdapter.getInitialState({ value: 0 }) };
+
+const print = getPrint();
+
+print({ initialState, counterState: selectPresent(initialState)  }) });
+`} />

@@ -2,11 +2,14 @@
 sidebar_position: 1
 ---
 
+import ts from "/src/lib/code";
+import { ConsoleSandbox } from "/src/components/ConsoleSandbox";
+
 # Standard Methods
 
 This page documents the standard methods available when using a history adapter instance.
 
-```ts
+```ts title="Adapter setup"
 import { createHistoryAdapter } from "history-adapter";
 
 interface CounterState {
@@ -20,21 +23,23 @@ const counterAdapter = createHistoryAdapter<CounterState>({ limit: 10 });
 
 Receives an initial state value and returns a "history state" shape.
 
-```ts
+<ConsoleSandbox code={ts`
 const initialState = counterAdapter.getInitialState({ value: 0 });
 
-// { past: [], present: { value: 0 }, future: [], paused: false }
-```
+print({ initialState })
+`} />
 
 :::tip
 
 A standalone version of this method is available as `getInitialState`.
 
-```ts
-import { getInitialState } from "history-adapter";
-
+<ConsoleSandbox includeCounterSetup={false} imports={{
+  "history-adapter": "{ getInitialState }"
+}} code={ts`
 const initialState = getInitialState({ value: 0 });
-```
+
+print({ initialState })
+`} />
 
 :::
 
@@ -42,7 +47,7 @@ const initialState = getInitialState({ value: 0 });
 
 Wraps an immer recipe to automatically manage undo and redo state. Because immer wraps the state in a draft, you can safely mutate the state directly.
 
-```ts
+<ConsoleSandbox code={ts`
 const increment = counterAdapter.undoable((draft) => {
   draft.value += 1;
 });
@@ -51,22 +56,32 @@ const initialState = counterAdapter.getInitialState({ value: 0 });
 
 const nextState = increment(initialState);
 
-// { past: [{ value: 0 }], present: { value: 1 }, future: [], paused: false }
-```
+print({ initialState, nextState })
+`} />
 
 :::tip State operators
 
 All of the methods to update state (`undo`, `redo`, etc.) will act mutably when passed a draft, otherwise return a new state. The same applies to the function returned by `undoable`.
 
-```ts
-console.log(initialState.present.value, nextState.present.value); // 0, 1
-
-const withDraft = produce(initialState, (draft) => {
-  increment(draft);
+<ConsoleSandbox imports={{ immer: "{ produce }" }} code={ts`
+const increment = counterAdapter.undoable((draft) => {
+  draft.value += 1;
 });
 
-console.log(initialState.present.value, withDraft.present.value); // 0, 1
-```
+const initialState = counterAdapter.getInitialState({ value: 0 });
+
+const nextState = increment(initialState); // creates a new state
+
+const withDraft = produce(initialState, (draft) => {
+  increment(draft); // called as a mutator
+});
+
+print({
+  initialState: initialState.present.value,
+  nextState: nextState.present.value,
+  withDraft: withDraft.present.value,
+})
+`} />
 
 :::
 
@@ -74,24 +89,31 @@ console.log(initialState.present.value, withDraft.present.value); // 0, 1
 
 By default, a change is assumed to be undoable, and is added to the history stack. To have finer control over this behaviour, you can pass an `isUndoable` function as part of the optional configuration object. This function receives the same arguments as the recipe, and should return a boolean (or `undefined`, in which case the change is assumed to be undoable).
 
-```ts
+<ConsoleSandbox code={ts`
 const incrementBy = counterAdapter.undoable(
   (draft, amount: number) => {
     draft.value += amount;
   },
   {
     // don't bother adding to history if the amount is zero
-    // highlight-next-line
     isUndoable: (amount) => amount !== 0,
   },
 );
-```
+
+const initialState = counterAdapter.getInitialState({ value: 0 });
+
+const incrementedByZero = incrementBy(initialState, 0);
+
+const incrementedByOne = incrementBy(incrementedByZero, 1);
+
+print({ incrementedByZero, incrementedByOne })
+`} />
 
 ### Nested history state
 
 Sometimes the state you want to manage is nested within a larger object. In this case, you can pass a `selectHistoryState` function to `undoable` to extract the relevant state.
 
-```ts
+<ConsoleSandbox code={ts`
 interface RootState {
   counter: HistoryState<CounterState>;
 }
@@ -101,7 +123,6 @@ const increment = counterAdapter.undoable(
     draft.value += 1;
   },
   {
-    // highlight-next-line
     selectHistoryState: (state: RootState) => state.counter,
   },
 );
@@ -110,8 +131,8 @@ const initialState = { counter: counterAdapter.getInitialState({ value: 0 }) };
 
 const nextState = increment(initialState);
 
-// { counter: { past: [{ value: 0 }], present: { value: 1 }, future: [], paused: false } }
-```
+print({ initialState, nextState })
+`} />
 
 It should be a function that receives the wider state object and returns the history state object.
 
@@ -119,25 +140,42 @@ It should be a function that receives the wider state object and returns the his
 
 These methods allow you to navigate the history stack.
 
-```ts
+<ConsoleSandbox code={ts`
+const initialState = counterAdapter.getInitialState({ value: 0 });
+
+const increment = counterAdapter.undoable((draft) => {
+  draft.value += 1;
+});
+
+const nextState = increment(initialState);
+
 const undoneState = counterAdapter.undo(nextState);
-// { past: [], present: { value: 0 }, future: [{ value: 1 }], paused: false }
 
 const redoneState = counterAdapter.redo(undoneState);
-// { past: [{ value: 0 }], present: { value: 1 }, future: [], paused: false }
 
-const jumpedState = counterAdapter.jump(redoneState, -1); // negative numbers move back, positive move forward
-// { past: [], present: { value: 0 }, future: [{ value: 1 }], paused: false }
-```
+// negative numbers move back, positive move forward
+const jumpedState = counterAdapter.jump(redoneState, -1);
+
+print({ nextState, undoneState, redoneState, jumpedState })
+`} />
 
 ## `clearHistory`
 
 Clears the history stack, while preserving the present state.
 
-```ts
+<ConsoleSandbox code={ts`
+const initialState = counterAdapter.getInitialState({ value: 0 });
+
+const increment = counterAdapter.undoable((draft) => {
+  draft.value += 1;
+});
+
+const nextState = increment(initialState);
+
 const clearedState = counterAdapter.clearHistory(nextState);
-// { past: [], present: { value: 1 }, future: [], paused: false }
-```
+
+print({ nextState, clearedState })
+`} />
 
 ## Pausing history
 
@@ -145,16 +183,20 @@ To pause recording of history, you can set the `paused` flag in state to `true` 
 
 Changes made while paused will not be added to the history stack, but will still update the present state.
 
-```ts
-const pausedState = counterAdapter.pause(nextState);
-// { past: [{ value: 0 }], present: { value: 1 }, future: [], paused: true }
+<ConsoleSandbox code={ts`
+const initialState = counterAdapter.getInitialState({ value: 0 });
+
+const increment = counterAdapter.undoable((draft) => {
+  draft.value += 1;
+});
+
+const pausedState = counterAdapter.pause(initialState);
 
 const whilePaused = increment(pausedState);
-// { past: [{ value: 0 }], present: { value: 2 }, future: [], paused: true }
 
 const resumedState = counterAdapter.resume(whilePaused);
-// { past: [{ value: 0 }], present: { value: 2 }, future: [], paused: false }
 
 const undone = counterAdapter.undo(resumedState);
-// { past: [], present: { value: 0 }, future: [{ value: 2 }], paused: false }
-```
+
+print({ initialState, pausedState, whilePaused, resumedState, undone })
+`} />

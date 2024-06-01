@@ -5,9 +5,22 @@ slug: /
 
 # Setup
 
-A "history adapter" for managing undoable (and redoable) state changes with [immer](https://immerjs.github.io/immer/).
+A "history adapter" for managing undoable (and redoable) state changes with [immer](https://immerjs.github.io/immer/), which pairs well with state management solutions like [Redux](https://redux.js.org/) and [Zustand](https://docs.pmnd.rs/zustand/getting-started/introduction).
 
-Also includes a Redux specific version, for use with Redux Toolkit.
+Also includes a Redux specific version, with additional utilities for use with Redux Toolkit.
+
+## Sandboxes
+
+import RTKCounter from "/src/components/RTKCounter";
+import ZustandCounter from "/src/components/ZustandCounter";
+
+### Redux Toolkit
+
+<RTKCounter />
+
+### Zustand
+
+<ZustandCounter />
 
 ## Installation
 
@@ -47,29 +60,9 @@ import TabItem from "@theme/TabItem";
 
 The main export of `history-adapter` is the `createHistoryAdapter` function. This function takes an optional configuration object and returns an object with useful methods for managing undoable state changes.
 
-```ts no-transpile
-import { createHistoryAdapter } from "history-adapter";
-
-interface CounterState {
-  value: number;
-}
-
-const adapter = createHistoryAdapter<CounterState>({ limit: 10 });
-```
-
 For a list of all available methods, see the [API reference](/category/api).
 
 By default, history entries will be a copy of state before/after each change. However, you can use `createPatchHistoryAdapter` to store JSON Patches instead.
-
-```ts no-transpile
-import { createPatchHistoryAdapter } from "history-adapter";
-
-interface CounterState {
-  value: number;
-}
-
-const adapter = createPatchHistoryAdapter<CounterState>({ limit: 10 });
-```
 
 ### Configuration
 
