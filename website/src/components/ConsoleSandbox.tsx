@@ -8,20 +8,20 @@ export function ConsoleSandbox({
   code,
   imports = {},
   includeCounterSetup = true,
+  redux,
   ...props
 }: {
   code: string;
   imports?: Record<string, string>;
   includeCounterSetup?: boolean;
+  redux?: boolean;
 } & Omit<SandpackProps, "files">) {
   if (includeCounterSetup) {
-    if (!imports["history-adapter"]) {
-      imports["history-adapter"] = "{ createHistoryAdapter }";
-    } else if (!imports["history-adapter"].includes("createHistoryAdapter")) {
-      imports["history-adapter"] = imports["history-adapter"].replace(
-        " }",
-        ", createHistoryAdapter }",
-      );
+    const path = redux ? "history-adapter/redux" : "history-adapter";
+    if (!imports[path]) {
+      imports[path] = "{ createHistoryAdapter }";
+    } else if (!imports[path].includes("createHistoryAdapter")) {
+      imports[path] = imports[path].replace(" }", ", createHistoryAdapter }");
     }
   }
   return (
