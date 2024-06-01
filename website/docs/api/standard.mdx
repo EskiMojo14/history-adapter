@@ -73,7 +73,7 @@ const initialState = counterAdapter.getInitialState({ value: 0 });
 const nextState = increment(initialState); // creates a new state
 
 const withDraft = produce(initialState, (draft) => {
-increment(draft); // called as a mutator
+  increment(draft); // called as a mutator
 });
 
 print({
