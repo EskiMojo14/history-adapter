@@ -1,5 +1,7 @@
 # History Adapter
 
+![logo](./website/static/img/logo.png)
+
 A "history adapter" for managing undoable (and redoable) state changes with [immer](https://immerjs.github.io/immer/).
 
 Includes generic methods along with Redux-specific helpers.
