@@ -15,7 +15,6 @@ interface CounterState {
 }
 
 interface RootState extends HistoryState<CounterState> {
-  increment: () => void;
   incrementBy: (by: number) => void;
   undo: () => void;
   redo: () => void;
