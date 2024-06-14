@@ -1,23 +1,27 @@
+import type { EntityState } from "@reduxjs/toolkit";
 import {
   buildCreateSlice,
   combineSlices,
   configureStore,
+  createEntityAdapter,
 } from "@reduxjs/toolkit";
 import { describe, expect, it } from "vitest";
 import { historyCreatorsCreator } from "./creator";
-import type { HistoryState } from "./redux";
 import { createHistoryAdapter, createPatchHistoryAdapter } from "./redux";
 
 interface Book {
+  id: number;
   title: string;
   author: string;
 }
 
 const book1: Book = {
+  id: 1,
   title: "Hitchhiker's Guide to the Galaxy",
   author: "Douglas Adams",
 };
 const book2: Book = {
+  id: 2,
   title: "The Restaurant at the End of the Universe",
   author: "Douglas Adams",
 };
@@ -286,28 +290,45 @@ describe("Slice creators", () => {
     expect(selectLastBook(store.getState())).toBeUndefined();
   });
   it("works with patches", () => {
-    const bookAdapter = createPatchHistoryAdapter<Array<Book>>();
+    const bookAdapter = createEntityAdapter<Book>();
+    const bookHistoryAdapter =
+      createPatchHistoryAdapter<EntityState<Book, Book["id"]>>();
+    const localHistorySelectors = bookHistoryAdapter.getSelectors();
+    const localSelectors = bookAdapter.getSelectors(
+      localHistorySelectors.selectPresent,
+    );
+
     const bookSlice = createAppSlice({
       name: "book",
-      initialState: bookAdapter.getInitialState([]),
+      initialState: bookHistoryAdapter.getInitialState(
+        bookAdapter.getInitialState(),
+      ),
       reducers: (create) => {
         const { createUndoable, createHistoryMethods } =
-          create.historyCreators(bookAdapter);
+          create.historyCreators(bookHistoryAdapter);
         return {
           ...createHistoryMethods(),
           addBook: createUndoable.preparedReducer(
-            bookAdapter.withPayload<Book>(),
-            (state, action) => {
-              state.push(action.payload);
-            },
+            bookHistoryAdapter.withPayload<Book>(),
+            (state, action) => bookAdapter.setOne(state, action),
           ),
           removeLastBook: createUndoable.reducer((state) => {
-            state.pop();
+            const lastId = state.ids.at(-1);
+            if (typeof lastId === "number") {
+              bookAdapter.removeOne(state, lastId);
+            }
           }),
         };
       },
       selectors: {
-        selectLastBook: (state) => state.present.at(-1),
+        ...localHistorySelectors,
+        ...localSelectors,
+        selectLastBook: (state) => {
+          const lastId = localHistorySelectors.selectPresent(state).ids.at(-1);
+          if (typeof lastId === "number") {
+            return localSelectors.selectById(state, lastId);
+          }
+        },
       },
     });
 
