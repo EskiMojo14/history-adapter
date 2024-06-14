@@ -71,7 +71,6 @@ function globaliseSelectors<
 } {
   const result: Record<string, Selector<RootState>> = {};
   for (const [key, selector] of Object.entries<Selector<State>>(selectors)) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     result[key] = (state) => selector(selectState(state));
   }
   return result as never;
