@@ -148,7 +148,8 @@ export const historyCreatorsCreator: ReducerCreator<
       },
       createHistoryMethods() {
         const createReducer = makeScopedReducerCreator(
-          config.selectHistoryState,
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+          config?.selectHistoryState ?? ((state) => state as never),
         );
         return {
           undone: createReducer(adapter.undo),
