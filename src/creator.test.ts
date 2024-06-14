@@ -138,13 +138,10 @@ describe("Slice creators", () => {
       name: "book",
       initialState: { books: bookAdapter.getInitialState([]) },
       reducers: (create) => {
-        const selectHistoryState = (state: {
-          books: HistoryState<Array<Book>>;
-        }) => state.books;
         const { createUndoable, createHistoryMethods } = create.historyCreators(
           bookAdapter,
           {
-            selectHistoryState,
+            selectHistoryState: (state) => state.books,
           },
         );
         return {
