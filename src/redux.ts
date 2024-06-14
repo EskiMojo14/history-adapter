@@ -56,11 +56,7 @@ export interface HistorySelectors<Data, State = HistoryState<Data>> {
   selectPaused: (state: State) => boolean;
 }
 
-function globaliseSelectors<
-  RootState,
-  State extends BaseHistoryState<unknown, unknown>,
-  Selected extends Record<string, unknown>,
->(
+function globaliseSelectors<RootState, State, Selected>(
   selectState: (rootState: RootState) => State,
   selectors: {
     [K in keyof Selected]: (state: State) => Selected[K];
