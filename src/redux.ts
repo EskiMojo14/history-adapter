@@ -1,9 +1,6 @@
 /* eslint-disable import/export */
 import type { Action, CaseReducer, PayloadAction } from "@reduxjs/toolkit";
-import {
-  isFluxStandardAction,
-  createDraftSafeSelector,
-} from "@reduxjs/toolkit";
+import { isFluxStandardAction } from "@reduxjs/toolkit";
 import type {
   HistoryAdapter as Adapter,
   BaseHistoryState,
@@ -30,6 +27,12 @@ type AnyCreateSelectorFunction = CreateSelectorFunction<
 >;
 
 export interface GetSelectorsOptions {
+  /**
+   * @deprecated
+   * No longer used, as no memoisation is needed.
+   * This option will be removed in the next major version.
+   */
+  // TODO: Remove in next major version
   createSelector?: AnyCreateSelectorFunction;
 }
 
@@ -61,7 +64,6 @@ function globaliseSelectors<
   State extends BaseHistoryState<Data, unknown>,
   Selected extends Record<string, unknown>,
 >(
-  createSelector: AnyCreateSelectorFunction,
   selectState: (rootState: RootState) => State,
   selectors: {
     [K in keyof Selected]: (state: State) => Selected[K];
@@ -70,8 +72,9 @@ function globaliseSelectors<
   [K in keyof Selected]: (rootState: RootState) => Selected[K];
 } {
   const result: Record<string, Selector<RootState>> = {};
-  for (const key of Object.keys(selectors)) {
-    result[key] = createSelector(selectState, selectors[key as keyof Selected]);
+  for (const [key, selector] of Object.entries<Selector<State>>(selectors)) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    result[key] = (state) => selector(selectState(state));
   }
   return result as never;
 }
@@ -87,8 +90,15 @@ function makeSelectorFactory<
   ): HistorySelectors<Data, RootState>;
   function getSelectors<RootState>(
     selectState?: (rootState: RootState) => State,
-    { createSelector = createDraftSafeSelector }: GetSelectorsOptions = {},
+    { createSelector }: GetSelectorsOptions = {},
   ): HistorySelectors<Data, any> {
+    if (createSelector) {
+      console.error(
+        "The createSelector option is no longer supported, as no memoisation is needed." +
+          "\n" +
+          "This option will be removed in the next major version.",
+      );
+    }
     const localisedSelectors = {
       selectCanUndo: (state) => state.past.length > 0,
       selectCanRedo: (state) => state.future.length > 0,
@@ -98,7 +108,7 @@ function makeSelectorFactory<
     if (!selectState) {
       return localisedSelectors;
     }
-    return globaliseSelectors(createSelector, selectState, localisedSelectors);
+    return globaliseSelectors(selectState, localisedSelectors);
   }
   return getSelectors;
 }
