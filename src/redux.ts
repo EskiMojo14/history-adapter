@@ -57,9 +57,8 @@ export interface HistorySelectors<Data, State = HistoryState<Data>> {
 }
 
 function globaliseSelectors<
-  Data,
   RootState,
-  State extends BaseHistoryState<Data, unknown>,
+  State extends BaseHistoryState<unknown, unknown>,
   Selected extends Record<string, unknown>,
 >(
   selectState: (rootState: RootState) => State,
