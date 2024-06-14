@@ -18,8 +18,7 @@ import type { HistoryAdapter, HistoryState } from "./redux";
 import type { WithRequiredProp } from "./utils";
 import type { BaseHistoryState } from ".";
 
-const historyMethodsCreatorType = Symbol("historyMethodsCreator");
-const undoableCreatorsCreatorType = Symbol("undoableCreatorsCreator");
+const historyCreatorsType = Symbol("historyCreators");
 
 interface HistoryReducers<State> {
   undone: CaseReducerDefinition<State, PayloadAction>;
@@ -29,20 +28,12 @@ interface HistoryReducers<State> {
   pauseToggled: CaseReducerDefinition<State, PayloadAction>;
   jumped: CaseReducerDefinition<State, PayloadAction<number>>;
   historyCleared: CaseReducerDefinition<State, PayloadAction>;
-  reset: ReducerDefinition<typeof historyMethodsCreatorType> & {
+  reset: ReducerDefinition<typeof historyCreatorsType> & {
     type: "reset";
   };
 }
 
-interface HistoryMethodsCreatorConfig<
-  RootState,
-  Data,
-  State extends BaseHistoryState<unknown, unknown> = HistoryState<Data>,
-> {
-  selectHistoryState?: (state: Draft<RootState>) => Draft<State>;
-}
-
-interface UndoableCreatorsCreatorConfig<
+interface HistoryCreatorConfig<
   RootState,
   Data,
   State extends BaseHistoryState<unknown, unknown> = HistoryState<Data>,
@@ -54,19 +45,22 @@ type ActionForPrepare<Prepare extends PrepareAction<any>> = ReturnType<
   PayloadActionCreator<0, string, Prepare>
 >;
 
-interface UndoableCreators<Data, State> {
-  reducer: {
-    (
-      reducer: CaseReducer<Data, PayloadAction>,
-    ): CaseReducerDefinition<State, PayloadAction>;
-    <Payload>(
-      reducer: CaseReducer<Data, PayloadAction<Payload>>,
-    ): CaseReducerDefinition<State, PayloadAction<Payload>>;
+interface HistoryCreators<Data, State> {
+  createUndoable: {
+    reducer: {
+      (
+        reducer: CaseReducer<Data, PayloadAction>,
+      ): CaseReducerDefinition<State, PayloadAction>;
+      <Payload>(
+        reducer: CaseReducer<Data, PayloadAction<Payload>>,
+      ): CaseReducerDefinition<State, PayloadAction<Payload>>;
+    };
+    preparedReducer: <Prepare extends PrepareAction<any>>(
+      prepare: Prepare,
+      reducer: CaseReducer<Data, ActionForPrepare<Prepare>>,
+    ) => PreparedCaseReducerDefinition<State, Prepare>;
   };
-  preparedReducer: <Prepare extends PrepareAction<any>>(
-    prepare: Prepare,
-    reducer: CaseReducer<Data, ActionForPrepare<Prepare>>,
-  ) => PreparedCaseReducerDefinition<State, Prepare>;
+  createHistoryMethods: () => HistoryReducers<State>;
 }
 
 declare module "@reduxjs/toolkit" {
@@ -76,32 +70,32 @@ declare module "@reduxjs/toolkit" {
     Name extends string,
     ReducerPath extends string,
   > {
-    [historyMethodsCreatorType]: ReducerCreatorEntry<
+    [historyCreatorsType]: ReducerCreatorEntry<
       State extends BaseHistoryState<infer Data, any>
         ? {
             (
               adapter: HistoryAdapter<Data, State>,
-              config?: HistoryMethodsCreatorConfig<State, Data, State>,
-            ): HistoryReducers<State>;
+              config?: HistoryCreatorConfig<State, Data, State>,
+            ): HistoryCreators<Data, State>;
             <Data, HState extends BaseHistoryState<Data, unknown>>(
               adapter: HistoryAdapter<Data, HState>,
               config: WithRequiredProp<
-                HistoryMethodsCreatorConfig<State, Data, HState>,
+                HistoryCreatorConfig<State, Data, HState>,
                 "selectHistoryState"
               >,
-            ): HistoryReducers<State>;
+            ): HistoryCreators<Data, State>;
           }
         : <Data, HState extends BaseHistoryState<Data, unknown>>(
             adapter: HistoryAdapter<Data, HState>,
             config: WithRequiredProp<
-              HistoryMethodsCreatorConfig<State, Data, HState>,
+              HistoryCreatorConfig<State, Data, HState>,
               "selectHistoryState"
             >,
-          ) => HistoryReducers<State>,
+          ) => HistoryCreators<Data, State>,
       {
         actions: {
           [ReducerName in keyof CaseReducers]: CaseReducers[ReducerName] extends ReducerDefinition<
-            typeof historyMethodsCreatorType
+            typeof historyCreatorsType
           >
             ? CaseReducers[ReducerName] extends { type: "reset" }
               ? PayloadActionCreator<void, SliceActionType<Name, ReducerName>>
@@ -110,7 +104,7 @@ declare module "@reduxjs/toolkit" {
         };
         caseReducers: {
           [ReducerName in keyof CaseReducers]: CaseReducers[ReducerName] extends ReducerDefinition<
-            typeof historyMethodsCreatorType
+            typeof historyCreatorsType
           >
             ? CaseReducers[ReducerName] extends { type: "reset" }
               ? CaseReducer<State, PayloadAction>
@@ -118,29 +112,6 @@ declare module "@reduxjs/toolkit" {
             : never;
         };
       }
-    >;
-    [undoableCreatorsCreatorType]: ReducerCreatorEntry<
-      State extends BaseHistoryState<infer Data, any>
-        ? {
-            (
-              adapter: HistoryAdapter<Data, State>,
-              config?: UndoableCreatorsCreatorConfig<State, Data, State>,
-            ): UndoableCreators<Data, State>;
-            <Data, HState extends BaseHistoryState<Data, unknown>>(
-              adapter: HistoryAdapter<Data, HState>,
-              config: WithRequiredProp<
-                UndoableCreatorsCreatorConfig<State, Data, HState>,
-                "selectHistoryState"
-              >,
-            ): UndoableCreators<Data, State>;
-          }
-        : <Data, HState extends BaseHistoryState<Data, unknown>>(
-            adapter: HistoryAdapter<Data, HState>,
-            config: WithRequiredProp<
-              UndoableCreatorsCreatorConfig<State, Data, HState>,
-              "selectHistoryState"
-            >,
-          ) => UndoableCreators<Data, State>
     >;
   }
 }
@@ -156,34 +127,44 @@ const makeScopedReducerCreator =
       },
     );
 
-export const historyMethodsCreator: ReducerCreator<
-  typeof historyMethodsCreatorType
+export const historyCreatorsCreator: ReducerCreator<
+  typeof historyCreatorsType
 > = {
-  type: historyMethodsCreatorType,
-  create<
-    Data,
-    State = HistoryState<Data>,
-    HState extends BaseHistoryState<Data, unknown> = HistoryState<Data>,
-  >(
-    adapter: HistoryAdapter<Data, HState>,
-    {
-      selectHistoryState = (state) => state as never,
-    }: HistoryMethodsCreatorConfig<State, Data, HState> = {},
-  ): HistoryReducers<State> {
-    const createReducer = makeScopedReducerCreator(selectHistoryState);
+  type: historyCreatorsType,
+  create(adapter, config) {
     return {
-      undone: createReducer(adapter.undo),
-      redone: createReducer(adapter.redo),
-      jumped: createReducer(adapter.jump),
-      paused: createReducer(adapter.pause),
-      resumed: createReducer(adapter.resume),
-      pauseToggled: createReducer((state) => {
-        state.paused = !state.paused;
-      }),
-      historyCleared: createReducer(adapter.clearHistory),
-      reset: {
-        _reducerDefinitionType: historyMethodsCreatorType,
-        type: "reset",
+      createUndoable: {
+        reducer(reducer: CaseReducer<any, any>) {
+          return reducerCreator.create(
+            adapter.undoableReducer(reducer, config),
+          );
+        },
+        preparedReducer(prepare, reducer) {
+          return preparedReducerCreator.create(
+            prepare,
+            adapter.undoableReducer(reducer, config),
+          );
+        },
+      },
+      createHistoryMethods() {
+        const createReducer = makeScopedReducerCreator(
+          config.selectHistoryState,
+        );
+        return {
+          undone: createReducer(adapter.undo),
+          redone: createReducer(adapter.redo),
+          jumped: createReducer(adapter.jump),
+          paused: createReducer(adapter.pause),
+          resumed: createReducer(adapter.resume),
+          pauseToggled: createReducer((state) => {
+            state.paused = !state.paused;
+          }),
+          historyCleared: createReducer(adapter.clearHistory),
+          reset: {
+            _reducerDefinitionType: historyCreatorsType,
+            type: "reset",
+          },
+        };
       },
     };
   },
@@ -197,28 +178,4 @@ export const historyMethodsCreator: ReducerCreator<
       context,
     );
   },
-};
-
-export const undoableCreatorsCreator: ReducerCreator<
-  typeof undoableCreatorsCreatorType
-> = {
-  type: undoableCreatorsCreatorType,
-  create(adapter, config) {
-    return {
-      reducer(reducer: CaseReducer<any, any>) {
-        return reducerCreator.create(adapter.undoableReducer(reducer, config));
-      },
-      preparedReducer(prepare, reducer) {
-        return preparedReducerCreator.create(
-          prepare,
-          adapter.undoableReducer(reducer, config),
-        );
-      },
-    };
-  },
-};
-
-export const historyCreators = {
-  historyMethods: historyMethodsCreator,
-  undoableCreators: undoableCreatorsCreator,
 };
