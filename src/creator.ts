@@ -60,7 +60,7 @@ interface HistoryCreators<Data, State> {
       reducer: CaseReducer<Data, ActionForPrepare<Prepare>>,
     ) => PreparedCaseReducerDefinition<State, Prepare>;
   };
-  createHistoryMethods: () => HistoryReducers<State>;
+  createHistoryMethods(): HistoryReducers<State>;
 }
 
 declare module "@reduxjs/toolkit" {
