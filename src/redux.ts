@@ -1,5 +1,10 @@
 /* eslint-disable import/export */
-import type { Action, CaseReducer, PayloadAction } from "@reduxjs/toolkit";
+import type {
+  Action,
+  CaseReducer,
+  PayloadAction,
+  Selector,
+} from "@reduxjs/toolkit";
 import { isFluxStandardAction } from "@reduxjs/toolkit";
 import type {
   HistoryAdapter as Adapter,
@@ -16,15 +21,8 @@ import {
   createPatchHistoryAdapter as createPatchAdapter,
 } from ".";
 import type { IfMaybeUndefined, MaybeDraft, Overwrite } from "./utils";
-import type { CreateSelectorFunction, Selector } from "reselect";
 
 export * from ".";
-
-type AnyFunction = (...args: any) => any;
-type AnyCreateSelectorFunction = CreateSelectorFunction<
-  <F extends AnyFunction>(f: F) => F,
-  <F extends AnyFunction>(f: F) => F
->;
 
 export interface GetSelectorsOptions {
   /**
@@ -33,7 +31,7 @@ export interface GetSelectorsOptions {
    * This option will be removed in the next major version.
    */
   // TODO: Remove in next major version
-  createSelector?: AnyCreateSelectorFunction;
+  createSelector?: unknown;
 }
 
 export interface HistorySelectors<Data, State = HistoryState<Data>> {

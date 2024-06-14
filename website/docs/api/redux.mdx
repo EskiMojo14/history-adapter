@@ -263,7 +263,7 @@ print({
 });
 `} />
 
-An input selector can be provided if the state is nested, which will be combined using `reselect`'s `createSelector`.
+An input selector can be provided if the state is nested, which will be used to select the relevant slice of state.
 
 <ConsoleSandbox
   redux
@@ -306,28 +306,4 @@ print({
   present: selectPresent(store.getState()),
   paused: selectPaused(store.getState()),
 });
-`} />
-
-The instance of `createSelector` used can be customised, and defaults to RTK's [`createDraftSafeSelector`](https://redux-toolkit.js.org/api/createSelector#createdraftsafeselector):
-
-<ConsoleSandbox
-  redux
-  imports={{ "reselect": "{ createSelectorCreator, lruMemoize }", "history-adapter": "{ HistoryState }" }}
-  code={ts`
-const createLruSelector = createSelectorCreator(lruMemoize);
-
-interface RootState {
-  counter: HistoryState<CounterState>;
-}
-
-const { selectPresent } = counterAdapter.getSelectors(
-  (state: RootState) => state.counter,
-  { createSelector: createLruSelector },
-);
-
-const initialState: RootState = { counter: counterAdapter.getInitialState({ value: 0 }) };
-
-const print = getPrint();
-
-print({ initialState, counterState: selectPresent(initialState)  }) });
 `} />
