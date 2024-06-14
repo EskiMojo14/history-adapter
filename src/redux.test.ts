@@ -6,7 +6,7 @@ import {
 } from "@reduxjs/toolkit";
 import type { HistoryState } from "./redux";
 import { createHistoryAdapter } from "./redux";
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach, vi } from "vitest";
 
 interface Book {
   title: string;
@@ -200,6 +200,15 @@ describe("createReduxHistoryAdapter", () => {
         (state: RootState) => booksHistorySlice.selectSlice(state),
       );
       expect(selectPresent(store.getState())).toEqual([]);
+    });
+    it("logs a error when a createSelector function is passed", () => {
+      const consoleSpy = vi.spyOn(console, "error");
+      booksHistoryAdapter.getSelectors(undefined, { createSelector: () => {} });
+      expect(consoleSpy).toHaveBeenCalled();
+      expect(consoleSpy.mock.calls[0]?.[0]).toMatchInlineSnapshot(`
+        "The createSelector option is no longer supported, as no memoisation is needed.
+        This option will be removed in the next major version."
+      `);
     });
   });
 });
