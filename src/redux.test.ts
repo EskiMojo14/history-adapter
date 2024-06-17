@@ -2,9 +2,7 @@ import {
   combineSlices,
   configureStore,
   createSelector,
-  createSelectorCreator,
   createSlice,
-  lruMemoize,
 } from "@reduxjs/toolkit";
 import type { HistoryState } from "./redux";
 import { createHistoryAdapter } from "./redux";
@@ -193,25 +191,27 @@ describe("createReduxHistoryAdapter", () => {
   });
 
   describe("getSelectors", () => {
+    it("can be used without an input selector", () => {
+      const { selectPresent } = booksHistoryAdapter.getSelectors();
+      expect(selectPresent(store.getState().books)).toEqual([]);
+    });
     it("can be used with an input selector", () => {
       const { selectPresent } = booksHistoryAdapter.getSelectors(
         (state: RootState) => booksHistorySlice.selectSlice(state),
       );
       expect(selectPresent(store.getState())).toEqual([]);
     });
-    it("can be used with an input selector and a custom createSelector", () => {
-      const createSelector = createSelectorCreator(lruMemoize);
-      const spied = vi.fn(
-        createSelector as any,
-      ) as unknown as typeof createSelector;
-      const { selectPresent } = booksHistoryAdapter.getSelectors(
-        (state: RootState) => booksHistorySlice.selectSlice(state),
-        {
-          createSelector: spied,
-        },
-      );
-      expect(selectPresent(store.getState())).toStrictEqual([]);
-      expect(spied).toHaveBeenCalled();
+    it("logs a error when a createSelector function is passed", () => {
+      const consoleSpy = vi.spyOn(console, "error");
+      booksHistoryAdapter.getSelectors(undefined as never, {
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        createSelector: () => {},
+      });
+      expect(consoleSpy).toHaveBeenCalled();
+      expect(consoleSpy.mock.calls[0]?.[0]).toMatchInlineSnapshot(`
+        "The createSelector option is no longer supported, as no memoisation is needed.
+        This option will be removed in the next major version."
+      `);
     });
   });
 });

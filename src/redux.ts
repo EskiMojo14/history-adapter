@@ -1,9 +1,11 @@
 /* eslint-disable import/export */
-import type { Action, CaseReducer, PayloadAction } from "@reduxjs/toolkit";
-import {
-  isFluxStandardAction,
-  createDraftSafeSelector,
+import type {
+  Action,
+  CaseReducer,
+  PayloadAction,
+  Selector,
 } from "@reduxjs/toolkit";
+import { isFluxStandardAction } from "@reduxjs/toolkit";
 import type {
   HistoryAdapter as Adapter,
   BaseHistoryState,
@@ -19,18 +21,17 @@ import {
   createPatchHistoryAdapter as createPatchAdapter,
 } from ".";
 import type { IfMaybeUndefined, MaybeDraft, Overwrite } from "./utils";
-import type { CreateSelectorFunction, Selector } from "reselect";
 
 export * from ".";
 
-type AnyFunction = (...args: any) => any;
-type AnyCreateSelectorFunction = CreateSelectorFunction<
-  <F extends AnyFunction>(f: F) => F,
-  <F extends AnyFunction>(f: F) => F
->;
-
 export interface GetSelectorsOptions {
-  createSelector?: AnyCreateSelectorFunction;
+  /**
+   * @deprecated
+   * No longer used, as no memoisation is needed.
+   * This option will be removed in the next major version.
+   */
+  // TODO: Remove in next major version
+  createSelector?: unknown;
 }
 
 export interface HistorySelectors<Data, State = HistoryState<Data>> {
@@ -55,13 +56,7 @@ export interface HistorySelectors<Data, State = HistoryState<Data>> {
   selectPaused: (state: State) => boolean;
 }
 
-function globaliseSelectors<
-  Data,
-  RootState,
-  State extends BaseHistoryState<Data, unknown>,
-  Selected extends Record<string, unknown>,
->(
-  createSelector: AnyCreateSelectorFunction,
+function globaliseSelectors<RootState, State, Selected>(
   selectState: (rootState: RootState) => State,
   selectors: {
     [K in keyof Selected]: (state: State) => Selected[K];
@@ -70,8 +65,8 @@ function globaliseSelectors<
   [K in keyof Selected]: (rootState: RootState) => Selected[K];
 } {
   const result: Record<string, Selector<RootState>> = {};
-  for (const key of Object.keys(selectors)) {
-    result[key] = createSelector(selectState, selectors[key as keyof Selected]);
+  for (const [key, selector] of Object.entries<Selector<State>>(selectors)) {
+    result[key] = (state) => selector(selectState(state));
   }
   return result as never;
 }
@@ -87,8 +82,15 @@ function makeSelectorFactory<
   ): HistorySelectors<Data, RootState>;
   function getSelectors<RootState>(
     selectState?: (rootState: RootState) => State,
-    { createSelector = createDraftSafeSelector }: GetSelectorsOptions = {},
+    { createSelector }: GetSelectorsOptions = {},
   ): HistorySelectors<Data, any> {
+    if (createSelector) {
+      console.error(
+        "The createSelector option is no longer supported, as no memoisation is needed." +
+          "\n" +
+          "This option will be removed in the next major version.",
+      );
+    }
     const localisedSelectors = {
       selectCanUndo: (state) => state.past.length > 0,
       selectCanRedo: (state) => state.future.length > 0,
@@ -98,7 +100,7 @@ function makeSelectorFactory<
     if (!selectState) {
       return localisedSelectors;
     }
-    return globaliseSelectors(createSelector, selectState, localisedSelectors);
+    return globaliseSelectors(selectState, localisedSelectors);
   }
   return getSelectors;
 }
