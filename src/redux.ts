@@ -71,6 +71,8 @@ function globaliseSelectors<RootState, State, Selected>(
   return result as never;
 }
 
+let hasWarned = false;
+
 function makeSelectorFactory<
   Data,
   State extends BaseHistoryState<unknown, unknown>,
@@ -84,12 +86,13 @@ function makeSelectorFactory<
     selectState?: (rootState: RootState) => State,
     { createSelector }: GetSelectorsOptions = {},
   ): HistorySelectors<Data, any> {
-    if (createSelector) {
+    if (createSelector && !hasWarned) {
       console.error(
         "The createSelector option is no longer supported, as no memoisation is needed." +
           "\n" +
           "This option will be removed in the next major version.",
       );
+      hasWarned = true;
     }
     const localisedSelectors = {
       selectCanUndo: (state) => state.past.length > 0,
