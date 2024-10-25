@@ -9,7 +9,9 @@ export function Past() {
   return (
     <div className="past">
       {past.map(({ value }, index) => (
-        <p key={`v${value}i${index}`}>count was {value}</p>
+        <p key={`v${value}i${index}`}>
+          count was <span className="count">{value}</span>
+        </p>
       ))}
     </div>
   );

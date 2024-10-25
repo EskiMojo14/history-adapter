@@ -75,22 +75,6 @@ button:focus-visible {
   }
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-  .incrementing::before {
-    background-color: rgba(0, 0, 0, 0.1);
-  }
-}
-
 .values {
   display: flex;
   gap: 1em;
@@ -109,20 +93,41 @@ button:focus-visible {
 }
 
 .past {
-  mask-image: linear-gradient(
-    to right,
-    transparent 0,
-    rgba(0, 0, 0, 0.75) 100%
-  );
+  mask-image: linear-gradient(to right, transparent 0, rgba(0, 0, 0, 0.6) 100%);
   justify-content: flex-end;
 }
 
 .future {
-  mask-image: linear-gradient(to left, transparent 0, rgba(0, 0, 0, 0.75) 100%);
+  mask-image: linear-gradient(to left, transparent 0, rgba(0, 0, 0, 0.6) 100%);
   justify-content: flex-start;
 }
 
 .past p,
 .future p {
   flex-shrink: 0;
+}
+
+.count {
+  color: plum;
+  font-weight: bold;
+  font-size: larger;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+  .incrementing::before {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+  .count {
+    color: rebeccapurple;
+  }
 }

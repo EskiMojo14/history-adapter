@@ -9,7 +9,9 @@ export function Future() {
   return (
     <div className="future">
       {future.map(({ value }, index) => (
-        <p key={`v${value}i${index}`}>count will be {value}</p>
+        <p key={`v${value}i${index}`}>
+          count will be <span className="count">{value}</span>
+        </p>
       ))}
     </div>
   );
