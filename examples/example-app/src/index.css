@@ -54,19 +54,6 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
-
 .incrementing {
   position: relative;
 }
@@ -78,12 +65,28 @@ button:focus-visible {
   left: 0;
   width: 0;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.1);
   animation: progress 1s linear forwards;
 }
 
 @keyframes progress {
   to {
     width: 100%;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+  .incrementing::before {
+    background-color: rgba(0, 0, 0, 0.1);
   }
 }
