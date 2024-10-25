@@ -1,15 +1,11 @@
 // will work once RTK supports custom creators
 import { buildCreateSlice } from "@reduxjs/toolkit";
 import { createHistoryAdapter } from "history-adapter/redux";
-import {
-  historyMethodsCreator,
-  undoableCreatorsCreator,
-} from "history-adapter/creator";
+import { historyCreatorsCreator } from "history-adapter/creator";
 
 const createAppSlice = buildCreateSlice({
   creators: {
-    historyMethods: historyMethodsCreator,
-    undoableCreators: undoableCreatorsCreator,
+    undoableCreators: historyCreatorsCreator,
   },
 });
 
@@ -25,7 +21,8 @@ export const counterSlice = createAppSlice({
   name: "counter",
   initialState: counterAdapter.getInitialState({ value: 0 }),
   reducers: (create) => {
-    const createUndoable = create.undoableCreators(counterAdapter);
+    const { createUndoable, createHistoryMethods } =
+      create.undoableCreators(counterAdapter);
     return {
       incremented: createUndoable.reducer<number>((state, action) => {
         state.value += action.payload;
@@ -33,7 +30,7 @@ export const counterSlice = createAppSlice({
       decremented: createUndoable.reducer<number>((state, action) => {
         state.value -= action.payload;
       }),
-      ...create.historyMethods(counterAdapter),
+      ...createHistoryMethods(),
     };
   },
   selectors: {
