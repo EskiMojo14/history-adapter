@@ -62,5 +62,25 @@ export const counterSlice = createAppSlice({
   selectors: {
     ...selectors,
     selectCount: (state) => selectPresent(state).value,
+    selectIncrementing: (state) => state.incrementing,
   },
 });
+
+export const {
+  incremented,
+  decremented,
+  undone,
+  redone,
+  pauseToggled,
+  jumped,
+  historyCleared,
+  reset,
+} = counterSlice.actions;
+
+export const {
+  selectCount,
+  selectCanRedo,
+  selectCanUndo,
+  selectPaused,
+  selectIncrementing,
+} = counterSlice.selectors;
