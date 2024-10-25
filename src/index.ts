@@ -279,7 +279,7 @@ export function buildCreateHistoryAdapter<StateFn extends BaseHistoryStateFn>({
         return makeStateOperator<RootState, Args>((rootState, ...args) => {
           const state =
             selectHistoryState?.(rootState as never) ??
-            (rootState as Draft<GetStateType<Data, StateFn>>);
+            (rootState as Draft<State>);
 
           const historyEntry = finalRecipe(state, ...args);
 
@@ -315,12 +315,8 @@ export interface HistoryStateFn extends BaseHistoryStateFn {
  *
  * Correctly handles immer's `nothing` and `undefined` return values.
  */
-export const applyRecipe = <
-  Data,
-  Args extends Array<any>,
-  State extends MaybeDraft<BaseHistoryState<Data, unknown>>,
->(
-  state: State,
+export const applyRecipe = <Data, Args extends Array<any>>(
+  state: MaybeDraft<BaseHistoryState<Data, unknown>>,
   recipe: (draft: Draft<Data>, ...args: Args) => ValidRecipeReturnType<Data>,
   ...args: Args
 ) => {
