@@ -3514,9 +3514,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@reduxjs/toolkit@https://pkg.csb.dev/reduxjs/redux-toolkit/commit/e99e0848/@reduxjs/toolkit/_pkg.tgz":
-  version: 2.2.5
-  resolution: "@reduxjs/toolkit@https://pkg.csb.dev/reduxjs/redux-toolkit/commit/e99e0848/@reduxjs/toolkit/_pkg.tgz"
+"@reduxjs/toolkit@https://pkg.csb.dev/reduxjs/redux-toolkit/commit/5654eb2b/@reduxjs/toolkit/_pkg.tgz":
+  version: 2.3.0
+  resolution: "@reduxjs/toolkit@https://pkg.csb.dev/reduxjs/redux-toolkit/commit/5654eb2b/@reduxjs/toolkit/_pkg.tgz"
   dependencies:
     immer: "npm:^10.0.3"
     redux: "npm:^5.0.1"
@@ -3530,7 +3530,7 @@ __metadata:
       optional: true
     react-redux:
       optional: true
-  checksum: 10c0/139bcbe32ddc36711b3813dc64808beed0b84ea555b9aad2e2a088628cc014429fd3a875194502ffc74c11b45aec1e175d7aeabb1b1e057cada535f79f801470
+  checksum: 10c0/637d6e18e5140e7195adcbce6e6227ead0899d7fd5d6e9341fc379f64c97011605932ebb344c6b76af381db9d306de3654ebf7aafd5e1bf4c04709f3704e0b1d
   languageName: node
   linkType: hard
 
@@ -9019,7 +9019,7 @@ __metadata:
   resolution: "history-adapter@workspace:."
   dependencies:
     "@arethetypeswrong/cli": "npm:^0.13.5"
-    "@reduxjs/toolkit": "https://pkg.csb.dev/reduxjs/redux-toolkit/commit/e99e0848/@reduxjs/toolkit/_pkg.tgz"
+    "@reduxjs/toolkit": "https://pkg.csb.dev/reduxjs/redux-toolkit/commit/5654eb2b/@reduxjs/toolkit/_pkg.tgz"
     "@size-limit/preset-small-lib": "npm:^11.1.0"
     "@types/node": "npm:^20.12.7"
     "@typescript-eslint/eslint-plugin": "npm:^6.18.0"
