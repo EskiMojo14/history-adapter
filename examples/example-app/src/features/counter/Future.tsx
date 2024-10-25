@@ -1,7 +1,11 @@
+import { shallowEqual } from "react-redux";
 import { useAppSelector } from "../../hooks";
 
 export function Future() {
-  const future = useAppSelector((state) => state.counter.future);
+  const future = useAppSelector(
+    (state) => state.counter.future.slice(0, 4),
+    shallowEqual,
+  );
   return (
     <div className="future">
       {future.map(({ value }, index) => (
