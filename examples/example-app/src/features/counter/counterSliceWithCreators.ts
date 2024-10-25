@@ -1,11 +1,12 @@
 // will work once RTK supports custom creators
-import { buildCreateSlice } from "@reduxjs/toolkit";
+import { buildCreateSlice, asyncThunkCreator } from "@reduxjs/toolkit";
 import { createHistoryAdapter } from "history-adapter/redux";
 import { historyCreatorsCreator } from "history-adapter/creator";
 
 const createAppSlice = buildCreateSlice({
   creators: {
     undoableCreators: historyCreatorsCreator,
+    asyncThunk: asyncThunkCreator,
   },
 });
 
@@ -30,6 +31,17 @@ export const counterSlice = createAppSlice({
       decremented: createUndoable.reducer<number>((state, action) => {
         state.value -= action.payload;
       }),
+      incrementedAsync: create.asyncThunk<number, number>(
+        async (amount) => {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          return amount;
+        },
+        {
+          fulfilled: createUndoable.reducer<number>((state, action) => {
+            state.value += action.payload;
+          }),
+        },
+      ),
       ...createHistoryMethods(),
     };
   },
