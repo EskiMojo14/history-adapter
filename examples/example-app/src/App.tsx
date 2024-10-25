@@ -1,11 +1,17 @@
 import { Count } from "./features/counter/Count";
 import { HistoryButtons } from "./features/counter/HistoryButtons";
 import "./App.css";
+import { Past } from "./features/counter/Past";
+import { Future } from "./features/counter/Future";
 
 function App() {
   return (
     <>
-      <Count />
+      <div className="values">
+        <Past />
+        <Count />
+        <Future />
+      </div>
       <HistoryButtons />
     </>
   );

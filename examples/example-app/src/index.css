@@ -90,3 +90,39 @@ button:focus-visible {
     background-color: rgba(0, 0, 0, 0.1);
   }
 }
+
+.values {
+  display: flex;
+  gap: 1em;
+  margin-top: 1em;
+  align-items: center;
+  justify-content: center;
+}
+
+.past,
+.future {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  width: 300px;
+  overflow: hidden;
+}
+
+.past {
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    rgba(0, 0, 0, 0.75) 100%
+  );
+  justify-content: right;
+}
+
+.future {
+  mask-image: linear-gradient(to left, transparent 0, rgba(0, 0, 0, 0.75) 100%);
+  justify-content: left;
+}
+
+.past p,
+.future p {
+  flex-shrink: 0;
+}
