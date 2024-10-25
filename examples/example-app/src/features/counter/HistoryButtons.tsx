@@ -4,6 +4,7 @@ import {
   historyCleared,
   decremented,
   incremented,
+  incrementAsync,
   jumped,
   pauseToggled,
   redone,
@@ -12,7 +13,9 @@ import {
   selectCanUndo,
   selectPaused,
   undone,
+  selectIncrementing,
 } from "./counterSlice";
+import "./HistoryButtons.css";
 
 function ButtonGroup({ children }: { children: ReactNode }) {
   return <div className="button-group">{children}</div>;
@@ -23,11 +26,19 @@ export function HistoryButtons() {
   const paused = useAppSelector(selectPaused);
   const canUndo = useAppSelector(selectCanUndo);
   const canRedo = useAppSelector(selectCanRedo);
+  const incrementing = useAppSelector(selectIncrementing);
   return (
     <div className="card">
       <ButtonGroup>
         <button onClick={() => dispatch(incremented(1))}>increment</button>
         <button onClick={() => dispatch(decremented(1))}>decrement</button>
+        <button
+          onClick={() => dispatch(incrementAsync(1))}
+          disabled={incrementing}
+          className={incrementing ? "incrementing" : ""}
+        >
+          increment async
+        </button>
       </ButtonGroup>
       <ButtonGroup>
         <button disabled={!canUndo} onClick={() => dispatch(undone())}>
