@@ -1,5 +1,6 @@
 import { PayloadAction, createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { HistoryState, createHistoryAdapter } from "history-adapter/redux";
+import { wait } from "../../util";
 
 interface CounterState {
   value: number;
@@ -12,7 +13,7 @@ interface RootCounterState extends HistoryState<CounterState> {
 export const incrementAsync = createAsyncThunk(
   "counter/incrementAsync",
   async (amount: number) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await wait(1000);
     return amount;
   },
 );
