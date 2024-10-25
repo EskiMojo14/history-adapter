@@ -15,7 +15,6 @@ import {
   undone,
   selectIncrementing,
 } from "./counterSlice";
-import "./HistoryButtons.css";
 
 function ButtonGroup({ children }: { children: ReactNode }) {
   return <div className="button-group">{children}</div>;
@@ -35,7 +34,7 @@ export function HistoryButtons() {
         <button
           onClick={() => dispatch(incrementAsync(1))}
           disabled={incrementing}
-          className={incrementing ? "incrementing" : ""}
+          className={incrementing && "incrementing"}
         >
           increment async
         </button>

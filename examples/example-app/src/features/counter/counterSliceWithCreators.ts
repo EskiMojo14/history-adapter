@@ -15,7 +15,7 @@ interface CounterState {
 }
 
 interface RootCounterState extends HistoryState<CounterState> {
-  incrementing?: boolean;
+  incrementing?: true;
 }
 
 const counterAdapter = createHistoryAdapter<CounterState>();

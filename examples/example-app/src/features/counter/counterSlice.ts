@@ -6,7 +6,7 @@ interface CounterState {
 }
 
 interface RootCounterState extends HistoryState<CounterState> {
-  incrementing?: boolean;
+  incrementing?: true;
 }
 
 export const incrementAsync = createAsyncThunk(
@@ -21,10 +21,9 @@ const counterAdapter = createHistoryAdapter<CounterState>();
 
 const { selectPresent, ...selectors } = counterAdapter.getSelectors();
 
-const initialState: RootCounterState = {
-  ...counterAdapter.getInitialState({ value: 0 }),
-  incrementing: false,
-};
+const initialState: RootCounterState = counterAdapter.getInitialState({
+  value: 0,
+});
 
 export const counterSlice = createSlice({
   name: "counter",
@@ -55,22 +54,26 @@ export const counterSlice = createSlice({
     selectIncrementing: (state) => state.incrementing,
   },
   extraReducers: (builder) => {
-    builder.addCase(incrementAsync.pending, (state) => {
-      state.incrementing = true;
-    });
-    builder.addCase(
-      incrementAsync.fulfilled,
-      counterAdapter.undoableReducer<
-        ReturnType<typeof incrementAsync.fulfilled> & {
-          meta: { undoable?: never };
-        }
-      >((state, action: ReturnType<typeof incrementAsync.fulfilled>) => {
-        state.value += action.payload;
-      }),
-    );
-    builder.addMatcher(incrementAsync.settled, (state) => {
-      delete state.incrementing;
-    });
+    builder
+      .addCase(incrementAsync.pending, (state) => {
+        state.incrementing = true;
+      })
+      .addCase(
+        incrementAsync.fulfilled,
+        counterAdapter.undoableReducer(
+          (
+            state,
+            action: ReturnType<typeof incrementAsync.fulfilled> & {
+              meta: { undoable?: never };
+            },
+          ) => {
+            state.value += action.payload;
+          },
+        ),
+      )
+      .addMatcher(incrementAsync.settled, (state) => {
+        delete state.incrementing;
+      });
   },
 });
 
