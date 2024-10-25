@@ -40,7 +40,7 @@ export const counterSlice = createAppSlice({
       decremented: createUndoable.reducer<number>((state, action) => {
         state.value -= action.payload;
       }),
-      incrementedAsync: create.asyncThunk<number, number>(
+      incrementAsync: create.asyncThunk<number, number>(
         async (amount) => {
           await wait(1000);
           return amount;
@@ -76,6 +76,7 @@ export const {
   jumped,
   historyCleared,
   reset,
+  incrementAsync,
 } = counterSlice.actions;
 
 export const {
