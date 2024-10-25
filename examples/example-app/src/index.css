@@ -114,12 +114,12 @@ button:focus-visible {
     transparent 0,
     rgba(0, 0, 0, 0.75) 100%
   );
-  justify-content: right;
+  justify-content: flex-end;
 }
 
 .future {
   mask-image: linear-gradient(to left, transparent 0, rgba(0, 0, 0, 0.75) 100%);
-  justify-content: left;
+  justify-content: flex-start;
 }
 
 .past p,

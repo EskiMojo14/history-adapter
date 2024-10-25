@@ -7,7 +7,7 @@ import { Future } from "./features/counter/Future";
 function App() {
   return (
     <>
-      <div className="values">
+      <div className="values" dir="ltr">
         <Past />
         <Count />
         <Future />
