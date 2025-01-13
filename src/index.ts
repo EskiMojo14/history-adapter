@@ -5,8 +5,8 @@ import {
   applyPatches,
   produceWithPatches,
 } from "immer";
-import { ensureCurrent, makeStateOperator } from "./utils";
 import type { MaybeDraft } from "./utils";
+import { ensureCurrent, makeStateOperator } from "./utils";
 
 type ValidRecipeReturnType<State> =
   | State
@@ -31,9 +31,8 @@ export interface BaseHistoryState<Data, HistoryEntry> {
   paused: boolean;
 }
 
-type HistoryEntryType<State> = State extends BaseHistoryState<any, infer T>
-  ? T
-  : never;
+type HistoryEntryType<State> =
+  State extends BaseHistoryState<any, infer T> ? T : never;
 
 export interface BaseHistoryAdapterConfig {
   /**

@@ -1,8 +1,8 @@
 import type { SandpackProps } from "@codesandbox/sandpack-react";
-import { CustomSandpack } from "./CustomSandpack";
-import code from "../lib/code";
-import { usePatches, withPatchTabs } from "./PatchesTabs";
 import { useMemo } from "react";
+import code from "../lib/code";
+import { CustomSandpack } from "./CustomSandpack";
+import { usePatches, withPatchTabs } from "./PatchesTabs";
 
 const { ts, tsx, css } = code;
 

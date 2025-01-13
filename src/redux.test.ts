@@ -4,9 +4,9 @@ import {
   createSelector,
   createSlice,
 } from "@reduxjs/toolkit";
+import { describe, expect, it, beforeEach, vi } from "vitest";
 import type { HistoryState } from "./redux";
 import { createHistoryAdapter } from "./redux";
-import { describe, expect, it, beforeEach, vi } from "vitest";
 
 interface Book {
   title: string;

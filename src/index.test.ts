@@ -1,4 +1,6 @@
+import { nothing, produce } from "immer";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { ensureCurrent } from "./utils";
 import type {
   PatchHistoryState,
   HistoryState,
@@ -13,9 +15,6 @@ import {
   createPatchHistoryAdapter,
   getInitialState,
 } from ".";
-import { nothing, produce } from "immer";
-
-import { ensureCurrent } from "./utils";
 
 interface Book {
   title: string;

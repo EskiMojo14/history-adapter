@@ -1,4 +1,4 @@
-/* eslint-disable import/export */
+/* eslint-disable import-x/export */
 import type {
   Action,
   CaseReducer,
@@ -6,6 +6,7 @@ import type {
   Selector,
 } from "@reduxjs/toolkit";
 import { isFluxStandardAction } from "@reduxjs/toolkit";
+import type { IfMaybeUndefined, MaybeDraft, Overwrite } from "./utils";
 import type {
   HistoryAdapter as Adapter,
   BaseHistoryState,
@@ -20,7 +21,6 @@ import {
   createHistoryAdapter as createAdapter,
   createPatchHistoryAdapter as createPatchAdapter,
 } from ".";
-import type { IfMaybeUndefined, MaybeDraft, Overwrite } from "./utils";
 
 export * from ".";
 
@@ -137,7 +137,7 @@ export interface ReduxMethods<
    */
   jump<S extends MaybeDraft<State>>(
     state: S,
-    // eslint-disable-next-line @typescript-eslint/unified-signatures
+
     n: number,
   ): S;
   /**

@@ -7,6 +7,7 @@ export type IfMaybeUndefined<T, True, False> = [undefined] extends [T]
   ? True
   : False;
 
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export type Compute<T> = { [K in keyof T]: T[K] } & unknown;
 
 export type WithRequiredProp<T, K extends keyof T> = Omit<T, K> &

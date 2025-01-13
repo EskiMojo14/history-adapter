@@ -1,8 +1,8 @@
-import Tabs from "@theme/Tabs";
+import type { SandpackFiles } from "@codesandbox/sandpack-react";
 import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 import type { ComponentType, ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
-import type { SandpackFiles } from "@codesandbox/sandpack-react";
 
 const PatchContext = createContext(false);
 

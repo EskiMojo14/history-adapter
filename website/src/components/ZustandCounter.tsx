@@ -1,7 +1,7 @@
 import type { SandpackFiles } from "@codesandbox/sandpack-react";
+import code from "../lib/code";
 import { CustomSandpack } from "./CustomSandpack";
 import { usePatches, withPatchTabs } from "./PatchesTabs";
-import code from "../lib/code";
 
 const { ts } = code;
 
