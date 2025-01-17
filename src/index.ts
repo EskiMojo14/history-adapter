@@ -54,14 +54,14 @@ export interface BaseHistoryStateFn {
 }
 
 export type GetStateType<
-  Data,
+  Data extends StateFn["dataConstraint"],
   StateFn extends BaseHistoryStateFn,
 > = (StateFn & {
   _rawData: Data;
 })["state"];
 
 export type GetConfigType<
-  Data,
+  Data extends StateFn["dataConstraint"],
   StateFn extends BaseHistoryStateFn,
 > = (StateFn & {
   _rawData: Data;
