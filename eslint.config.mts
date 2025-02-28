@@ -7,7 +7,12 @@ import vitest from "eslint-plugin-vitest";
 
 export default tseslint.config(
   {
-    ignores: ["eslint.config.mts", "dist", ".yarn", "website/build"],
+    ignores: [
+      "eslint.config.mts",
+      "dist",
+      "website/build",
+      "website/.docusaurus",
+    ],
   },
   {
     files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"],
@@ -41,6 +46,7 @@ export default tseslint.config(
         "error",
         { allowNumber: true },
       ],
+      "import-x/no-unresolved": "off",
       "import-x/order": [
         "error",
         {

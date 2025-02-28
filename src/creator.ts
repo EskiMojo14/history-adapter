@@ -1,4 +1,3 @@
-import { preparedReducerCreator, reducerCreator } from "@reduxjs/toolkit";
 import type {
   PayloadActionCreator,
   SliceActionType,
@@ -14,6 +13,7 @@ import type {
   PreparedCaseReducerDefinition,
   PrepareAction,
 } from "@reduxjs/toolkit";
+import { preparedReducerCreator, reducerCreator } from "@reduxjs/toolkit";
 import type { HistoryAdapter, HistoryState } from "./redux";
 import type { WithRequiredProp } from "./utils";
 import type { BaseHistoryState } from ".";

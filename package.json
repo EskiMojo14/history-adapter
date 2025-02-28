@@ -11,10 +11,6 @@
     "patches",
     "state"
   ],
-  "workspaces": [
-    "examples/*",
-    "website"
-  ],
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -36,20 +32,20 @@
   ],
   "scripts": {
     "clean": "rimraf dist",
-    "prepare": "husky install",
+    "prepare": "husky",
     "run-build": "tsup",
-    "build": "yarn clean && yarn type && yarn run-build",
-    "build-only": "yarn clean && yarn run-build",
+    "build": "pnpm clean && pnpm type && pnpm run-build",
+    "build-only": "pnpm clean && pnpm run-build",
     "test": "vitest",
     "lint": "eslint",
     "pre-commit": "lint-staged",
     "attw": "attw",
     "publint": "publint",
     "type": "tsc",
-    "prepack": "yarn build && yarn publint",
+    "prepack": "pnpm build && pnpm publint",
     "size": "size-limit",
-    "example": "yarn workspace example-app dev",
-    "website": "yarn workspace website start"
+    "example": "pnpm workspace example-app dev",
+    "website": "pnpm workspace website start"
   },
   "repository": "https://github.com/EskiMojo14/history-adapter.git",
   "author": "EskiMojo14 <ben.j.durrant@gmail.com>",
@@ -110,5 +106,5 @@
       "optional": true
     }
   },
-  "packageManager": "yarn@4.6.0"
+  "packageManager": "pnpm@10.5.2+sha256.79a98daa90248b50815e31460790f118c56fe099113370826caa0153be6daba5"
 }
