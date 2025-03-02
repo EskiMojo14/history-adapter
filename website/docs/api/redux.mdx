@@ -71,6 +71,14 @@ A wrapper around the `undoable` method that receives a case reducer and returns 
 
 Instead of providing an `isUndoable` callback, the reducer checks `action.meta.undoable` to determine if the action should be tracked.
 
+:::info
+
+In order to set `action.meta.undoable`, Redux Toolkit requires use of [prepare callbacks](https://redux-toolkit.js.org/api/createSlice#customizing-generated-action-creators).
+
+[`adapter.withPayload`](#withpayload) and [`adapter.withoutPayload`](#withoutpayload) are provided for common cases.
+
+:::
+
 <ConsoleSandbox
   redux
   imports={{ "@reduxjs/toolkit": "{ createSlice, PayloadAction }" }}
