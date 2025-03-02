@@ -1,4 +1,4 @@
-"use strict";(self.webpackChunkwebsite=self.webpackChunkwebsite||[]).push([[199],{880:(e,t,o)=>{o.r(t),o.d(t,{assets:()=>b,contentTitle:()=>S,default:()=>C,frontMatter:()=>x,metadata:()=>f,toc:()=>y});var r=o(2540),n=o(3023),s=o(4775),i=o(7112),a=o(4572);const{ts:c}=a.A,d={"/counterSlice.ts":c`
+"use strict";(self.webpackChunkwebsite=self.webpackChunkwebsite||[]).push([[199],{3053:(e,t,o)=>{o.r(t),o.d(t,{assets:()=>b,contentTitle:()=>f,default:()=>C,frontMatter:()=>S,metadata:()=>r,toc:()=>y});const r=JSON.parse('{"id":"setup","title":"Setup","description":"A \\"history adapter\\" for managing undoable (and redoable) state changes with immer, which pairs well with state management solutions like Redux and Zustand.","source":"@site/docs/setup.mdx","sourceDirName":".","slug":"/","permalink":"/history-adapter/","draft":false,"unlisted":false,"editUrl":"https://github.com/EskiMojo14/history-adapter/tree/main/website/docs/setup.mdx","tags":[],"version":"current","sidebarPosition":1,"frontMatter":{"sidebar_position":1,"slug":"/"},"sidebar":"docs","next":{"title":"API","permalink":"/history-adapter/category/api"}}');var n=o(6106),s=o(6590),i=o(9058),a=o(8357),c=o(4830);const{ts:d}=i.A,l={"/counterSlice.ts":d`
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { createHistoryAdapter } from "history-adapter/redux";
 
@@ -6,11 +6,11 @@ interface CounterState {
   value: number;
 }
 
-const counterAdapter = createHistoryAdapter({ limit: 5 });
+const counterAdapter = createHistoryAdapter<CounterState>({ limit: 5 });
 
 const { selectPresent, ...historySelectors } = counterAdapter.getSelectors();
 
-const initialState = counterAdapter.getInitialState<CounterState>({ value: 0 });
+const initialState = counterAdapter.getInitialState({ value: 0 });
 
 export const counterSlice = createSlice({
   name: "counter",
@@ -46,7 +46,7 @@ export const {
 
 export const { selectCount, selectCanUndo, selectCanRedo, selectPaused } =
   counterSlice.selectors;
-`,"/store.ts":{hidden:!0,code:c`
+`,"/store.ts":{hidden:!0,code:d`
 import { configureStore, combineSlices } from '@reduxjs/toolkit';
 import { counterSlice } from './counterSlice';
 
@@ -57,13 +57,13 @@ export const store = configureStore({
 export type AppStore = typeof store;
 export type RootState = ReturnType<AppStore['getState']>;
 export type AppDispatch = AppStore['dispatch'];
-`},"/hooks.ts":{hidden:!0,code:c`
+`},"/hooks.ts":{hidden:!0,code:d`
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from './store';
 
 export const useAppSelector = useSelector.withTypes<RootState>();
 export const useAppDispatch = useDispatch.withTypes<AppDispatch>();
-`},"/Counter.tsx":c`
+`},"/Counter.tsx":d`
 import { useAppSelector, useAppDispatch } from "./hooks";
 import {
   incrementedBy,
@@ -103,7 +103,7 @@ export function Counter() {
     </div>
   );
 }
-`,"/App.tsx":{hidden:!0,code:c`
+`,"/App.tsx":{hidden:!0,code:d`
 import { Counter } from "./Counter";
 import { useAppSelector } from "./hooks";
 import { counterSlice } from "./counterSlice";
@@ -121,7 +121,7 @@ export default function App() {
     </div>
   );
 }
-`},"/index.tsx":{hidden:!0,code:c`
+`},"/index.tsx":{hidden:!0,code:d`
 import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
@@ -138,7 +138,7 @@ root.render(
     </Provider>
   </StrictMode>
 );
-`}},u=(0,i.n)((function(){const e=(0,i.m)(d,"/counterSlice.ts");return(0,r.jsx)(s.l,{template:"react-ts",customSetup:{dependencies:{"@reduxjs/toolkit":"latest","react-redux":"latest","react-highlight":"latest"}},files:e,options:{activeFile:"/counterSlice.ts",externalResources:["https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css"],editorHeight:"400px",editorWidthPercentage:70}})})),{ts:l}=a.A,p={"/counterStore.ts":l`
+`}},u=(0,c.n)((function(){const e=(0,c.m)(l,"/counterSlice.ts");return(0,n.jsx)(a.l,{template:"react-ts",customSetup:{dependencies:{"@reduxjs/toolkit":"latest","react-redux":"latest","react-highlight":"latest"}},files:e,options:{activeFile:"/counterSlice.ts",externalResources:["https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css"],editorHeight:"400px",editorWidthPercentage:70}})})),{ts:p}=i.A,h={"/counterStore.ts":p`
 import { create } from "zustand";
 import { createHistoryAdapter, HistoryState } from "history-adapter";
 
@@ -173,7 +173,7 @@ export const useCounterStore = create<RootState>()((set) => ({
   clearHistory: () => set(counterAdapter.clearHistory),
   reset: () => set(initialState),
 }));
-`,"/Counter.tsx":l`
+`,"/Counter.tsx":p`
 import { useCounterStore } from "./counterStore";
 
 export function Counter() {
@@ -203,7 +203,7 @@ export function Counter() {
     </div>
   );
 }
-`,"/App.tsx":{hidden:!0,code:l`
+`,"/App.tsx":{hidden:!0,code:p`
 import { Counter } from "./Counter";
 import { useCounterStore } from "./counterStore";
 import Highlight from "react-highlight";
@@ -220,4 +220,4 @@ export default function App() {
     </div>
   );
 }
-`}},h=(0,i.n)((function(){const e=(0,i.m)(p,"/counterStore.ts");return(0,r.jsx)(s.l,{template:"react-ts",customSetup:{dependencies:{zustand:"latest","react-highlight":"latest"}},files:e,options:{activeFile:"/counterStore.ts",externalResources:["https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css"],editorHeight:"400px",editorWidthPercentage:70}})}));var m=o(8296),g=o(2491);const x={sidebar_position:1,slug:"/"},S="Setup",f={id:"setup",title:"Setup",description:'A "history adapter" for managing undoable (and redoable) state changes with immer, which pairs well with state management solutions like Redux and Zustand.',source:"@site/docs/setup.mdx",sourceDirName:".",slug:"/",permalink:"/history-adapter/",draft:!1,unlisted:!1,editUrl:"https://github.com/EskiMojo14/history-adapter/tree/main/website/docs/setup.mdx",tags:[],version:"current",sidebarPosition:1,frontMatter:{sidebar_position:1,slug:"/"},sidebar:"docs",next:{title:"API",permalink:"/history-adapter/category/api"}},b={},y=[{value:"Sandboxes",id:"sandboxes",level:2},{value:"Redux Toolkit",id:"redux-toolkit",level:3},{value:"Zustand",id:"zustand",level:3},{value:"Installation",id:"installation",level:2},{value:"Usage",id:"usage",level:2},{value:"Configuration",id:"configuration",level:3}];function j(e){const t={a:"a",code:"code",h1:"h1",h2:"h2",h3:"h3",li:"li",p:"p",pre:"pre",ul:"ul",...(0,n.R)(),...e.components};return(0,r.jsxs)(r.Fragment,{children:[(0,r.jsx)(t.h1,{id:"setup",children:"Setup"}),"\n",(0,r.jsxs)(t.p,{children:['A "history adapter" for managing undoable (and redoable) state changes with ',(0,r.jsx)(t.a,{href:"https://immerjs.github.io/immer/",children:"immer"}),", which pairs well with state management solutions like ",(0,r.jsx)(t.a,{href:"https://redux.js.org/",children:"Redux"})," and ",(0,r.jsx)(t.a,{href:"https://docs.pmnd.rs/zustand/getting-started/introduction",children:"Zustand"}),"."]}),"\n",(0,r.jsx)(t.p,{children:"Also includes a Redux specific version, with additional utilities for use with Redux Toolkit."}),"\n",(0,r.jsx)(t.h2,{id:"sandboxes",children:"Sandboxes"}),"\n","\n",(0,r.jsx)(t.h3,{id:"redux-toolkit",children:"Redux Toolkit"}),"\n",(0,r.jsx)(u,{}),"\n",(0,r.jsx)(t.h3,{id:"zustand",children:"Zustand"}),"\n",(0,r.jsx)(h,{}),"\n",(0,r.jsx)(t.h2,{id:"installation",children:"Installation"}),"\n",(0,r.jsx)(t.p,{children:"Install with your package manager of choice:"}),"\n","\n",(0,r.jsxs)(m.A,{groupId:"package-manager",children:[(0,r.jsx)(g.A,{value:"npm",default:!0,children:(0,r.jsx)(t.pre,{children:(0,r.jsx)(t.code,{className:"language-bash",children:"\nnpm install history-adapter\n\n"})})}),(0,r.jsx)(g.A,{value:"yarn",children:(0,r.jsx)(t.pre,{children:(0,r.jsx)(t.code,{className:"language-bash",children:"\nyarn add history-adapter\n\n"})})}),(0,r.jsx)(g.A,{value:"bun",children:(0,r.jsx)(t.pre,{children:(0,r.jsx)(t.code,{className:"language-bash",children:"\nbun add history-adapter\n\n"})})})]}),"\n",(0,r.jsx)(t.h2,{id:"usage",children:"Usage"}),"\n",(0,r.jsxs)(t.p,{children:["The main export of ",(0,r.jsx)(t.code,{children:"history-adapter"})," is the ",(0,r.jsx)(t.code,{children:"createHistoryAdapter"})," function. This function takes an optional configuration object and returns an object with useful methods for managing undoable state changes."]}),"\n",(0,r.jsxs)(t.p,{children:["For a list of all available methods, see the ",(0,r.jsx)(t.a,{href:"/category/api",children:"API reference"}),"."]}),"\n",(0,r.jsxs)(t.p,{children:["By default, history entries will be a copy of state before/after each change. However, you can use ",(0,r.jsx)(t.code,{children:"createPatchHistoryAdapter"})," to store JSON Patches instead."]}),"\n",(0,r.jsx)(t.h3,{id:"configuration",children:"Configuration"}),"\n",(0,r.jsxs)(t.p,{children:["The ",(0,r.jsx)(t.code,{children:"createHistoryAdapter"})," function accepts an optional configuration object with some of the following properties:"]}),"\n",(0,r.jsxs)(t.ul,{children:["\n",(0,r.jsxs)(t.li,{children:[(0,r.jsx)(t.code,{children:"limit"})," (number): The maximum number of history entries to store.","\n",(0,r.jsxs)(t.ul,{children:["\n",(0,r.jsx)(t.li,{children:"If not provided, all history entries will be stored."}),"\n"]}),"\n"]}),"\n"]})]})}function C(e={}){const{wrapper:t}={...(0,n.R)(),...e.components};return t?(0,r.jsx)(t,{...e,children:(0,r.jsx)(j,{...e})}):j(e)}}}]);
+`}},m=(0,c.n)((function(){const e=(0,c.m)(h,"/counterStore.ts");return(0,n.jsx)(a.l,{template:"react-ts",customSetup:{dependencies:{zustand:"latest","react-highlight":"latest"}},files:e,options:{activeFile:"/counterStore.ts",externalResources:["https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css"],editorHeight:"400px",editorWidthPercentage:70}})}));var g=o(1992),x=o(4019);const S={sidebar_position:1,slug:"/"},f="Setup",b={},y=[{value:"Sandboxes",id:"sandboxes",level:2},{value:"Redux Toolkit",id:"redux-toolkit",level:3},{value:"Zustand",id:"zustand",level:3},{value:"Installation",id:"installation",level:2},{value:"Usage",id:"usage",level:2},{value:"Configuration",id:"configuration",level:3}];function j(e){const t={a:"a",code:"code",h1:"h1",h2:"h2",h3:"h3",header:"header",li:"li",p:"p",pre:"pre",ul:"ul",...(0,s.R)(),...e.components};return(0,n.jsxs)(n.Fragment,{children:[(0,n.jsx)(t.header,{children:(0,n.jsx)(t.h1,{id:"setup",children:"Setup"})}),"\n",(0,n.jsxs)(t.p,{children:['A "history adapter" for managing undoable (and redoable) state changes with ',(0,n.jsx)(t.a,{href:"https://immerjs.github.io/immer/",children:"immer"}),", which pairs well with state management solutions like ",(0,n.jsx)(t.a,{href:"https://redux.js.org/",children:"Redux"})," and ",(0,n.jsx)(t.a,{href:"https://docs.pmnd.rs/zustand/getting-started/introduction",children:"Zustand"}),"."]}),"\n",(0,n.jsx)(t.p,{children:"Also includes a Redux specific version, with additional utilities for use with Redux Toolkit."}),"\n",(0,n.jsx)(t.h2,{id:"sandboxes",children:"Sandboxes"}),"\n","\n",(0,n.jsx)(t.h3,{id:"redux-toolkit",children:"Redux Toolkit"}),"\n",(0,n.jsx)(u,{}),"\n",(0,n.jsx)(t.h3,{id:"zustand",children:"Zustand"}),"\n",(0,n.jsx)(m,{}),"\n",(0,n.jsx)(t.h2,{id:"installation",children:"Installation"}),"\n",(0,n.jsx)(t.p,{children:"Install with your package manager of choice:"}),"\n","\n",(0,n.jsxs)(g.A,{groupId:"package-manager",children:[(0,n.jsx)(x.A,{value:"npm",default:!0,children:(0,n.jsx)(t.pre,{children:(0,n.jsx)(t.code,{className:"language-bash",children:"\r\nnpm install history-adapter\r\n\n"})})}),(0,n.jsx)(x.A,{value:"yarn",children:(0,n.jsx)(t.pre,{children:(0,n.jsx)(t.code,{className:"language-bash",children:"\r\nyarn add history-adapter\r\n\n"})})}),(0,n.jsx)(x.A,{value:"pnpm",children:(0,n.jsx)(t.pre,{children:(0,n.jsx)(t.code,{className:"language-bash",children:"\r\npnpm add history-adapter\r\n\n"})})}),(0,n.jsx)(x.A,{value:"bun",children:(0,n.jsx)(t.pre,{children:(0,n.jsx)(t.code,{className:"language-bash",children:"\r\nbun add history-adapter\r\n\n"})})})]}),"\n",(0,n.jsx)(t.h2,{id:"usage",children:"Usage"}),"\n",(0,n.jsxs)(t.p,{children:["The main export of ",(0,n.jsx)(t.code,{children:"history-adapter"})," is the ",(0,n.jsx)(t.code,{children:"createHistoryAdapter"})," function. This function takes an optional configuration object and returns an object with useful methods for managing undoable state changes."]}),"\n",(0,n.jsxs)(t.p,{children:["For a list of all available methods, see the ",(0,n.jsx)(t.a,{href:"/category/api",children:"API reference"}),"."]}),"\n",(0,n.jsxs)(t.p,{children:["By default, history entries will be a copy of state before/after each change. However, you can use ",(0,n.jsx)(t.code,{children:"createPatchHistoryAdapter"})," to store JSON Patches instead."]}),"\n",(0,n.jsx)(t.h3,{id:"configuration",children:"Configuration"}),"\n",(0,n.jsxs)(t.p,{children:["The ",(0,n.jsx)(t.code,{children:"createHistoryAdapter"})," function accepts an optional configuration object with some of the following properties:"]}),"\n",(0,n.jsxs)(t.ul,{children:["\n",(0,n.jsxs)(t.li,{children:[(0,n.jsx)(t.code,{children:"limit"})," (number): The maximum number of history entries to store.","\n",(0,n.jsxs)(t.ul,{children:["\n",(0,n.jsx)(t.li,{children:"If not provided, all history entries will be stored."}),"\n"]}),"\n"]}),"\n"]})]})}function C(e={}){const{wrapper:t}={...(0,s.R)(),...e.components};return t?(0,n.jsx)(t,{...e,children:(0,n.jsx)(j,{...e})}):j(e)}}}]);
