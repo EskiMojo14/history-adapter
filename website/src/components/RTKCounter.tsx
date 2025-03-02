@@ -14,11 +14,11 @@ interface CounterState {
   value: number;
 }
 
-const counterAdapter = createHistoryAdapter({ limit: 5 });
+const counterAdapter = createHistoryAdapter<CounterState>({ limit: 5 });
 
 const { selectPresent, ...historySelectors } = counterAdapter.getSelectors();
 
-const initialState = counterAdapter.getInitialState<CounterState>({ value: 0 });
+const initialState = counterAdapter.getInitialState({ value: 0 });
 
 export const counterSlice = createSlice({
   name: "counter",
