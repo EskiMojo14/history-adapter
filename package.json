@@ -44,8 +44,8 @@
     "type": "tsc",
     "prepack": "pnpm build && pnpm publint",
     "size": "size-limit",
-    "example": "pnpm workspace example-app dev",
-    "website": "pnpm workspace website start"
+    "example": "pnpm --filter example-app dev",
+    "website": "pnpm --filter website start"
   },
   "repository": "https://github.com/EskiMojo14/history-adapter.git",
   "author": "EskiMojo14 <ben.j.durrant@gmail.com>",
