@@ -17,8 +17,6 @@ export type Overwrite<T, U> = Compute<Omit<T, keyof U> & U>;
 
 export type MaybeDraft<T> = T | Draft<T>;
 
-const isDraftTyped = isDraft as <T>(value: MaybeDraft<T>) => value is Draft<T>;
-
 export const ensureCurrent = <T>(value: T) =>
   isDraft(value) ? current(value) : value;
 
@@ -29,7 +27,7 @@ export function makeStateOperator<State, Args extends Array<any> = []>(
     state: S,
     ...args: Args
   ): S {
-    if (isDraftTyped(state)) {
+    if (isDraft(state)) {
       mutator(state as Draft<State>, ...args);
       return state;
     } else {
