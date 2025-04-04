@@ -24,16 +24,6 @@ import {
 
 export * from ".";
 
-export interface GetSelectorsOptions {
-  /**
-   * @deprecated
-   * No longer used, as no memoisation is needed.
-   * This option will be removed in the next major version.
-   */
-  // TODO: Remove in next major version
-  createSelector?: unknown;
-}
-
 export interface HistorySelectors<Data, State = HistoryState<Data>> {
   /**
    * Returns true if there are any patches in the past
@@ -71,8 +61,6 @@ function globaliseSelectors<RootState, State, Selected>(
   return result as never;
 }
 
-let hasWarned = false;
-
 function makeSelectorFactory<
   Data,
   State extends BaseHistoryState<unknown, unknown>,
@@ -80,20 +68,10 @@ function makeSelectorFactory<
   function getSelectors(): HistorySelectors<Data, State>;
   function getSelectors<RootState>(
     selectState: (rootState: RootState) => State,
-    options?: GetSelectorsOptions,
   ): HistorySelectors<Data, RootState>;
   function getSelectors<RootState>(
     selectState?: (rootState: RootState) => State,
-    { createSelector }: GetSelectorsOptions = {},
   ): HistorySelectors<Data, any> {
-    if (createSelector && !hasWarned) {
-      console.error(
-        "The createSelector option is no longer supported, as no memoisation is needed." +
-          "\n" +
-          "This option will be removed in the next major version.",
-      );
-      hasWarned = true;
-    }
     const localisedSelectors = {
       selectCanUndo: (state) => state.past.length > 0,
       selectCanRedo: (state) => state.future.length > 0,
@@ -178,7 +156,6 @@ export interface ReduxMethods<
   getSelectors(): HistorySelectors<Data, State>;
   getSelectors<RootState>(
     selectState: (rootState: RootState) => State,
-    options?: GetSelectorsOptions,
   ): HistorySelectors<Data, RootState>;
 }
 
