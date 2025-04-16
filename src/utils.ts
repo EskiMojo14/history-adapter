@@ -17,7 +17,7 @@ export type Overwrite<T, U> = Compute<Omit<T, keyof U> & U>;
 
 export type MaybeDraft<T> = T | Draft<T>;
 
-export const ensureCurrent = <T>(value: T) =>
+export const ensureCurrent = <T>(value: T): T =>
   isDraft(value) ? current(value) : value;
 
 export function makeStateOperator<State, Args extends Array<any> = []>(

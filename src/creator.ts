@@ -18,7 +18,7 @@ import type { HistoryAdapter, HistoryState } from "./redux";
 import type { WithRequiredProp } from "./utils";
 import type { BaseHistoryState } from ".";
 
-const historyCreatorsType = Symbol("historyCreators");
+const historyCreatorsType: unique symbol = Symbol("historyCreators");
 
 interface HistoryReducers<State> {
   undone: CaseReducerDefinition<State, PayloadAction>;

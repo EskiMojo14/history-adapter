@@ -318,7 +318,7 @@ export const applyRecipe = <Data, Args extends Array<any>>(
   state: MaybeDraft<BaseHistoryState<Data, unknown>>,
   recipe: (draft: Draft<Data>, ...args: Args) => ValidRecipeReturnType<Data>,
   ...args: Args
-) => {
+): void => {
   const result = recipe(state.present as Draft<Data>, ...args);
   if (result === nothing) {
     state.present = undefined as never;
@@ -327,7 +327,7 @@ export const applyRecipe = <Data, Args extends Array<any>>(
   }
 };
 
-export const createHistoryAdapter =
+export const createHistoryAdapter: CreateHistoryAdapter<HistoryStateFn> =
   /* @__PURE__ */ buildCreateHistoryAdapter<HistoryStateFn>({
     applyEntry(state, historyEntry) {
       const stateBefore = state.present;
@@ -357,7 +357,7 @@ export interface PatchHistoryStateFn extends BaseHistoryStateFn {
   state: PatchHistoryState<this["data"]>;
 }
 
-export const createPatchHistoryAdapter =
+export const createPatchHistoryAdapter: CreateHistoryAdapter<PatchHistoryStateFn> =
   /* @__PURE__ */ buildCreateHistoryAdapter<PatchHistoryStateFn>({
     onCreate() {
       enablePatches();
