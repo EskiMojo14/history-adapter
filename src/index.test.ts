@@ -654,7 +654,7 @@ describe("createPatchHistoryAdapter", () => {
 });
 
 describe("buildCreateHistoryAdapter", () => {
-  const onCreate = vi.fn<[CustomConfig?], void>();
+  const onCreate = vi.fn<(config?: CustomConfig) => void>();
   beforeEach(() => {
     onCreate.mockClear();
   });
