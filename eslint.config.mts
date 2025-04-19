@@ -2,10 +2,10 @@ import pluginJs from "@eslint/js";
 import tsParser from "@typescript-eslint/parser";
 import eslintPluginImportX from "eslint-plugin-import-x";
 import globals from "globals";
-import tseslint from "typescript-eslint";
+import tseslint, { ConfigArray } from "typescript-eslint";
 import vitest from "eslint-plugin-vitest";
 
-export default tseslint.config(
+const config: ConfigArray = tseslint.config(
   {
     ignores: [
       "eslint.config.mts",
@@ -104,3 +104,5 @@ export default tseslint.config(
     },
   },
 );
+
+export default config;

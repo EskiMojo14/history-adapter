@@ -1,7 +1,9 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig, type UserConfig as ViteUserConfig } from "vitest/config";
 
-export default defineConfig({
+const config: ViteUserConfig = defineConfig({
   test: {
     setupFiles: ["./test-setup"],
   },
 });
+
+export default config;

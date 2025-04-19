@@ -16,6 +16,8 @@ import type {
   CreateHistoryAdapter as CreateAdapter,
   GetConfigType,
   GetStateType,
+  HistoryStateFn,
+  PatchHistoryStateFn,
 } from ".";
 import {
   createHistoryAdapter as createAdapter,
@@ -112,7 +114,9 @@ export interface UndoableMeta {
   undoable?: boolean;
 }
 
-export function getUndoableMeta(action: { meta?: UndoableMeta }) {
+export function getUndoableMeta(action: {
+  meta?: UndoableMeta;
+}): boolean | undefined {
   return action.meta?.undoable;
 }
 
@@ -241,7 +245,8 @@ export function withRedux<StateFn extends BaseHistoryStateFn>(
   };
 }
 
-export const createHistoryAdapter = /* @__PURE__ */ withRedux(createAdapter);
+export const createHistoryAdapter: CreateHistoryAdapter<HistoryStateFn> =
+  /* @__PURE__ */ withRedux(createAdapter);
 
-export const createPatchHistoryAdapter =
+export const createPatchHistoryAdapter: CreateHistoryAdapter<PatchHistoryStateFn> =
   /* @__PURE__ */ withRedux(createPatchAdapter);

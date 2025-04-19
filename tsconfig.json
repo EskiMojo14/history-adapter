@@ -4,7 +4,6 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "target": "ES2020",
-    "allowJs": true,
     "resolveJsonModule": true,
     "moduleDetection": "force",
     "strict": true,
@@ -12,12 +11,9 @@
     "moduleResolution": "Bundler",
     "module": "ESNext",
     "noEmit": true,
-    "lib": [
-      "ES2022"
-    ]
+    "declaration": true,
+    "isolatedDeclarations": true,
+    "lib": ["ES2022"]
   },
-  "exclude": [
-    "examples/**/*",
-    "website"
-  ]
+  "exclude": ["examples/**/*", "website"]
 }
