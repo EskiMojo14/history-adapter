@@ -5,10 +5,8 @@ import type {
   CaseReducerDefinition,
   PayloadAction,
   ReducerCreator,
-  ReducerCreatorEntry,
   ReducerCreators,
   ReducerDefinition,
-  CreatorCaseReducers,
   Draft,
   PreparedCaseReducerDefinition,
   PrepareAction,
@@ -64,56 +62,57 @@ interface HistoryCreators<Data, State> {
 }
 
 declare module "@reduxjs/toolkit" {
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   export interface SliceReducerCreators<
     State,
-    CaseReducers extends CreatorCaseReducers<State>,
-    Name extends string,
+    SliceName extends string,
     ReducerPath extends string,
   > {
-    [historyCreatorsType]: ReducerCreatorEntry<
-      State extends BaseHistoryState<infer Data, any>
-        ? {
-            (
-              adapter: HistoryAdapter<Data, State>,
-              config?: HistoryCreatorConfig<State, Data, State>,
-            ): HistoryCreators<Data, State>;
-            <Data, HState extends BaseHistoryState<Data, unknown>>(
-              adapter: HistoryAdapter<Data, HState>,
-              config: WithRequiredProp<
-                HistoryCreatorConfig<State, Data, HState>,
-                "selectHistoryState"
-              >,
-            ): HistoryCreators<Data, State>;
-          }
-        : <Data, HState extends BaseHistoryState<Data, unknown>>(
+    [historyCreatorsType]: State extends BaseHistoryState<infer Data, any>
+      ? {
+          (
+            adapter: HistoryAdapter<Data, State>,
+            config?: HistoryCreatorConfig<State, Data, State>,
+          ): HistoryCreators<Data, State>;
+          <Data, HState extends BaseHistoryState<Data, unknown>>(
             adapter: HistoryAdapter<Data, HState>,
             config: WithRequiredProp<
               HistoryCreatorConfig<State, Data, HState>,
               "selectHistoryState"
             >,
-          ) => HistoryCreators<Data, State>,
-      {
-        actions: {
-          [ReducerName in keyof CaseReducers]: CaseReducers[ReducerName] extends ReducerDefinition<
-            typeof historyCreatorsType
-          >
-            ? CaseReducers[ReducerName] extends { type: "reset" }
-              ? PayloadActionCreator<void, SliceActionType<Name, ReducerName>>
-              : never
-            : never;
-        };
-        caseReducers: {
-          [ReducerName in keyof CaseReducers]: CaseReducers[ReducerName] extends ReducerDefinition<
-            typeof historyCreatorsType
-          >
-            ? CaseReducers[ReducerName] extends { type: "reset" }
-              ? CaseReducer<State, PayloadAction>
-              : never
-            : never;
-        };
-      }
-    >;
+          ): HistoryCreators<Data, State>;
+        }
+      : <Data, HState extends BaseHistoryState<Data, unknown>>(
+          adapter: HistoryAdapter<Data, HState>,
+          config: WithRequiredProp<
+            HistoryCreatorConfig<State, Data, HState>,
+            "selectHistoryState"
+          >,
+        ) => HistoryCreators<Data, State>;
   }
+  export interface SliceReducerCreatorsExposes<
+    State,
+    SliceName extends string,
+    ReducerPath extends string,
+    ReducerName extends PropertyKey,
+    Definition extends ReducerDefinition,
+  > {
+    [historyCreatorsType]: {
+      action: Definition extends ReducerDefinition<typeof historyCreatorsType>
+        ? Definition extends { type: "reset" }
+          ? PayloadActionCreator<void, SliceActionType<SliceName, ReducerName>>
+          : never
+        : never;
+      caseReducer: Definition extends ReducerDefinition<
+        typeof historyCreatorsType
+      >
+        ? Definition extends { type: "reset" }
+          ? CaseReducer<State, PayloadAction>
+          : never
+        : never;
+    };
+  }
+  /* eslint-enable @typescript-eslint/no-unused-vars */
 }
 
 const makeScopedReducerCreator =
