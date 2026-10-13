@@ -138,7 +138,6 @@ export const historyCreatorsCreator: ReducerCreator<typeof historyCreatorsType> 
       },
       createHistoryMethods() {
         const createReducer = makeScopedReducerCreator(
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
           config?.selectHistoryState ?? ((state) => state as never),
         );
         return {
@@ -160,7 +159,6 @@ export const historyCreatorsCreator: ReducerCreator<typeof historyCreatorsType> 
     };
   },
   handle(details, def, context) {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (def.type !== "reset") throw new Error(`Unrecognised reducer type ${String(def.type)}`);
     reducerCreator.handle(
       details,

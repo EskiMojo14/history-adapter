@@ -11,6 +11,7 @@ const config: ViteUserConfig = defineConfig({
     options: {
       typeAware: true,
       typeCheck: true,
+      reportUnusedDisableDirectives: "warn",
     },
     env: {
       browser: true,

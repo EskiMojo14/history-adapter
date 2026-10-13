@@ -188,7 +188,6 @@ describe("createReduxHistoryAdapter", () => {
     it("logs a error when a createSelector function is passed", () => {
       const consoleSpy = vi.spyOn(console, "error");
       booksHistoryAdapter.getSelectors(undefined as never, {
-        // oxlint-disable-next-line @typescript-eslint/no-empty-function, typescript/no-deprecated
         createSelector: () => {},
       });
       expect(consoleSpy).toHaveBeenCalled();
