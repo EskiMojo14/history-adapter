@@ -140,12 +140,12 @@ export function getPrint(
           code: css`
             @import "highlight.js/styles/github.css";
             code {
-              font-family: "Fira Code", monospace;
+              font-family: "Paper Mono", monospace;
               font-size: 90%;
             }
             th {
               text-align: left;
-              font-family: "Lato", sans-serif;
+              font-family: "Paper Mono", monospace;
             }
           `,
         },
@@ -204,10 +204,6 @@ ${code}
         editorWidthPercentage: redux ? 55 : 65,
         activeFile: "/index.ts",
         ...props.options,
-        externalResources: [
-          "https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap",
-          ...(props.options?.externalResources ?? []),
-        ],
       }}
     />
   );
