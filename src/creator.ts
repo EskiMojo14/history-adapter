@@ -94,7 +94,9 @@ declare module "@reduxjs/toolkit" {
           ) => HistoryCreators<Data, State>,
       {
         actions: {
-          [ReducerName in keyof CaseReducers]: CaseReducers[ReducerName] extends ReducerDefinition<
+          [
+            ReducerName in keyof CaseReducers
+          ]: CaseReducers[ReducerName] extends ReducerDefinition<
             typeof historyCreatorsType
           >
             ? CaseReducers[ReducerName] extends { type: "reset" }
@@ -103,7 +105,9 @@ declare module "@reduxjs/toolkit" {
             : never;
         };
         caseReducers: {
-          [ReducerName in keyof CaseReducers]: CaseReducers[ReducerName] extends ReducerDefinition<
+          [
+            ReducerName in keyof CaseReducers
+          ]: CaseReducers[ReducerName] extends ReducerDefinition<
             typeof historyCreatorsType
           >
             ? CaseReducers[ReducerName] extends { type: "reset" }

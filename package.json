@@ -32,67 +32,40 @@
   ],
   "scripts": {
     "clean": "rimraf dist",
-    "prepare": "husky",
-    "run-build": "tsdown",
-    "build": "pnpm clean && pnpm type && pnpm run-build",
-    "build-only": "pnpm clean && pnpm run-build",
-    "test": "vitest",
-    "lint": "eslint",
-    "pre-commit": "lint-staged",
+    "prepare": "vp config",
+    "run-build": "vp pack",
+    "build": "vpr clean && vpr type && vpr run-build",
+    "build-only": "vpr clean && vpr run-build",
+    "test": "vp test",
+    "lint": "vp lint",
     "attw": "attw",
     "publint": "publint",
     "type": "tsc",
-    "prepack": "pnpm build && pnpm publint",
+    "prepack": "vpr build && vpr publint",
     "size": "size-limit",
-    "example": "pnpm --filter example-app dev",
-    "website": "pnpm --filter website start"
+    "example": "vpr --filter example-app dev",
+    "website": "vpr --filter website start"
   },
   "repository": "https://github.com/EskiMojo14/history-adapter.git",
   "author": "EskiMojo14 <ben.j.durrant@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.17.4",
-    "@eslint/js": "^9.25.0",
     "@reduxjs/toolkit": "https://pkg.csb.dev/reduxjs/redux-toolkit/commit/d1059244/@reduxjs/toolkit",
     "@size-limit/preset-small-lib": "^11.2.0",
     "@types/node": "^22.14.1",
-    "@typescript-eslint/parser": "^8.30.1",
-    "eslint": "^9.25.0",
     "eslint-import-resolver-typescript": "^4.3.2",
-    "eslint-plugin-import-x": "^4.10.5",
-    "eslint-plugin-vitest": "^0.5.4",
     "globals": "^16.0.0",
-    "husky": "^9.1.7",
     "jiti": "^2.4.2",
-    "lint-staged": "^15.5.1",
     "mix-n-matchers": "^1.8.1",
-    "prettier": "^3.5.3",
     "publint": "^0.3.12",
     "rimraf": "^6.0.1",
     "size-limit": "^11.2.0",
-    "tsdown": "^0.9.0",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.30.1",
-    "vitest": "^3.1.1"
+    "vite-plus": "catalog:"
   },
   "engines": {
     "node": "^14.15.0 || ^16.10.0 || >=18.0.0"
-  },
-  "lint-staged": {
-    "*.{ts,md}": "prettier --write"
-  },
-  "prettier": {},
-  "tsdown": {
-    "entry": [
-      "src/index.ts",
-      "src/redux.ts"
-    ],
-    "sourcemap": true,
-    "format": [
-      "esm",
-      "cjs"
-    ],
-    "dts": true
   },
   "dependencies": {
     "immer": "^10.1.1"

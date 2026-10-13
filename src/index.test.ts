@@ -1,5 +1,5 @@
 import { nothing, produce } from "immer";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
 import { ensureCurrent } from "./utils";
 import type {
   PatchHistoryState,
@@ -31,12 +31,12 @@ const book2: Book = {
 };
 
 describe("createHistoryAdapter", () => {
-  const booksHistoryAdapter = createHistoryAdapter<Array<Book>>();
+  const booksHistoryAdapter = createHistoryAdapter<Book[]>();
 
   describe("getInitialState", () => {
     it("returns an initial state", () => {
       expect(booksHistoryAdapter.getInitialState([])).toEqual<
-        HistoryState<Array<Book>>
+        HistoryState<Book[]>
       >({
         past: [],
         present: [],
@@ -53,7 +53,7 @@ describe("createHistoryAdapter", () => {
       });
       const initialState = booksHistoryAdapter.getInitialState([]);
       const nextState = addBook(initialState, book1);
-      expect(nextState).toEqual<HistoryState<Array<Book>>>({
+      expect(nextState).toEqual<HistoryState<Book[]>>({
         past: [[]],
         present: [book1],
         future: [],
@@ -74,14 +74,14 @@ describe("createHistoryAdapter", () => {
     });
     it("allows deriving from arguments whether update should be undoable", () => {
       const addBook = booksHistoryAdapter.undoable(
-        (books, book: Book, undoable?: boolean) => {
+        (books, book: Book, _undoable?: boolean) => {
           books.push(book);
         },
         { isUndoable: (book, undoable) => undoable },
       );
       const initialState = booksHistoryAdapter.getInitialState([]);
       const nextState = addBook(initialState, book1, false);
-      expect(nextState).toEqual<HistoryState<Array<Book>>>({
+      expect(nextState).toEqual<HistoryState<Book[]>>({
         past: [],
         present: [book1],
         future: [],
@@ -96,7 +96,7 @@ describe("createHistoryAdapter", () => {
       const nextState = produce(initialState, (draft) => {
         addBook(draft, book1);
       });
-      expect(nextState).toEqual<HistoryState<Array<Book>>>({
+      expect(nextState).toEqual<HistoryState<Book[]>>({
         past: [[]],
         present: [book1],
         future: [],
@@ -109,7 +109,7 @@ describe("createHistoryAdapter", () => {
           books.push(book);
         },
         {
-          selectHistoryState: (state: { books: HistoryState<Array<Book>> }) =>
+          selectHistoryState: (state: { books: HistoryState<Book[]> }) =>
             state.books,
         },
       );
@@ -135,7 +135,7 @@ describe("createHistoryAdapter", () => {
     const updatedState = addBook(initialState, book1);
     it("applies previous patch if available", () => {
       expect(booksHistoryAdapter.undo(updatedState)).toEqual<
-        HistoryState<Array<Book>>
+        HistoryState<Book[]>
       >({
         past: [],
         present: [],
@@ -148,7 +148,7 @@ describe("createHistoryAdapter", () => {
         produce(updatedState, (draft) => {
           booksHistoryAdapter.undo(draft);
         }),
-      ).toEqual<HistoryState<Array<Book>>>({
+      ).toEqual<HistoryState<Book[]>>({
         past: [],
         present: [],
         future: [[book1]],
@@ -167,7 +167,7 @@ describe("createHistoryAdapter", () => {
 
     it("applies next patch if available", () => {
       expect(booksHistoryAdapter.redo(undoneState)).toEqual<
-        HistoryState<Array<Book>>
+        HistoryState<Book[]>
       >({
         past: [[]],
         present: [book1],
@@ -180,7 +180,7 @@ describe("createHistoryAdapter", () => {
         produce(undoneState, (draft) => {
           booksHistoryAdapter.redo(draft);
         }),
-      ).toEqual<HistoryState<Array<Book>>>({
+      ).toEqual<HistoryState<Book[]>>({
         past: [[]],
         present: [book1],
         future: [],
@@ -199,7 +199,7 @@ describe("createHistoryAdapter", () => {
 
     it("moves the state back or forward in history by n steps", () => {
       const jumpedState = booksHistoryAdapter.jump(secondState, -2);
-      expect(jumpedState).toEqual<HistoryState<Array<Book>>>({
+      expect(jumpedState).toEqual<HistoryState<Book[]>>({
         past: [],
         present: [],
         future: [[book1], [book1, book2]],
@@ -213,7 +213,7 @@ describe("createHistoryAdapter", () => {
         produce(secondState, (draft) => {
           booksHistoryAdapter.jump(draft, -2);
         }),
-      ).toEqual<HistoryState<Array<Book>>>({
+      ).toEqual<HistoryState<Book[]>>({
         past: [],
         present: [],
         future: [[book1], [book1, book2]],
@@ -226,7 +226,7 @@ describe("createHistoryAdapter", () => {
     it("can be used to pause history tracking", () => {
       const initialState = booksHistoryAdapter.getInitialState([]);
       const pausedState = booksHistoryAdapter.pause(initialState);
-      expect(pausedState).toEqual<HistoryState<Array<Book>>>({
+      expect(pausedState).toEqual<HistoryState<Book[]>>({
         past: [],
         present: [],
         future: [],
@@ -239,7 +239,7 @@ describe("createHistoryAdapter", () => {
         produce(initialState, (draft) => {
           booksHistoryAdapter.pause(draft);
         }),
-      ).toEqual<HistoryState<Array<Book>>>({
+      ).toEqual<HistoryState<Book[]>>({
         past: [],
         present: [],
         future: [],
@@ -253,7 +253,7 @@ describe("createHistoryAdapter", () => {
       const initialState = booksHistoryAdapter.getInitialState([]);
       const pausedState = booksHistoryAdapter.pause(initialState);
       const nextState = addBook(pausedState, book1);
-      expect(nextState).toEqual<HistoryState<Array<Book>>>({
+      expect(nextState).toEqual<HistoryState<Book[]>>({
         past: [],
         present: [book1],
         future: [],
@@ -267,7 +267,7 @@ describe("createHistoryAdapter", () => {
       const initialState = booksHistoryAdapter.getInitialState([]);
       const pausedState = booksHistoryAdapter.pause(initialState);
       const resumedState = booksHistoryAdapter.resume(pausedState);
-      expect(resumedState).toEqual<HistoryState<Array<Book>>>({
+      expect(resumedState).toEqual<HistoryState<Book[]>>({
         past: [],
         present: [],
         future: [],
@@ -281,7 +281,7 @@ describe("createHistoryAdapter", () => {
         produce(pausedState, (draft) => {
           booksHistoryAdapter.resume(draft);
         }),
-      ).toEqual<HistoryState<Array<Book>>>({
+      ).toEqual<HistoryState<Book[]>>({
         past: [],
         present: [],
         future: [],
@@ -295,7 +295,7 @@ describe("createHistoryAdapter", () => {
       const initialState = booksHistoryAdapter.getInitialState([]);
       const pausedState = booksHistoryAdapter.pause(initialState);
       const withBook = addBook(pausedState, book1);
-      expect(withBook).toEqual<HistoryState<Array<Book>>>({
+      expect(withBook).toEqual<HistoryState<Book[]>>({
         past: [],
         present: [book1],
         future: [],
@@ -304,7 +304,7 @@ describe("createHistoryAdapter", () => {
 
       const resumedState = booksHistoryAdapter.resume(withBook);
       const nextState = addBook(resumedState, book2);
-      expect(nextState).toEqual<HistoryState<Array<Book>>>({
+      expect(nextState).toEqual<HistoryState<Book[]>>({
         past: [[book1]],
         present: [book1, book2],
         future: [],
@@ -339,12 +339,12 @@ describe("createHistoryAdapter", () => {
 });
 
 describe("createPatchHistoryAdapter", () => {
-  const booksHistoryAdapter = createPatchHistoryAdapter<Array<Book>>();
+  const booksHistoryAdapter = createPatchHistoryAdapter<Book[]>();
 
   describe("getInitialState", () => {
     it("returns an initial state", () => {
       expect(booksHistoryAdapter.getInitialState([])).toEqual<
-        PatchHistoryState<Array<Book>>
+        PatchHistoryState<Book[]>
       >({
         past: [],
         present: [],
@@ -354,6 +354,7 @@ describe("createPatchHistoryAdapter", () => {
     });
   });
 
+  // oxlint-disable typescript/no-unsafe-assignment
   const aPatch = expect.objectContaining({
     op: expect.oneOf(["add", "replace", "remove"]),
   });
@@ -362,6 +363,7 @@ describe("createPatchHistoryAdapter", () => {
     redo: expect.iterableOf(aPatch),
     undo: expect.iterableOf(aPatch),
   };
+  // oxlint-enable typescript/no-unsafe-assignment
 
   describe("undoable", () => {
     it("wraps a function to automatically update patches", () => {
@@ -370,7 +372,7 @@ describe("createPatchHistoryAdapter", () => {
       });
       const initialState = booksHistoryAdapter.getInitialState([]);
       const nextState = addBook(initialState, book1);
-      expect(nextState).toEqual<PatchHistoryState<Array<Book>>>({
+      expect(nextState).toEqual<PatchHistoryState<Book[]>>({
         past: [aPatchState],
         present: [book1],
         future: [],
@@ -393,14 +395,14 @@ describe("createPatchHistoryAdapter", () => {
     });
     it("allows deriving from arguments whether update should be undoable", () => {
       const addBook = booksHistoryAdapter.undoable(
-        (books, book: Book, undoable?: boolean) => {
+        (books, book: Book, _undoable?: boolean) => {
           books.push(book);
         },
         { isUndoable: (book, undoable) => undoable },
       );
       const initialState = booksHistoryAdapter.getInitialState([]);
       const nextState = addBook(initialState, book1, false);
-      expect(nextState).toEqual<PatchHistoryState<Array<Book>>>({
+      expect(nextState).toEqual<PatchHistoryState<Book[]>>({
         past: [],
         present: [book1],
         future: [],
@@ -415,7 +417,7 @@ describe("createPatchHistoryAdapter", () => {
       const nextState = produce(initialState, (draft) => {
         addBook(draft, book1);
       });
-      expect(nextState).toEqual<PatchHistoryState<Array<Book>>>({
+      expect(nextState).toEqual<PatchHistoryState<Book[]>>({
         past: [aPatchState],
         present: [book1],
         future: [],
@@ -428,9 +430,8 @@ describe("createPatchHistoryAdapter", () => {
           books.push(book);
         },
         {
-          selectHistoryState: (state: {
-            books: PatchHistoryState<Array<Book>>;
-          }) => state.books,
+          selectHistoryState: (state: { books: PatchHistoryState<Book[]> }) =>
+            state.books,
         },
       );
       const initialState = { books: booksHistoryAdapter.getInitialState([]) };
@@ -455,7 +456,7 @@ describe("createPatchHistoryAdapter", () => {
     const updatedState = addBook(initialState, book1);
     it("applies previous patch if available", () => {
       expect(booksHistoryAdapter.undo(updatedState)).toEqual<
-        PatchHistoryState<Array<Book>>
+        PatchHistoryState<Book[]>
       >({
         past: [],
         present: [],
@@ -468,7 +469,7 @@ describe("createPatchHistoryAdapter", () => {
         produce(updatedState, (draft) => {
           booksHistoryAdapter.undo(draft);
         }),
-      ).toEqual<PatchHistoryState<Array<Book>>>({
+      ).toEqual<PatchHistoryState<Book[]>>({
         past: [],
         present: [],
         future: [aPatchState],
@@ -486,7 +487,7 @@ describe("createPatchHistoryAdapter", () => {
 
     it("applies next patch if available", () => {
       expect(booksHistoryAdapter.redo(undoneState)).toEqual<
-        PatchHistoryState<Array<Book>>
+        PatchHistoryState<Book[]>
       >({
         past: [aPatchState],
         present: [book1],
@@ -499,7 +500,7 @@ describe("createPatchHistoryAdapter", () => {
         produce(undoneState, (draft) => {
           booksHistoryAdapter.redo(draft);
         }),
-      ).toEqual<PatchHistoryState<Array<Book>>>({
+      ).toEqual<PatchHistoryState<Book[]>>({
         past: [aPatchState],
         present: [book1],
         future: [],
@@ -517,7 +518,7 @@ describe("createPatchHistoryAdapter", () => {
 
     it("moves the state back or forward in history by n steps", () => {
       const jumpedState = booksHistoryAdapter.jump(secondState, -2);
-      expect(jumpedState).toEqual<PatchHistoryState<Array<Book>>>({
+      expect(jumpedState).toEqual<PatchHistoryState<Book[]>>({
         past: [],
         present: [],
         future: [aPatchState, aPatchState],
@@ -531,7 +532,7 @@ describe("createPatchHistoryAdapter", () => {
         produce(secondState, (draft) => {
           booksHistoryAdapter.jump(draft, -2);
         }),
-      ).toEqual<PatchHistoryState<Array<Book>>>({
+      ).toEqual<PatchHistoryState<Book[]>>({
         past: [],
         present: [],
         future: [aPatchState, aPatchState],
@@ -543,7 +544,7 @@ describe("createPatchHistoryAdapter", () => {
     it("can be used to pause history tracking", () => {
       const initialState = booksHistoryAdapter.getInitialState([]);
       const pausedState = booksHistoryAdapter.pause(initialState);
-      expect(pausedState).toEqual<PatchHistoryState<Array<Book>>>({
+      expect(pausedState).toEqual<PatchHistoryState<Book[]>>({
         past: [],
         present: [],
         future: [],
@@ -556,7 +557,7 @@ describe("createPatchHistoryAdapter", () => {
         produce(initialState, (draft) => {
           booksHistoryAdapter.pause(draft);
         }),
-      ).toEqual<PatchHistoryState<Array<Book>>>({
+      ).toEqual<PatchHistoryState<Book[]>>({
         past: [],
         present: [],
         future: [],
@@ -570,7 +571,7 @@ describe("createPatchHistoryAdapter", () => {
       const initialState = booksHistoryAdapter.getInitialState([]);
       const pausedState = booksHistoryAdapter.pause(initialState);
       const nextState = addBook(pausedState, book1);
-      expect(nextState).toEqual<PatchHistoryState<Array<Book>>>({
+      expect(nextState).toEqual<PatchHistoryState<Book[]>>({
         past: [],
         present: [book1],
         future: [],
@@ -583,7 +584,7 @@ describe("createPatchHistoryAdapter", () => {
       const initialState = booksHistoryAdapter.getInitialState([]);
       const pausedState = booksHistoryAdapter.pause(initialState);
       const resumedState = booksHistoryAdapter.resume(pausedState);
-      expect(resumedState).toEqual<PatchHistoryState<Array<Book>>>({
+      expect(resumedState).toEqual<PatchHistoryState<Book[]>>({
         past: [],
         present: [],
         future: [],
@@ -597,7 +598,7 @@ describe("createPatchHistoryAdapter", () => {
         produce(pausedState, (draft) => {
           booksHistoryAdapter.resume(draft);
         }),
-      ).toEqual<PatchHistoryState<Array<Book>>>({
+      ).toEqual<PatchHistoryState<Book[]>>({
         past: [],
         present: [],
         future: [],
@@ -611,7 +612,7 @@ describe("createPatchHistoryAdapter", () => {
       const initialState = booksHistoryAdapter.getInitialState([]);
       const pausedState = booksHistoryAdapter.pause(initialState);
       const withBook = addBook(pausedState, book1);
-      expect(withBook).toEqual<PatchHistoryState<Array<Book>>>({
+      expect(withBook).toEqual<PatchHistoryState<Book[]>>({
         past: [],
         present: [book1],
         future: [],
@@ -620,7 +621,7 @@ describe("createPatchHistoryAdapter", () => {
 
       const resumedState = booksHistoryAdapter.resume(withBook);
       const nextState = addBook(resumedState, book2);
-      expect(nextState).toEqual<PatchHistoryState<Array<Book>>>({
+      expect(nextState).toEqual<PatchHistoryState<Book[]>>({
         past: [aPatchState],
         present: [book1, book2],
         future: [],
@@ -659,18 +660,20 @@ describe("buildCreateHistoryAdapter", () => {
     onCreate.mockClear();
   });
 
-  interface CustomHistoryEntry<Data extends Array<any>> {
+  interface CustomHistoryEntry<Data extends any[]> {
     data: Data;
   }
-  interface CustomHistoryState<Data extends Array<any>>
-    extends BaseHistoryState<Data, CustomHistoryEntry<Data>> {
+  interface CustomHistoryState<Data extends any[]> extends BaseHistoryState<
+    Data,
+    CustomHistoryEntry<Data>
+  > {
     extra: string;
   }
   interface CustomConfig extends BaseHistoryAdapterConfig {
     extra?: string;
   }
   interface CustomHistoryStateFn extends BaseHistoryStateFn {
-    dataConstraint: Array<any>;
+    dataConstraint: any[];
     state: CustomHistoryState<this["data"]>;
     config: CustomConfig;
   }
@@ -696,7 +699,7 @@ describe("buildCreateHistoryAdapter", () => {
       applyEntry(state, entry) {
         const stateBefore = state.present;
         state.present = entry.data;
-        return { data: stateBefore } as never;
+        return { data: stateBefore };
       },
     });
 
@@ -707,10 +710,10 @@ describe("buildCreateHistoryAdapter", () => {
   });
 
   it("exposes getInitialState", () => {
-    const initialState = createCustomHistoryAdapter<
-      Array<number>
-    >().getInitialState([]);
-    expect(initialState).toEqual<CustomHistoryState<Array<number>>>({
+    const initialState = createCustomHistoryAdapter<number[]>().getInitialState(
+      [],
+    );
+    expect(initialState).toEqual<CustomHistoryState<number[]>>({
       past: [],
       present: [],
       future: [],
@@ -720,13 +723,13 @@ describe("buildCreateHistoryAdapter", () => {
   });
 
   it("updates the state correctly", () => {
-    const adapter = createCustomHistoryAdapter<Array<number>>();
+    const adapter = createCustomHistoryAdapter<number[]>();
     const add = adapter.undoable((state, value: number) => {
       state.push(value);
     });
     const initialState = adapter.getInitialState([]);
     const nextState = add(initialState, 1);
-    expect(nextState).toEqual<CustomHistoryState<Array<number>>>({
+    expect(nextState).toEqual<CustomHistoryState<number[]>>({
       past: [{ data: [] }],
       present: [1],
       future: [],
@@ -734,7 +737,7 @@ describe("buildCreateHistoryAdapter", () => {
       extra: "extra",
     });
     const undoneState = adapter.undo(nextState);
-    expect(undoneState).toEqual<CustomHistoryState<Array<number>>>({
+    expect(undoneState).toEqual<CustomHistoryState<number[]>>({
       past: [],
       present: [],
       future: [{ data: [1] }],
@@ -742,7 +745,7 @@ describe("buildCreateHistoryAdapter", () => {
       extra: "extra",
     });
     const redoneState = adapter.redo(undoneState);
-    expect(redoneState).toEqual<CustomHistoryState<Array<number>>>({
+    expect(redoneState).toEqual<CustomHistoryState<number[]>>({
       past: [{ data: [] }],
       present: [1],
       future: [],

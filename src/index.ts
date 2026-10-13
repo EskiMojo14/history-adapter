@@ -11,12 +11,12 @@ import { ensureCurrent, makeStateOperator } from "./utils";
 type ValidRecipeReturnType<State> =
   | State
   | Draft<State>
-  // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
+  // oxlint-disable-next-line @typescript-eslint/no-invalid-void-type
   | void
   | undefined
   | (State extends undefined ? typeof nothing : never);
 
-export type ImmerRecipe<Data, Args extends Array<any>> = (
+export type ImmerRecipe<Data, Args extends any[]> = (
   draft: Draft<Data>,
   ...args: Args
 ) => ValidRecipeReturnType<Data>;
@@ -25,9 +25,9 @@ export type DataFromRecipe<Recipe extends ImmerRecipe<any, any>> =
   Recipe extends ImmerRecipe<infer T, any> ? T : never;
 
 export interface BaseHistoryState<Data, HistoryEntry> {
-  past: Array<HistoryEntry>;
+  past: HistoryEntry[];
   present: Data;
-  future: Array<HistoryEntry>;
+  future: HistoryEntry[];
   paused: boolean;
 }
 
@@ -67,7 +67,7 @@ export type GetConfigType<
   _rawData: Data;
 })["config"];
 
-export interface WrapRecipeConfig<Args extends Array<any>> {
+export interface WrapRecipeConfig<Args extends any[]> {
   /**
    * A function to extract from the arguments whether the action was undoable or not.
    * If not provided (or if function returns undefined), defaults to true.
@@ -78,7 +78,7 @@ export interface WrapRecipeConfig<Args extends Array<any>> {
 
 export interface UndoableConfig<
   Data,
-  Args extends Array<any>,
+  Args extends any[],
   RootState,
   State extends BaseHistoryState<unknown, unknown> = HistoryState<Data>,
 > extends WrapRecipeConfig<Args> {
@@ -126,7 +126,7 @@ export interface HistoryAdapter<
    * @param recipe An immer-style recipe, which can mutate the draft or return new state
    * @param config Configuration for undoable action
    */
-  undoable<Args extends Array<any>, RootState = State>(
+  undoable<Args extends any[], RootState = State>(
     recipe: ImmerRecipe<Data, Args>,
     config?: UndoableConfig<Data, Args, RootState, State>,
   ): <State extends MaybeDraft<RootState>>(
@@ -185,7 +185,7 @@ export type BuildHistoryAdapterConfig<StateFn extends BaseHistoryStateFn> = {
    * Function to wrap a recipe to automatically update patch history according to changes.
    * Should return a function that receives the state and arguments, and returns a history entry to be added to the past stack.
    */
-  wrapRecipe: <Data extends StateFn["dataConstraint"], Args extends Array<any>>(
+  wrapRecipe: <Data extends StateFn["dataConstraint"], Args extends any[]>(
     recipe: ImmerRecipe<Data, Args>,
   ) => (
     state: Draft<GetStateType<Data, StateFn>>,
@@ -266,7 +266,7 @@ export function buildCreateHistoryAdapter<StateFn extends BaseHistoryStateFn>({
       resume: makeStateOperator<State>((state) => {
         state.paused = false;
       }),
-      undoable: <Args extends Array<any>, RootState>(
+      undoable: <Args extends any[], RootState>(
         recipe: (
           draft: Draft<Data>,
           ...args: Args
@@ -277,8 +277,7 @@ export function buildCreateHistoryAdapter<StateFn extends BaseHistoryStateFn>({
         const finalRecipe = wrapRecipe(recipe);
         return makeStateOperator<RootState, Args>((rootState, ...args) => {
           const state =
-            selectHistoryState?.(rootState as never) ??
-            (rootState as Draft<State>);
+            selectHistoryState?.(rootState) ?? (rootState as Draft<State>);
 
           const historyEntry = finalRecipe(state, ...args);
 
@@ -314,7 +313,7 @@ export interface HistoryStateFn extends BaseHistoryStateFn {
  *
  * Correctly handles immer's `nothing` and `undefined` return values.
  */
-export const applyRecipe = <Data, Args extends Array<any>>(
+export const applyRecipe = <Data, Args extends any[]>(
   state: MaybeDraft<BaseHistoryState<Data, unknown>>,
   recipe: (draft: Draft<Data>, ...args: Args) => ValidRecipeReturnType<Data>,
   ...args: Args
@@ -349,7 +348,7 @@ export const createHistoryAdapter: CreateHistoryAdapter<HistoryStateFn> =
       },
   });
 
-export type PatchState = Record<ApplyOp, Array<Patch>>;
+export type PatchState = Record<ApplyOp, Patch[]>;
 
 export type PatchHistoryState<Data> = BaseHistoryState<Data, PatchState>;
 

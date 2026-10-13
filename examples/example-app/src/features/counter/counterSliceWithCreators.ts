@@ -1,7 +1,7 @@
 // will work once RTK supports custom creators
 import { buildCreateSlice, asyncThunkCreator } from "@reduxjs/toolkit";
 import { historyCreatorsCreator } from "history-adapter/creator";
-import type { HistoryState} from "history-adapter/redux";
+import type { HistoryState } from "history-adapter/redux";
 import { createHistoryAdapter } from "history-adapter/redux";
 import { wait } from "../../util";
 

@@ -4,7 +4,7 @@ import {
   createSelector,
   createSlice,
 } from "@reduxjs/toolkit";
-import { describe, expect, it, beforeEach, vi } from "vitest";
+import { describe, expect, it, beforeEach, vi } from "vite-plus/test";
 import type { HistoryState } from "./redux";
 import { createHistoryAdapter } from "./redux";
 
@@ -23,7 +23,7 @@ const book2: Book = {
 };
 
 describe("createReduxHistoryAdapter", () => {
-  const booksHistoryAdapter = createHistoryAdapter<Array<Book>>();
+  const booksHistoryAdapter = createHistoryAdapter<Book[]>();
   const localisedSelectors = booksHistoryAdapter.getSelectors();
   const booksHistorySlice = createSlice({
     name: "books",
@@ -163,7 +163,7 @@ describe("createReduxHistoryAdapter", () => {
               state.push(action.payload);
             },
             {
-              selectHistoryState: (s: { books: HistoryState<Array<Book>> }) =>
+              selectHistoryState: (s: { books: HistoryState<Book[]> }) =>
                 s.books,
             },
           ),
@@ -204,7 +204,7 @@ describe("createReduxHistoryAdapter", () => {
     it("logs a error when a createSelector function is passed", () => {
       const consoleSpy = vi.spyOn(console, "error");
       booksHistoryAdapter.getSelectors(undefined as never, {
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        // oxlint-disable-next-line @typescript-eslint/no-empty-function, typescript/no-deprecated
         createSelector: () => {},
       });
       expect(consoleSpy).toHaveBeenCalled();

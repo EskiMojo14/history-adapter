@@ -86,8 +86,10 @@ function makeSelectorFactory<
   ): HistorySelectors<Data, RootState>;
   function getSelectors<RootState>(
     selectState?: (rootState: RootState) => State,
-    { createSelector }: GetSelectorsOptions = {},
+    options: GetSelectorsOptions = {},
   ): HistorySelectors<Data, any> {
+    // oxlint-disable-next-line typescript/no-deprecated
+    const { createSelector } = options;
     if (createSelector && !hasWarned) {
       console.error(
         "The createSelector option is no longer supported, as no memoisation is needed." +
@@ -151,7 +153,7 @@ export interface ReduxMethods<
    */
   jump<S extends MaybeDraft<State>>(
     state: S,
-    // eslint-disable-next-line @typescript-eslint/unified-signatures
+    // oxlint-disable-next-line @typescript-eslint/unified-signatures
     action: PayloadAction<number>,
   ): S;
   /** An action creator prepare callback which doesn't take a payload */

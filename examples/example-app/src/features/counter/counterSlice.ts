@@ -1,6 +1,6 @@
-import type { PayloadAction} from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import type { HistoryState} from "history-adapter/redux";
+import type { HistoryState } from "history-adapter/redux";
 import { createHistoryAdapter } from "history-adapter/redux";
 import { wait } from "../../util";
 
