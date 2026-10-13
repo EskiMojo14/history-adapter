@@ -1,4 +1,3 @@
-/* eslint-disable import-x/export */
 import type { Action, CaseReducer, PayloadAction, Selector } from "@reduxjs/toolkit";
 import { isFluxStandardAction } from "@reduxjs/toolkit";
 
@@ -81,7 +80,6 @@ function makeSelectorFactory<Data, State extends BaseHistoryState<unknown, unkno
     selectState?: (rootState: RootState) => State,
     options: GetSelectorsOptions = {},
   ): HistorySelectors<Data, any> {
-    // oxlint-disable-next-line typescript/no-deprecated
     const { createSelector } = options;
     if (createSelector && !hasWarned) {
       console.error(
@@ -137,11 +135,7 @@ export interface ReduxMethods<Data, State extends BaseHistoryState<unknown, unkn
    * @param state History state shape, with patches
    * @param action An action with a payload of the number of steps to move. Negative numbers move backwards.
    */
-  jump<S extends MaybeDraft<State>>(
-    state: S,
-    // oxlint-disable-next-line @typescript-eslint/unified-signatures
-    action: PayloadAction<number>,
-  ): S;
+  jump<S extends MaybeDraft<State>>(state: S, action: PayloadAction<number>): S;
   /** An action creator prepare callback which doesn't take a payload */
   withoutPayload(): (undoable?: boolean) => {
     payload: undefined;

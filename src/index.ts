@@ -7,7 +7,6 @@ import { ensureCurrent, makeStateOperator } from "./utils";
 type ValidRecipeReturnType<State> =
   | State
   | Draft<State>
-  // oxlint-disable-next-line @typescript-eslint/no-invalid-void-type
   | void
   | undefined
   | (State extends undefined ? typeof nothing : never);

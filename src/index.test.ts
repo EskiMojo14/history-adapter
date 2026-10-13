@@ -346,7 +346,6 @@ describe("createPatchHistoryAdapter", () => {
     });
   });
 
-  // oxlint-disable typescript/no-unsafe-assignment
   const aPatch = expect.objectContaining({
     op: expect.oneOf(["add", "replace", "remove"]),
   });
@@ -355,8 +354,6 @@ describe("createPatchHistoryAdapter", () => {
     redo: expect.iterableOf(aPatch),
     undo: expect.iterableOf(aPatch),
   };
-  // oxlint-enable typescript/no-unsafe-assignment
-
   describe("undoable", () => {
     it("wraps a function to automatically update patches", () => {
       const addBook = booksHistoryAdapter.undoable((books, book: Book) => {
