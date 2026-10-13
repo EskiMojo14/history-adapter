@@ -1,0 +1,42 @@
+@font-face {
+  font-family: "Paper Mono";
+  src: url("./fonts/PaperMono[wght].ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: "Paper Mono", monospace;
+  font-feature-settings:
+    "ss02" 1,
+    "ss03" 1,
+    "cv01" 1;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-feature-settings:
+    "ss02" 1,
+    "ss03" 0,
+    "cv01" 1;
+}
+
+code,
+pre {
+  font-family: "Paper Mono", monospace;
+  font-feature-settings:
+    "ss01" 1,
+    "zero" 1,
+    "ss02" 0,
+    "ss03" 0,
+    "cv01" 0;
+}

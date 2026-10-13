@@ -19,7 +19,7 @@ interface CounterState {
 const counterAdapter = createHistoryAdapter<CounterState>({ limit: 10 });
 ```
 
-## `getInitialState`
+## getInitialState
 
 Receives an initial state value and returns a "history state" shape.
 
@@ -43,7 +43,7 @@ print({ initialState })
 
 :::
 
-## `undoable`
+## undoable
 
 Wraps an immer recipe to automatically manage undo and redo state. Because immer wraps the state in a draft, you can safely mutate the state directly.
 
@@ -136,7 +136,7 @@ print({ initialState, nextState })
 
 It should be a function that receives the wider state object and returns the history state object.
 
-## `undo`, `redo`, `jump`
+## undo, redo, jump
 
 These methods allow you to navigate the history stack.
 
@@ -159,7 +159,7 @@ const jumpedState = counterAdapter.jump(redoneState, -1);
 print({ nextState, undoneState, redoneState, jumpedState })
 `} />
 
-## `clearHistory`
+## clearHistory
 
 Clears the history stack, while preserving the present state.
 
