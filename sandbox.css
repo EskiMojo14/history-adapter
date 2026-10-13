@@ -11,7 +11,7 @@ button,
 input,
 select,
 textarea {
-  font-family: "Paper Mono", monospace;
+  font-family: "Paper Mono", monospace !important;
   font-feature-settings:
     "ss02" 1,
     "ss03" 1,
