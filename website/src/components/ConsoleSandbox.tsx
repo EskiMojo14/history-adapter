@@ -1,16 +1,13 @@
 import type { SandpackProps } from "@codesandbox/sandpack-react";
 import { useMemo } from "react";
+
 import code from "../lib/code";
 import { CustomSandpack } from "./CustomSandpack";
 import { usePatches, withPatchTabs } from "./PatchesTabs";
 
 const { ts, tsx, css } = code;
 
-const addToImports = (
-  imports: Record<string, string>,
-  path: string,
-  name: string,
-) => {
+const addToImports = (imports: Record<string, string>, path: string, name: string) => {
   if (!imports[path]) {
     imports[path] = `{ ${name} }`;
   } else if (!imports[path].includes(name)) {

@@ -99,11 +99,7 @@ button:focus-visible {
 }
 
 .past {
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    rgba(0, 0, 0, 0.6) 100%
-  );
+  mask-image: linear-gradient(to bottom, transparent 0, rgba(0, 0, 0, 0.6) 100%);
   justify-content: flex-end;
 }
 

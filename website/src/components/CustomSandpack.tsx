@@ -5,18 +5,14 @@ import { useColorMode } from "@docusaurus/theme-common";
 
 export function CustomSandpack(props: SandpackProps) {
   const { colorMode } = useColorMode();
-  const sandboxStylesheet =
-    "https://eskimojo14.github.io/history-adapter/sandbox.css";
+  const sandboxStylesheet = "https://eskimojo14.github.io/history-adapter/sandbox.css";
   const theme = colorMode === "dark" ? dracula : githubLight;
   return (
     <Sandpack
       {...props}
       options={{
         ...props.options,
-        externalResources: [
-          sandboxStylesheet,
-          ...(props.options?.externalResources ?? []),
-        ],
+        externalResources: [sandboxStylesheet, ...(props.options?.externalResources ?? [])],
       }}
       theme={
         typeof props.theme === "string"

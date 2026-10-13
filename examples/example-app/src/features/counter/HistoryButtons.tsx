@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import {
   historyCleared,
@@ -59,9 +60,7 @@ export function HistoryButtons() {
         <button onClick={() => dispatch(pauseToggled())}>
           {paused ? "resume" : "pause"} history
         </button>
-        <button onClick={() => dispatch(historyCleared())}>
-          clear history
-        </button>
+        <button onClick={() => dispatch(historyCleared())}>clear history</button>
       </ButtonGroup>
       <button onClick={() => dispatch(reset())}>reset</button>
     </div>

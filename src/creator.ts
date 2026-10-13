@@ -14,9 +14,10 @@ import type {
   PrepareAction,
 } from "@reduxjs/toolkit";
 import { preparedReducerCreator, reducerCreator } from "@reduxjs/toolkit";
+
+import type { BaseHistoryState } from ".";
 import type { HistoryAdapter, HistoryState } from "./redux";
 import type { WithRequiredProp } from "./utils";
-import type { BaseHistoryState } from ".";
 
 const historyCreatorsType: unique symbol = Symbol("historyCreators");
 
@@ -48,9 +49,7 @@ type ActionForPrepare<Prepare extends PrepareAction<any>> = ReturnType<
 interface HistoryCreators<Data, State> {
   createUndoable: {
     reducer: {
-      (
-        reducer: CaseReducer<Data, PayloadAction>,
-      ): CaseReducerDefinition<State, PayloadAction>;
+      (reducer: CaseReducer<Data, PayloadAction>): CaseReducerDefinition<State, PayloadAction>;
       <Payload>(
         reducer: CaseReducer<Data, PayloadAction<Payload>>,
       ): CaseReducerDefinition<State, PayloadAction<Payload>>;
@@ -94,9 +93,7 @@ declare module "@reduxjs/toolkit" {
           ) => HistoryCreators<Data, State>,
       {
         actions: {
-          [
-            ReducerName in keyof CaseReducers
-          ]: CaseReducers[ReducerName] extends ReducerDefinition<
+          [ReducerName in keyof CaseReducers]: CaseReducers[ReducerName] extends ReducerDefinition<
             typeof historyCreatorsType
           >
             ? CaseReducers[ReducerName] extends { type: "reset" }
@@ -105,9 +102,7 @@ declare module "@reduxjs/toolkit" {
             : never;
         };
         caseReducers: {
-          [
-            ReducerName in keyof CaseReducers
-          ]: CaseReducers[ReducerName] extends ReducerDefinition<
+          [ReducerName in keyof CaseReducers]: CaseReducers[ReducerName] extends ReducerDefinition<
             typeof historyCreatorsType
           >
             ? CaseReducers[ReducerName] extends { type: "reset" }
@@ -125,29 +120,20 @@ const makeScopedReducerCreator =
     selectHistoryState: (state: Draft<State>) => Draft<HState>,
   ) =>
   <P>(mutator: (state: Draft<HState>, action: PayloadAction<P>) => void) =>
-    (reducerCreator.create as ReducerCreators<State>["reducer"])<P>(
-      (state, action) => {
-        mutator(selectHistoryState(state), action);
-      },
-    );
+    (reducerCreator.create as ReducerCreators<State>["reducer"])<P>((state, action) => {
+      mutator(selectHistoryState(state), action);
+    });
 
-export const historyCreatorsCreator: ReducerCreator<
-  typeof historyCreatorsType
-> = {
+export const historyCreatorsCreator: ReducerCreator<typeof historyCreatorsType> = {
   type: historyCreatorsType,
   create(adapter, config) {
     return {
       createUndoable: {
         reducer(reducer: CaseReducer<any, any>) {
-          return reducerCreator.create(
-            adapter.undoableReducer(reducer, config),
-          );
+          return reducerCreator.create(adapter.undoableReducer(reducer, config));
         },
         preparedReducer(prepare, reducer) {
-          return preparedReducerCreator.create(
-            prepare,
-            adapter.undoableReducer(reducer, config),
-          );
+          return preparedReducerCreator.create(prepare, adapter.undoableReducer(reducer, config));
         },
       },
       createHistoryMethods() {
@@ -175,8 +161,7 @@ export const historyCreatorsCreator: ReducerCreator<
   },
   handle(details, def, context) {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (def.type !== "reset")
-      throw new Error(`Unrecognised reducer type ${String(def.type)}`);
+    if (def.type !== "reset") throw new Error(`Unrecognised reducer type ${String(def.type)}`);
     reducerCreator.handle(
       details,
       reducerCreator.create(() => context.getInitialState()),

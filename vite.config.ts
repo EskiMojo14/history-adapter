@@ -24,14 +24,8 @@ const config: ViteUserConfig = defineConfig({
       "typescript/no-empty-object-type": "off",
       "typescript/no-explicit-any": "warn",
       "typescript/only-throw-error": "off",
-      "typescript/restrict-template-expressions": [
-        "error",
-        { allowNumber: true },
-      ],
-      "typescript/consistent-type-imports": [
-        "error",
-        { fixStyle: "separate-type-imports" },
-      ],
+      "typescript/restrict-template-expressions": ["error", { allowNumber: true }],
+      "typescript/consistent-type-imports": ["error", { fixStyle: "separate-type-imports" }],
     },
     overrides: [
       {
@@ -60,9 +54,7 @@ const config: ViteUserConfig = defineConfig({
     setupFiles: ["./test-setup"],
   },
   fmt: {
-    printWidth: 80,
-    sortPackageJson: false,
-    ignorePatterns: ["**/docs/**/*.mdx"],
+    sortImports: true,
   },
   staged: {
     "*.{ts,md}": "vp fmt",

@@ -1,11 +1,11 @@
 {
   "name": "redux-history-adapter",
   "version": "1.0.0",
+  "files": [
+    "../dist"
+  ],
   "type": "module",
   "main": "../dist/redux.cjs",
   "module": "../dist/redux.js",
-  "types": "../dist/redux.d.ts",
-  "files": [
-    "../dist"
-  ]
+  "types": "../dist/redux.d.ts"
 }

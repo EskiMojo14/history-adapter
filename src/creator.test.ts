@@ -6,6 +6,7 @@ import {
   createEntityAdapter,
 } from "@reduxjs/toolkit";
 import { describe, expect, it } from "vite-plus/test";
+
 import { historyCreatorsCreator } from "./creator";
 import { createHistoryAdapter, createPatchHistoryAdapter } from "./redux";
 
@@ -38,8 +39,7 @@ describe("Slice creators", () => {
       name: "book",
       initialState: bookAdapter.getInitialState([]),
       reducers: (create) => {
-        const { createUndoable, createHistoryMethods } =
-          create.historyCreators(bookAdapter);
+        const { createUndoable, createHistoryMethods } = create.historyCreators(bookAdapter);
         return {
           ...createHistoryMethods(),
           addBook: createUndoable.preparedReducer(
@@ -142,12 +142,9 @@ describe("Slice creators", () => {
       name: "book",
       initialState: { books: bookAdapter.getInitialState([]) },
       reducers: (create) => {
-        const { createUndoable, createHistoryMethods } = create.historyCreators(
-          bookAdapter,
-          {
-            selectHistoryState: (state) => state.books,
-          },
-        );
+        const { createUndoable, createHistoryMethods } = create.historyCreators(bookAdapter, {
+          selectHistoryState: (state) => state.books,
+        });
         return {
           ...createHistoryMethods(),
           addBook: createUndoable.preparedReducer(
@@ -249,17 +246,13 @@ describe("Slice creators", () => {
       name: "book",
       initialState: bookAdapter.getInitialState([]),
       reducers: ({ historyCreators }) => {
-        const { createUndoable, createHistoryMethods } =
-          historyCreators(bookAdapter);
+        const { createUndoable, createHistoryMethods } = historyCreators(bookAdapter);
         const { reducer, preparedReducer } = createUndoable;
         return {
           ...createHistoryMethods(),
-          addBook: preparedReducer(
-            bookAdapter.withPayload<Book>(),
-            (state, action) => {
-              state.push(action.payload);
-            },
-          ),
+          addBook: preparedReducer(bookAdapter.withPayload<Book>(), (state, action) => {
+            state.push(action.payload);
+          }),
           removeLastBook: reducer((state) => {
             state.pop();
           }),
@@ -291,21 +284,15 @@ describe("Slice creators", () => {
   });
   it("works with patches", () => {
     const bookAdapter = createEntityAdapter<Book>();
-    const bookHistoryAdapter =
-      createPatchHistoryAdapter<EntityState<Book, Book["id"]>>();
+    const bookHistoryAdapter = createPatchHistoryAdapter<EntityState<Book, Book["id"]>>();
     const localHistorySelectors = bookHistoryAdapter.getSelectors();
-    const localSelectors = bookAdapter.getSelectors(
-      localHistorySelectors.selectPresent,
-    );
+    const localSelectors = bookAdapter.getSelectors(localHistorySelectors.selectPresent);
 
     const bookSlice = createAppSlice({
       name: "book",
-      initialState: bookHistoryAdapter.getInitialState(
-        bookAdapter.getInitialState(),
-      ),
+      initialState: bookHistoryAdapter.getInitialState(bookAdapter.getInitialState()),
       reducers: (create) => {
-        const { createUndoable, createHistoryMethods } =
-          create.historyCreators(bookHistoryAdapter);
+        const { createUndoable, createHistoryMethods } = create.historyCreators(bookHistoryAdapter);
         return {
           ...createHistoryMethods(),
           addBook: createUndoable.preparedReducer(

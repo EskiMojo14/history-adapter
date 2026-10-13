@@ -1,10 +1,6 @@
-import {
-  combineSlices,
-  configureStore,
-  createSelector,
-  createSlice,
-} from "@reduxjs/toolkit";
+import { combineSlices, configureStore, createSelector, createSlice } from "@reduxjs/toolkit";
 import { describe, expect, it, beforeEach, vi } from "vite-plus/test";
+
 import type { HistoryState } from "./redux";
 import { createHistoryAdapter } from "./redux";
 
@@ -51,24 +47,13 @@ describe("createReduxHistoryAdapter", () => {
     selectors: {
       selectCanUndo: localisedSelectors.selectCanUndo,
       selectCanRedo: localisedSelectors.selectCanRedo,
-      selectLastBook: createSelector(
-        localisedSelectors.selectPresent,
-        (books) => books.at(-1),
-      ),
+      selectLastBook: createSelector(localisedSelectors.selectPresent, (books) => books.at(-1)),
       selectPaused: localisedSelectors.selectPaused,
     },
   });
 
-  const {
-    undone,
-    redone,
-    jumped,
-    paused,
-    resumed,
-    historyCleared,
-    addBook,
-    removeLastBook,
-  } = booksHistorySlice.actions;
+  const { undone, redone, jumped, paused, resumed, historyCleared, addBook, removeLastBook } =
+    booksHistorySlice.actions;
   const { selectCanRedo, selectCanUndo, selectLastBook, selectPaused } =
     booksHistorySlice.selectors;
 
@@ -163,8 +148,7 @@ describe("createReduxHistoryAdapter", () => {
               state.push(action.payload);
             },
             {
-              selectHistoryState: (s: { books: HistoryState<Book[]> }) =>
-                s.books,
+              selectHistoryState: (s: { books: HistoryState<Book[]> }) => s.books,
             },
           ),
         ),
@@ -196,8 +180,8 @@ describe("createReduxHistoryAdapter", () => {
       expect(selectPresent(store.getState().books)).toEqual([]);
     });
     it("can be used with an input selector", () => {
-      const { selectPresent } = booksHistoryAdapter.getSelectors(
-        (state: RootState) => booksHistorySlice.selectSlice(state),
+      const { selectPresent } = booksHistoryAdapter.getSelectors((state: RootState) =>
+        booksHistorySlice.selectSlice(state),
       );
       expect(selectPresent(store.getState())).toEqual([]);
     });

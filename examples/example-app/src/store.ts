@@ -1,5 +1,6 @@
 import type { ThunkAction, UnknownAction } from "@reduxjs/toolkit";
 import { combineSlices, configureStore } from "@reduxjs/toolkit";
+
 import { counterSlice } from "./features/counter/counterSlice";
 
 const rootReducer = combineSlices(counterSlice);

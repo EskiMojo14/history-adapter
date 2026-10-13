@@ -1,6 +1,6 @@
 import { nothing, produce } from "immer";
 import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
-import { ensureCurrent } from "./utils";
+
 import type {
   PatchHistoryState,
   HistoryState,
@@ -15,6 +15,7 @@ import {
   createPatchHistoryAdapter,
   getInitialState,
 } from ".";
+import { ensureCurrent } from "./utils";
 
 interface Book {
   title: string;
@@ -35,9 +36,7 @@ describe("createHistoryAdapter", () => {
 
   describe("getInitialState", () => {
     it("returns an initial state", () => {
-      expect(booksHistoryAdapter.getInitialState([])).toEqual<
-        HistoryState<Book[]>
-      >({
+      expect(booksHistoryAdapter.getInitialState([])).toEqual<HistoryState<Book[]>>({
         past: [],
         present: [],
         future: [],
@@ -109,8 +108,7 @@ describe("createHistoryAdapter", () => {
           books.push(book);
         },
         {
-          selectHistoryState: (state: { books: HistoryState<Book[]> }) =>
-            state.books,
+          selectHistoryState: (state: { books: HistoryState<Book[]> }) => state.books,
         },
       );
       const initialState = { books: booksHistoryAdapter.getInitialState([]) };
@@ -134,9 +132,7 @@ describe("createHistoryAdapter", () => {
     });
     const updatedState = addBook(initialState, book1);
     it("applies previous patch if available", () => {
-      expect(booksHistoryAdapter.undo(updatedState)).toEqual<
-        HistoryState<Book[]>
-      >({
+      expect(booksHistoryAdapter.undo(updatedState)).toEqual<HistoryState<Book[]>>({
         past: [],
         present: [],
         future: [[book1]],
@@ -166,9 +162,7 @@ describe("createHistoryAdapter", () => {
     const undoneState = booksHistoryAdapter.undo(updatedState);
 
     it("applies next patch if available", () => {
-      expect(booksHistoryAdapter.redo(undoneState)).toEqual<
-        HistoryState<Book[]>
-      >({
+      expect(booksHistoryAdapter.redo(undoneState)).toEqual<HistoryState<Book[]>>({
         past: [[]],
         present: [book1],
         future: [],
@@ -343,9 +337,7 @@ describe("createPatchHistoryAdapter", () => {
 
   describe("getInitialState", () => {
     it("returns an initial state", () => {
-      expect(booksHistoryAdapter.getInitialState([])).toEqual<
-        PatchHistoryState<Book[]>
-      >({
+      expect(booksHistoryAdapter.getInitialState([])).toEqual<PatchHistoryState<Book[]>>({
         past: [],
         present: [],
         future: [],
@@ -380,9 +372,7 @@ describe("createPatchHistoryAdapter", () => {
       });
     });
     it("handles nothing value to return undefined", () => {
-      const optionalHistoryAdapter = createPatchHistoryAdapter<
-        string | undefined
-      >();
+      const optionalHistoryAdapter = createPatchHistoryAdapter<string | undefined>();
       const clearValue = optionalHistoryAdapter.undoable(() => nothing);
       expect(clearValue(optionalHistoryAdapter.getInitialState("foo"))).toEqual<
         PatchHistoryState<string | undefined>
@@ -430,8 +420,7 @@ describe("createPatchHistoryAdapter", () => {
           books.push(book);
         },
         {
-          selectHistoryState: (state: { books: PatchHistoryState<Book[]> }) =>
-            state.books,
+          selectHistoryState: (state: { books: PatchHistoryState<Book[]> }) => state.books,
         },
       );
       const initialState = { books: booksHistoryAdapter.getInitialState([]) };
@@ -455,9 +444,7 @@ describe("createPatchHistoryAdapter", () => {
     });
     const updatedState = addBook(initialState, book1);
     it("applies previous patch if available", () => {
-      expect(booksHistoryAdapter.undo(updatedState)).toEqual<
-        PatchHistoryState<Book[]>
-      >({
+      expect(booksHistoryAdapter.undo(updatedState)).toEqual<PatchHistoryState<Book[]>>({
         past: [],
         present: [],
         future: [aPatchState],
@@ -486,9 +473,7 @@ describe("createPatchHistoryAdapter", () => {
     const undoneState = booksHistoryAdapter.undo(updatedState);
 
     it("applies next patch if available", () => {
-      expect(booksHistoryAdapter.redo(undoneState)).toEqual<
-        PatchHistoryState<Book[]>
-      >({
+      expect(booksHistoryAdapter.redo(undoneState)).toEqual<PatchHistoryState<Book[]>>({
         past: [aPatchState],
         present: [book1],
         future: [],
@@ -678,30 +663,29 @@ describe("buildCreateHistoryAdapter", () => {
     config: CustomConfig;
   }
 
-  const createCustomHistoryAdapter =
-    buildCreateHistoryAdapter<CustomHistoryStateFn>({
-      onCreate,
-      getInitialState(data) {
-        return {
-          ...getInitialState(data),
-          extra: "extra",
-        } as never;
-      },
-      wrapRecipe(recipe) {
-        return (state, ...args) => {
-          const prev = ensureCurrent(state.present);
+  const createCustomHistoryAdapter = buildCreateHistoryAdapter<CustomHistoryStateFn>({
+    onCreate,
+    getInitialState(data) {
+      return {
+        ...getInitialState(data),
+        extra: "extra",
+      } as never;
+    },
+    wrapRecipe(recipe) {
+      return (state, ...args) => {
+        const prev = ensureCurrent(state.present);
 
-          applyRecipe(state, recipe, ...args);
+        applyRecipe(state, recipe, ...args);
 
-          return { data: prev } as never;
-        };
-      },
-      applyEntry(state, entry) {
-        const stateBefore = state.present;
-        state.present = entry.data;
-        return { data: stateBefore };
-      },
-    });
+        return { data: prev } as never;
+      };
+    },
+    applyEntry(state, entry) {
+      const stateBefore = state.present;
+      state.present = entry.data;
+      return { data: stateBefore };
+    },
+  });
 
   it("calls onCreate with config", () => {
     const config = { extra: "foo" };
@@ -710,9 +694,7 @@ describe("buildCreateHistoryAdapter", () => {
   });
 
   it("exposes getInitialState", () => {
-    const initialState = createCustomHistoryAdapter<number[]>().getInitialState(
-      [],
-    );
+    const initialState = createCustomHistoryAdapter<number[]>().getInitialState([]);
     expect(initialState).toEqual<CustomHistoryState<number[]>>({
       past: [],
       present: [],

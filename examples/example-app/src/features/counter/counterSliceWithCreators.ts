@@ -3,6 +3,7 @@ import { buildCreateSlice, asyncThunkCreator } from "@reduxjs/toolkit";
 import { historyCreatorsCreator } from "history-adapter/creator";
 import type { HistoryState } from "history-adapter/redux";
 import { createHistoryAdapter } from "history-adapter/redux";
+
 import { wait } from "../../util";
 
 const createAppSlice = buildCreateSlice({
@@ -32,8 +33,7 @@ export const counterSlice = createAppSlice({
   name: "counter",
   initialState,
   reducers: (create) => {
-    const { createUndoable, createHistoryMethods } =
-      create.undoableCreators(counterAdapter);
+    const { createUndoable, createHistoryMethods } = create.undoableCreators(counterAdapter);
     return {
       incremented: createUndoable.reducer<number>((state, action) => {
         state.value += action.payload;
@@ -80,10 +80,5 @@ export const {
   incrementAsync,
 } = counterSlice.actions;
 
-export const {
-  selectCount,
-  selectCanRedo,
-  selectCanUndo,
-  selectPaused,
-  selectIncrementing,
-} = counterSlice.selectors;
+export const { selectCount, selectCanRedo, selectCanUndo, selectPaused, selectIncrementing } =
+  counterSlice.selectors;
