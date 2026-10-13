@@ -5,7 +5,7 @@ import {
   configureStore,
   createEntityAdapter,
 } from "@reduxjs/toolkit";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { historyCreatorsCreator } from "./creator";
 import { createHistoryAdapter, createPatchHistoryAdapter } from "./redux";
 
@@ -32,7 +32,7 @@ describe("Slice creators", () => {
       historyCreators: historyCreatorsCreator,
     },
   });
-  const bookAdapter = createHistoryAdapter<Array<Book>>();
+  const bookAdapter = createHistoryAdapter<Book[]>();
   it("adds creators for reuse with slices", () => {
     const bookSlice = createAppSlice({
       name: "book",

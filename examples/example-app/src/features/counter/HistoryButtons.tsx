@@ -32,7 +32,7 @@ export function HistoryButtons() {
         <button onClick={() => dispatch(incremented(1))}>increment</button>
         <button onClick={() => dispatch(decremented(1))}>decrement</button>
         <button
-          onClick={() => dispatch(incrementAsync(1))}
+          onClick={() => void dispatch(incrementAsync(1))}
           disabled={incrementing}
           className={incrementing && "incrementing"}
         >
