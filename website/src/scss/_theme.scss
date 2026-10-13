@@ -24,13 +24,7 @@ $contrast: (
   ),
 );
 
-@mixin infima-color(
-  $name,
-  $color,
-  $custom-shades: (),
-  $custom-contrast: (),
-  $dark: false
-) {
+@mixin infima-color($name, $color, $custom-shades: (), $custom-contrast: (), $dark: false) {
   --ifm-color-#{$name}: #{$color};
   @each $shade, $colorOrPct in map.deep-merge($shades, $custom-shades) {
     --ifm-color-#{$name}#{if($shade == '', '', '-')}#{$shade}: #{if(
@@ -40,11 +34,7 @@ $contrast: (
       )};
   }
   @each $contrast,
-    $colorOrPct
-      in map.get(
-        map.deep-merge($contrast, $custom-contrast),
-        if($dark, dark, light)
-      )
+    $colorOrPct in map.get(map.deep-merge($contrast, $custom-contrast), if($dark, dark, light))
   {
     --ifm-color-#{$name}-contrast#{if($contrast == '', '', '-')}#{$contrast}: #{if(
         meta.type-of($colorOrPct) == color,

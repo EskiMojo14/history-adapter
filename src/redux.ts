@@ -1,12 +1,7 @@
 /* eslint-disable import-x/export */
-import type {
-  Action,
-  CaseReducer,
-  PayloadAction,
-  Selector,
-} from "@reduxjs/toolkit";
+import type { Action, CaseReducer, PayloadAction, Selector } from "@reduxjs/toolkit";
 import { isFluxStandardAction } from "@reduxjs/toolkit";
-import type { IfMaybeUndefined, MaybeDraft, Overwrite } from "./utils";
+
 import type {
   HistoryAdapter as Adapter,
   BaseHistoryState,
@@ -23,6 +18,7 @@ import {
   createHistoryAdapter as createAdapter,
   createPatchHistoryAdapter as createPatchAdapter,
 } from ".";
+import type { IfMaybeUndefined, MaybeDraft, Overwrite } from "./utils";
 
 export * from ".";
 
@@ -75,10 +71,7 @@ function globaliseSelectors<RootState, State, Selected>(
 
 let hasWarned = false;
 
-function makeSelectorFactory<
-  Data,
-  State extends BaseHistoryState<unknown, unknown>,
->() {
+function makeSelectorFactory<Data, State extends BaseHistoryState<unknown, unknown>>() {
   function getSelectors(): HistorySelectors<Data, State>;
   function getSelectors<RootState>(
     selectState: (rootState: RootState) => State,
@@ -116,9 +109,7 @@ export interface UndoableMeta {
   undoable?: boolean;
 }
 
-export function getUndoableMeta(action: {
-  meta?: UndoableMeta;
-}): boolean | undefined {
+export function getUndoableMeta(action: { meta?: UndoableMeta }): boolean | undefined {
   return action.meta?.undoable;
 }
 
@@ -127,15 +118,10 @@ const isPayloadAction = isFluxStandardAction as <P>(
 ) => action is PayloadAction<P>;
 
 function getPayload<P>(payloadOrAction: PayloadAction<P> | P): P {
-  return isPayloadAction(payloadOrAction)
-    ? payloadOrAction.payload
-    : payloadOrAction;
+  return isPayloadAction(payloadOrAction) ? payloadOrAction.payload : payloadOrAction;
 }
 
-export interface ReduxMethods<
-  Data,
-  State extends BaseHistoryState<unknown, unknown>,
-> {
+export interface ReduxMethods<Data, State extends BaseHistoryState<unknown, unknown>> {
   /**
    * Moves the state back or forward in history by n steps.
    * @param state History state shape, with patches
@@ -170,15 +156,9 @@ export interface ReduxMethods<
     >
   ) => { payload: P; meta: UndoableMeta };
   /** Wraps a reducer in logic which automatically updates the state history, and extracts whether an action is undoable from its meta (`action.meta.undoable`) */
-  undoableReducer<
-    A extends Action & { meta?: UndoableMeta },
-    RootState = State,
-  >(
+  undoableReducer<A extends Action & { meta?: UndoableMeta }, RootState = State>(
     reducer: CaseReducer<Data, A>,
-    config?: Omit<
-      UndoableConfig<Data, [action: A], RootState, State>,
-      "isUndoable"
-    >,
+    config?: Omit<UndoableConfig<Data, [action: A], RootState, State>, "isUndoable">,
   ): <State extends MaybeDraft<RootState>>(state: State, action: A) => State;
 
   getSelectors(): HistorySelectors<Data, State>;
@@ -193,10 +173,9 @@ export type HistoryAdapter<
   State extends BaseHistoryState<unknown, unknown> = HistoryState<Data>,
 > = Overwrite<Adapter<Data, State>, ReduxMethods<Data, State>>;
 
-export function getReduxMethods<
-  Data,
-  State extends BaseHistoryState<unknown, unknown>,
->(adapter: Adapter<Data, State>): ReduxMethods<Data, State> {
+export function getReduxMethods<Data, State extends BaseHistoryState<unknown, unknown>>(
+  adapter: Adapter<Data, State>,
+): ReduxMethods<Data, State> {
   return {
     jump(state, payloadOrAction) {
       return adapter.jump(state, getPayload(payloadOrAction));

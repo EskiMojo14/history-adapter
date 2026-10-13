@@ -1,10 +1,6 @@
 import type { Patch, Draft } from "immer";
-import {
-  nothing,
-  enablePatches,
-  applyPatches,
-  produceWithPatches,
-} from "immer";
+import { nothing, enablePatches, applyPatches, produceWithPatches } from "immer";
+
 import type { MaybeDraft } from "./utils";
 import { ensureCurrent, makeStateOperator } from "./utils";
 
@@ -31,8 +27,7 @@ export interface BaseHistoryState<Data, HistoryEntry> {
   paused: boolean;
 }
 
-type HistoryEntryType<State> =
-  State extends BaseHistoryState<any, infer T> ? T : never;
+type HistoryEntryType<State> = State extends BaseHistoryState<any, infer T> ? T : never;
 
 export interface BaseHistoryAdapterConfig {
   /**
@@ -46,9 +41,7 @@ export interface BaseHistoryAdapterConfig {
 export interface BaseHistoryStateFn {
   dataConstraint: unknown;
   _rawData: unknown;
-  data: this["_rawData"] extends this["dataConstraint"]
-    ? this["_rawData"]
-    : never;
+  data: this["_rawData"] extends this["dataConstraint"] ? this["_rawData"] : never;
   state: BaseHistoryState<this["data"], unknown>;
   config: BaseHistoryAdapterConfig;
 }
@@ -129,10 +122,7 @@ export interface HistoryAdapter<
   undoable<Args extends any[], RootState = State>(
     recipe: ImmerRecipe<Data, Args>,
     config?: UndoableConfig<Data, Args, RootState, State>,
-  ): <State extends MaybeDraft<RootState>>(
-    state: State,
-    ...args: Args
-  ) => State;
+  ): <State extends MaybeDraft<RootState>>(state: State, ...args: Args) => State;
   /**
    * Pauses the history, preventing any new patches from being added.
    * @param state History state shape, with patches
@@ -161,9 +151,7 @@ export function getInitialState<Data, HistoryEntry>(
   };
 }
 
-type GetInitialState<StateFn extends BaseHistoryStateFn> = <
-  Data extends StateFn["dataConstraint"],
->(
+type GetInitialState<StateFn extends BaseHistoryStateFn> = <Data extends StateFn["dataConstraint"]>(
   initialData: Data,
 ) => GetStateType<Data, StateFn>;
 
@@ -196,13 +184,8 @@ export type BuildHistoryAdapterConfig<StateFn extends BaseHistoryStateFn> = {
    *
    * Useful for setup such as enabling patches.
    */
-  onCreate?: (
-    config?: GetConfigType<StateFn["dataConstraint"], StateFn>,
-  ) => void;
-} & (BaseHistoryState<any, any> extends GetStateType<
-  StateFn["dataConstraint"],
-  StateFn
->
+  onCreate?: (config?: GetConfigType<StateFn["dataConstraint"], StateFn>) => void;
+} & (BaseHistoryState<any, any> extends GetStateType<StateFn["dataConstraint"], StateFn>
   ? {
       /**
        * Function to construct an initial state with no history.
@@ -267,17 +250,13 @@ export function buildCreateHistoryAdapter<StateFn extends BaseHistoryStateFn>({
         state.paused = false;
       }),
       undoable: <Args extends any[], RootState>(
-        recipe: (
-          draft: Draft<Data>,
-          ...args: Args
-        ) => ValidRecipeReturnType<Data>,
+        recipe: (draft: Draft<Data>, ...args: Args) => ValidRecipeReturnType<Data>,
         config?: UndoableConfig<Data, Args, RootState, State>,
       ) => {
         const { selectHistoryState, isUndoable } = config ?? {};
         const finalRecipe = wrapRecipe(recipe);
         return makeStateOperator<RootState, Args>((rootState, ...args) => {
-          const state =
-            selectHistoryState?.(rootState) ?? (rootState as Draft<State>);
+          const state = selectHistoryState?.(rootState) ?? (rootState as Draft<State>);
 
           const historyEntry = finalRecipe(state, ...args);
 
@@ -287,10 +266,7 @@ export function buildCreateHistoryAdapter<StateFn extends BaseHistoryStateFn>({
           const undoable = isUndoable?.(...args) ?? true;
           if (undoable) {
             const lengthWithoutFuture = state.past.length + 1;
-            if (
-              adapterConfig?.limit &&
-              lengthWithoutFuture > adapterConfig.limit
-            ) {
+            if (adapterConfig?.limit && lengthWithoutFuture > adapterConfig.limit) {
               state.past.shift();
             }
             state.past.push(historyEntry);
@@ -338,9 +314,7 @@ export const createHistoryAdapter: CreateHistoryAdapter<HistoryStateFn> =
       (state, ...args) => {
         // we need to get the present state before the recipe is applied
         // and because the recipe might mutate it, we need the non-draft version
-        const before = ensureCurrent(state.present) as DataFromRecipe<
-          typeof recipe
-        >;
+        const before = ensureCurrent(state.present) as DataFromRecipe<typeof recipe>;
 
         applyRecipe(state, recipe, ...args);
 

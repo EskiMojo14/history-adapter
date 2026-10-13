@@ -1,15 +1,22 @@
 {
   "name": "history-adapter",
-  "description": "A \"history adapter\" for managing undoable (and redoable) state changes.",
   "version": "2.1.1",
+  "description": "A \"history adapter\" for managing undoable (and redoable) state changes.",
   "keywords": [
     "history",
-    "redux",
-    "undo",
-    "redo",
     "immer",
     "patches",
-    "state"
+    "redo",
+    "redux",
+    "state",
+    "undo"
+  ],
+  "license": "MIT",
+  "author": "EskiMojo14 <ben.j.durrant@gmail.com>",
+  "repository": "https://github.com/EskiMojo14/history-adapter.git",
+  "files": [
+    "dist",
+    "redux"
   ],
   "type": "module",
   "main": "./dist/index.cjs",
@@ -26,10 +33,6 @@
       "require": "./dist/redux.cjs"
     }
   },
-  "files": [
-    "dist",
-    "redux"
-  ],
   "scripts": {
     "clean": "rimraf dist",
     "prepare": "vp config",
@@ -46,9 +49,9 @@
     "example": "vpr --filter example-app dev",
     "website": "vpr --filter website start"
   },
-  "repository": "https://github.com/EskiMojo14/history-adapter.git",
-  "author": "EskiMojo14 <ben.j.durrant@gmail.com>",
-  "license": "MIT",
+  "dependencies": {
+    "immer": "^10.1.1"
+  },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.17.4",
     "@reduxjs/toolkit": "https://pkg.csb.dev/reduxjs/redux-toolkit/commit/d1059244/@reduxjs/toolkit",
@@ -64,12 +67,6 @@
     "typescript": "^5.8.3",
     "vite-plus": "catalog:"
   },
-  "engines": {
-    "node": "^14.15.0 || ^16.10.0 || >=18.0.0"
-  },
-  "dependencies": {
-    "immer": "^10.1.1"
-  },
   "peerDependencies": {
     "@reduxjs/toolkit": "^1.9.7 || ^2"
   },
@@ -77,6 +74,9 @@
     "@reduxjs/toolkit": {
       "optional": true
     }
+  },
+  "engines": {
+    "node": "^14.15.0 || ^16.10.0 || >=18.0.0"
   },
   "packageManager": "pnpm@10.5.2+sha256.79a98daa90248b50815e31460790f118c56fe099113370826caa0153be6daba5"
 }

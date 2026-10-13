@@ -2,6 +2,7 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { HistoryState } from "history-adapter/redux";
 import { createHistoryAdapter } from "history-adapter/redux";
+
 import { wait } from "../../util";
 
 interface CounterState {
@@ -12,13 +13,10 @@ interface RootCounterState extends HistoryState<CounterState> {
   incrementing?: true;
 }
 
-export const incrementAsync = createAsyncThunk(
-  "counter/incrementAsync",
-  async (amount: number) => {
-    await wait(1000);
-    return amount;
-  },
-);
+export const incrementAsync = createAsyncThunk("counter/incrementAsync", async (amount: number) => {
+  await wait(1000);
+  return amount;
+});
 
 const counterAdapter = createHistoryAdapter<CounterState>();
 
@@ -32,16 +30,12 @@ export const counterSlice = createSlice({
   name: "counter",
   initialState,
   reducers: {
-    incremented: counterAdapter.undoableReducer(
-      (state, action: PayloadAction<number>) => {
-        state.value += action.payload;
-      },
-    ),
-    decremented: counterAdapter.undoableReducer(
-      (state, action: PayloadAction<number>) => {
-        state.value -= action.payload;
-      },
-    ),
+    incremented: counterAdapter.undoableReducer((state, action: PayloadAction<number>) => {
+      state.value += action.payload;
+    }),
+    decremented: counterAdapter.undoableReducer((state, action: PayloadAction<number>) => {
+      state.value -= action.payload;
+    }),
     undone: counterAdapter.undo,
     redone: counterAdapter.redo,
     pauseToggled(state) {
@@ -91,10 +85,5 @@ export const {
   reset,
 } = counterSlice.actions;
 
-export const {
-  selectCount,
-  selectCanRedo,
-  selectCanUndo,
-  selectPaused,
-  selectIncrementing,
-} = counterSlice.selectors;
+export const { selectCount, selectCanRedo, selectCanUndo, selectPaused, selectIncrementing } =
+  counterSlice.selectors;

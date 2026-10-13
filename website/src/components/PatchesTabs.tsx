@@ -14,8 +14,7 @@ export const usePatches = <Files extends SandpackFiles>(
   return useMemo(() => {
     if (!patches) return files;
     const adapterFile: SandpackFiles[string] = files[adapterFileName];
-    const asObj =
-      typeof adapterFile === "string" ? { code: adapterFile } : adapterFile;
+    const asObj = typeof adapterFile === "string" ? { code: adapterFile } : adapterFile;
     return {
       ...files,
       [adapterFileName]: {
@@ -41,9 +40,7 @@ function PatchesTabs({ children }: { children: ReactNode }) {
   );
 }
 
-export function withPatchTabs<Props extends {}>(
-  Component: ComponentType<Props>,
-) {
+export function withPatchTabs<Props extends {}>(Component: ComponentType<Props>) {
   function WithPatchTabs(props: Props) {
     return (
       <PatchesTabs>
@@ -51,8 +48,6 @@ export function withPatchTabs<Props extends {}>(
       </PatchesTabs>
     );
   }
-  WithPatchTabs.displayName = `withPatchTabs(${
-    Component.displayName ?? Component.name
-  })`;
+  WithPatchTabs.displayName = `withPatchTabs(${Component.displayName ?? Component.name})`;
   return WithPatchTabs;
 }

@@ -7,8 +7,8 @@ A "history adapter" for managing undoable (and redoable) state changes with [imm
 Includes generic methods along with Redux-specific helpers.
 
 ```ts
-import { createHistoryAdapter } from "history-adapter/redux";
 import { createSlice } from "@reduxjs/toolkit";
+import { createHistoryAdapter } from "history-adapter/redux";
 
 interface CounterState {
   value: number;

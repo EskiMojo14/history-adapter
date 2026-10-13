@@ -151,33 +151,32 @@ interface CustomHistoryStateFn extends BaseHistoryStateFn {
 You can then provide this interface to `buildCreateHistoryAdapter`, and all types should infer correctly.
 
 ```ts
-const createCustomHistoryAdapter =
-  buildCreateHistoryAdapter<CustomHistoryStateFn>({
-    onCreate(config) {
-      console.log(config?.extraConfig); // works
-    },
-    // is required if the default state is not enough
-    getInitialState(data) {
-      return {
-        ...getInitialState(data),
-        extra: "extra",
-      };
-    },
-    wrapRecipe(recipe) {
-      // This is called when a recipe is created
-      return (state, ...args) => {
-        // State is a Draft<CustomHistoryState<Data>>
+const createCustomHistoryAdapter = buildCreateHistoryAdapter<CustomHistoryStateFn>({
+  onCreate(config) {
+    console.log(config?.extraConfig); // works
+  },
+  // is required if the default state is not enough
+  getInitialState(data) {
+    return {
+      ...getInitialState(data),
+      extra: "extra",
+    };
+  },
+  wrapRecipe(recipe) {
+    // This is called when a recipe is created
+    return (state, ...args) => {
+      // State is a Draft<CustomHistoryState<Data>>
 
-        return entry; // required to be a CustomEntry
-      };
-    },
-    applyEntry(state, incomingEntry, op) {
-      // State is a Draft<CustomHistoryState<unknown>>
-      // Incoming entry is a CustomEntry
+      return entry; // required to be a CustomEntry
+    };
+  },
+  applyEntry(state, incomingEntry, op) {
+    // State is a Draft<CustomHistoryState<unknown>>
+    // Incoming entry is a CustomEntry
 
-      return outgoingEntry; // required to be a CustomEntry
-    },
-  });
+    return outgoingEntry; // required to be a CustomEntry
+  },
+});
 
 const exampleAdapter = createCustomHistoryAdapter<CounterState>({
   extraConfig: "foo",
