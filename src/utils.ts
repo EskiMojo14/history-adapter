@@ -16,7 +16,7 @@ export type MaybeDraft<T> = T | Draft<T>;
 
 export const ensureCurrent = <T>(value: T): T => (isDraft(value) ? current(value) : value);
 
-export function makeStateOperator<State, Args extends any[] = []>(
+export function makeStateOperator<State, Args extends Array<any> = []>(
   mutator: (state: Draft<State>, ...args: Args) => void,
 ) {
   return function operator<S extends State | Draft<State>>(state: S, ...args: Args): S {

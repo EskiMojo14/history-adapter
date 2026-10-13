@@ -33,7 +33,7 @@ describe("Slice creators", () => {
       historyCreators: historyCreatorsCreator,
     },
   });
-  const bookAdapter = createHistoryAdapter<Book[]>();
+  const bookAdapter = createHistoryAdapter<Array<Book>>();
   it("adds creators for reuse with slices", () => {
     const bookSlice = createAppSlice({
       name: "book",

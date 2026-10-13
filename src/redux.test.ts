@@ -19,7 +19,7 @@ const book2: Book = {
 };
 
 describe("createReduxHistoryAdapter", () => {
-  const booksHistoryAdapter = createHistoryAdapter<Book[]>();
+  const booksHistoryAdapter = createHistoryAdapter<Array<Book>>();
   const localisedSelectors = booksHistoryAdapter.getSelectors();
   const booksHistorySlice = createSlice({
     name: "books",
@@ -148,7 +148,7 @@ describe("createReduxHistoryAdapter", () => {
               state.push(action.payload);
             },
             {
-              selectHistoryState: (s: { books: HistoryState<Book[]> }) => s.books,
+              selectHistoryState: (s: { books: HistoryState<Array<Book>> }) => s.books,
             },
           ),
         ),
