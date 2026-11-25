@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunkwebsite||=[]).push([[509],{9517(e){e.exports=JSON.parse('{"categoryGeneratedIndex":{"title":"API Reference","slug":"/category/api","permalink":"/category/api","sidebar":"docs","navigation":{"previous":{"title":"Setup","permalink":"/"},"next":{"title":"Standard Methods","permalink":"/api/standard"}}}}')}}]);
