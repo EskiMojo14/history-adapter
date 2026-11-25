@@ -29,4 +29,4 @@ const counterSlice = createSlice({
 });
 ```
 
-See [website](https://eskimojo14.github.io/history-adapter/) for more information.
+See [website](https://history-adapter.eskimojo.dev) for more information.
